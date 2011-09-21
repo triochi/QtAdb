@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ScreenshotWidget</class>
+ <widget class="QWidget" name="ScreenshotWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>512</width>
+    <height>399</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">Form</string>
+  </property>
+  <widget class="QWidget" name="gridLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>291</width>
+     <height>241</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="layoutScreenshot" columnstretch="0,1,100">
+    <item row="1" column="2">
+     <widget class="QLabel" name="labelRgb565">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string notr="true"/>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <spacer name="horizontalSpacer_3">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>5</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="0" column="2">
+     <spacer name="verticalSpacer_8">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>5</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="1" column="1">
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <widget class="QPushButton" name="buttonRefreshScreenshot">
+        <property name="text">
+         <string extracomment="refresh screenshot button">Refresh</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../zasoby.qrc">
+          <normaloff>:/icons/refresh.png</normaloff>:/icons/refresh.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonSaveScreenshot">
+        <property name="text">
+         <string extracomment="save screenshot button">Save</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../zasoby.qrc">
+          <normaloff>:/icons/save.png</normaloff>:/icons/save.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonRotateLeft">
+        <property name="text">
+         <string extracomment="rotate screenshot">Rotate left</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../zasoby.qrc">
+          <normaloff>:/icons/rotate-left.png</normaloff>:/icons/rotate-left.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonRotateRight">
+        <property name="text">
+         <string extracomment="rotate screenshot">Rotate right</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../zasoby.qrc">
+          <normaloff>:/icons/rotate-right.png</normaloff>:/icons/rotate-right.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_11">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources>
+  <include location="../zasoby.qrc"/>
+ </resources>
+ <connections/>
+</ui>

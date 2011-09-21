@@ -1,0 +1,72 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="android.ico">images/android.ico</file>
+        <file alias="android.png">images/android.png</file>
+        <file alias="apps.png">images/apps.png</file>
+        <file alias="backup.png">images/backup.png</file>
+        <file alias="computer.png">images/computer.png</file>
+        <file alias="contacts.png">images/contacts.png</file>
+        <file alias="copy.png">images/copy.png</file>
+        <file alias="fastboot.png">images/fastboot.png</file>
+        <file alias="files.png">images/files.png</file>
+        <file alias="find.png">images/find.png</file>
+        <file alias="hidden.png">images/hidden.png</file>
+        <file alias="info.png">images/info.png</file>
+        <file alias="install.png">images/install.png</file>
+        <file alias="messages.png">images/messages.png</file>
+        <file alias="newDir.png">images/newDir.png</file>
+        <file alias="paypal.png">images/paypal.png</file>
+        <file alias="phone.png">images/phone.png</file>
+        <file alias="recovery.png">images/recovery.png</file>
+        <file alias="refresh.png">images/refresh.png</file>
+        <file alias="remove.png">images/remove.png</file>
+        <file alias="rename.png">images/rename.png</file>
+        <file alias="restore.png">images/restore.png</file>
+        <file alias="rotate-left.png">images/rotate-left.png</file>
+        <file alias="rotate-right.png">images/rotate-right.png</file>
+        <file alias="save.png">images/save.png</file>
+        <file alias="screenshot.png">images/screenshot.png</file>
+        <file alias="selectAll.png">images/selectAll.png</file>
+        <file alias="selectNone.png">images/selectNone.png</file>
+        <file alias="settings.png">images/settings.png</file>
+        <file alias="shell.png">images/shell.png</file>
+        <file alias="uninstall.png">images/uninstall.png</file>
+        <file alias="market.png">images/market.png</file>
+        <file alias="contactDefault.png">images/contactDefault.png</file>
+        <file alias="appBrain.png">images/appBrain.png</file>
+        <file alias="logcat.png">images/logcat.png</file>
+        <file>images/help.png</file>
+    </qresource>
+    <qresource prefix="/lang">
+        <file alias="qtadb_en.qm">languages/qtadb_en.qm</file>
+        <file alias="qtadb_pl.qm">languages/qtadb_pl.qm</file>
+        <file alias="qtadb_el.qm">languages/qtadb_el.qm</file>
+        <file alias="qtadb_es.qm">languages/qtadb_es.qm</file>
+        <file alias="qtadb_it.qm">languages/qtadb_it.qm</file>
+        <file alias="qtadb_nl.qm">languages/qtadb_nl.qm</file>
+        <file alias="qtadb_cs.qm">languages/qtadb_cs.qm</file>
+        <file alias="qtadb_de.qm">languages/qtadb_de.qm</file>
+        <file alias="qtadb_hu.qm">languages/qtadb_hu.qm</file>
+        <file alias="qtadb_sv.qm">languages/qtadb_sv.qm</file>
+        <file alias="qtadb_ja.qm">languages/qtadb_ja.qm</file>
+        <file alias="qtadb_ar.qm">languages/qtadb_ar.qm</file>
+        <file alias="qtadb_ru.qm">languages/qtadb_ru.qm</file>
+        <file alias="qtadb_pt.qm">languages/qtadb_pt.qm</file>
+        <file alias="qtadb_sr.qm">languages/qtadb_sr.qm</file>
+    </qresource>
+    <qresource prefix="/qml">
+        <file>qml/messageView.qml</file>
+        <file>qml/messages/ContactList.qml</file>
+        <file>qml/messages/MessageList.qml</file>
+        <file>qml/messages/NewMessage.qml</file>
+        <file>qml/messages/ThreadList.qml</file>
+        <file>qml/messages/delegates/Button.qml</file>
+        <file>qml/messages/delegates/ContactDelegate.qml</file>
+        <file>qml/messages/delegates/MessageDelegate.qml</file>
+        <file>qml/messages/delegates/ScrollBar.qml</file>
+        <file>qml/messages/delegates/SendMessage.qml</file>
+        <file>qml/messages/delegates/SendSmsButton.qml</file>
+        <file>qml/messages/delegates/ThreadContextMenu.qml</file>
+        <file>qml/messages/delegates/ThreadDelegate.qml</file>
+    </qresource>
+</RCC>

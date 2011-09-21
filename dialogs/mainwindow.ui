@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>764</width>
+    <height>548</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Times New Roman</family>
+   </font>
+  </property>
+  <property name="cursor">
+   <cursorShape>ArrowCursor</cursorShape>
+  </property>
+  <property name="windowTitle">
+   <string extracomment="Main window title">QtADB - Your android manager</string>
+  </property>
+  <property name="windowOpacity">
+   <double>1.000000000000000</double>
+  </property>
+  <property name="statusTip">
+   <string/>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <property name="documentMode">
+   <bool>false</bool>
+  </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
+  </property>
+  <property name="dockNestingEnabled">
+   <bool>false</bool>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>741</width>
+      <height>541</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>5</number>
+     </property>
+     <item row="0" column="0">
+      <widget class="QStackedWidget" name="stackedWidget">
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="pageDisconnected">
+        <widget class="QWidget" name="layoutWidget1">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>681</width>
+           <height>501</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="layoutDisconnected">
+          <item row="0" column="1">
+           <spacer name="verticalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>CONNECT YOUR PHONE</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QPushButton" name="buttonRefresh">
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
+            <property name="text">
+             <string extracomment="refresh state when disconnected">Refresh</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <spacer name="verticalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="2" column="2">
+           <spacer name="horizontalSpacer_8">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="2" column="0">
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>764</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuTryb">
+    <property name="title">
+     <string>&amp;Connection</string>
+    </property>
+    <addaction name="actionUsb"/>
+    <addaction name="actionWifi"/>
+   </widget>
+   <widget class="QMenu" name="menu_Pomoc">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionO_programie"/>
+    <addaction name="actionCheck_for_updates"/>
+    <addaction name="actionEnter_register_key"/>
+   </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>&amp;Tools</string>
+    </property>
+    <widget class="QMenu" name="menuAdb">
+     <property name="title">
+      <string>Adb</string>
+     </property>
+     <addaction name="actionAdbReboot"/>
+     <addaction name="actionAdbRebootBootloader"/>
+     <addaction name="actionAdbRebootRecovery"/>
+     <addaction name="actionAdbPowerOff"/>
+    </widget>
+    <widget class="QMenu" name="menuFastboot">
+     <property name="title">
+      <string>Fastboot</string>
+     </property>
+     <addaction name="actionFastbootReboot"/>
+     <addaction name="actionFastbootRebootBootloader"/>
+     <addaction name="actionFastbootPowerOff"/>
+    </widget>
+    <addaction name="menuAdb"/>
+    <addaction name="menuFastboot"/>
+   </widget>
+   <addaction name="menuTryb"/>
+   <addaction name="menu"/>
+   <addaction name="menu_Pomoc"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="windowTitle">
+    <string notr="true">toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <action name="actionUsb">
+   <property name="text">
+    <string>usb</string>
+   </property>
+  </action>
+  <action name="actionWifi">
+   <property name="text">
+    <string>wifi</string>
+   </property>
+  </action>
+  <action name="actionO_programie">
+   <property name="text">
+    <string>about</string>
+   </property>
+  </action>
+  <action name="actionPolski">
+   <property name="text">
+    <string>polski</string>
+   </property>
+  </action>
+  <action name="actionAdbReboot">
+   <property name="text">
+    <string>Reboot</string>
+   </property>
+  </action>
+  <action name="actionAdbRebootBootloader">
+   <property name="text">
+    <string>Reboot bootloader</string>
+   </property>
+  </action>
+  <action name="actionAdbRebootRecovery">
+   <property name="text">
+    <string>Reboot recovery</string>
+   </property>
+  </action>
+  <action name="actionFastbootReboot">
+   <property name="text">
+    <string>Reboot</string>
+   </property>
+  </action>
+  <action name="actionFastbootRebootBootloader">
+   <property name="text">
+    <string>Reboot bootloader</string>
+   </property>
+  </action>
+  <action name="actionFastbootPowerOff">
+   <property name="text">
+    <string>Power off</string>
+   </property>
+  </action>
+  <action name="actionAdbPowerOff">
+   <property name="text">
+    <string>Power off</string>
+   </property>
+  </action>
+  <action name="actionCheck_for_updates">
+   <property name="text">
+    <string>check for updates</string>
+   </property>
+  </action>
+  <action name="actionEnter_register_key">
+   <property name="text">
+    <string>enter register key</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>buttonRefresh</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

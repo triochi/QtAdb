@@ -1,0 +1,24 @@
+------0.7.6------
+-dodana obs³uga drag and drop pomiêdzy tabelami
+-poprawki kopiowania (jeœli plik istnieje to go najpierw usuwa oraz inne)
+-poprawka otwórz w markecie (nowy market siê nie otwiera³)
+-dodana opcja "layout direction" przydatna dla arabów ;)
+-poprawione wyszukiwanie aplikacji na sd-ext
+-dodane okno dotacja
+-poprawione tlumaczenie (przy pierwszym uruchomieniu jezyk pobierany z
+ systemu oraz przy uruchomieniu samego logcata lub instalacji aplikacji
+ teraz jest tlumaczenie)
+-dodany jezyk arabski
+-dodany jezyk rosyjski
+------0.7.7------
+-w appInfo dialog dodane sprawdzenie czy aplikacja jest zainstalowana
+    jesli tak to zmienia tekst na przycisku z Install na Reinstall oraz
+    uruchamia appDialog z opcja Reinstall zamiast Install
+-dodane wyswietlanie powodu niepowodzenia instalacji
+-poprawka w fileWidget - dwuklik otwiera info o aplikacji wewnatrz QtADB -
+    nie otwiera nowej instancji QtADB (tak bylo wczesniej :P)
+-zmiana z otwórz w appBrain na otwórz w markecie (PC)
+-dodane sprawdzenie czy system na którym pracujemy to Windows 7
+    (do postêpu na taskbarze - jeszcze zosta³o sprawdziæ jak siê
+    zachowa na windows 7 64bit)
+-zmienione wykrywanie sd-ext
