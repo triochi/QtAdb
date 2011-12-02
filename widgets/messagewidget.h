@@ -58,7 +58,6 @@ private:
     QSortFilterProxyModel sortModel;
     QSortFilterProxyModel sortThreadModel;
     QSortFilterProxyModel sortContactModel;
-    QString sdk;
     Message *previousMessage;
     int messageCount;
     void getSmsList();

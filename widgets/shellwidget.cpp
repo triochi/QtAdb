@@ -21,6 +21,15 @@
 #include "shellwidget.h"
 #include "ui_shellwidget.h"
 
+
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
+
+
 /*
   dodac 2 listy stringow:
   - commandList - w konstruktorze wczytywac komendy busyboxa i shella, a pozniej szift+tab bedzie podpowiadal komendy
@@ -39,10 +48,7 @@ ShellWidget::ShellWidget(QWidget *parent) :
     this->setCursorWidth(3);
     this->setTextCursor(cursor);
     this->setContextMenuPolicy(Qt::CustomContextMenu);
-
     QSettings settings;
-    this->sdk=settings.value("sdkPath").toString();
-
     this->fontColor = settings.value("shellFontColor", Qt::black).value<QColor>();
 
     QPalette palette = this->palette();
@@ -54,7 +60,7 @@ ShellWidget::ShellWidget(QWidget *parent) :
 
     //qDebug()<<"MainWindow::showPageShell() - process shell is not running, starting...";
     this->process.setProcessChannelMode(QProcess::MergedChannels);
-    this->process.start("\""+sdk+"\""+"adb shell");
+    this->process.start("\""+adb + "\"", QStringList()<<" shell");
 
     connect(&this->process, SIGNAL(readyRead()), this, SLOT(readFromProcess()));
 }

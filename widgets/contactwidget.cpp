@@ -89,7 +89,7 @@
 //{
 //    QString tmp;
 //    QProcess *proces=new QProcess;
-//    proces->start("\""+sdk+"\""+"adb shell sqlite3");
+//    proces->start("\""+adb + "\"", QStringList()<<" shell sqlite3");
 //    proces->waitForReadyRead(-1);
 //    tmp=proces->readLine();
 //    proces->write(QString(QChar(0x3)).toAscii());
@@ -105,7 +105,7 @@
 //    ContactList contactList;
 //    QStringList tmpList;
 
-//    proces->start("\""+sdk+"\""+"adb shell sqlite3 /data/data/com.android.providers.contacts/databases/contacts2.db \"select * from view_v1_people where number IS NOT NULL;;\"");
+//    proces->start("\""+adb + "\"", QStringList()<<" shell sqlite3 /data/data/com.android.providers.contacts/databases/contacts2.db \"select * from view_v1_people where number IS NOT NULL;;\"");
 //    while (true)
 //    {
 //        proces->waitForReadyRead(-1);

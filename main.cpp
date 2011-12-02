@@ -32,6 +32,7 @@ QString sdk;
 QString adb;
 QString aapt;
 QString busybox;
+QString fastboot;
 
 void myMessageHandler(QtMsgType type, const char *msg)
 {
@@ -209,10 +210,10 @@ int main(int argc, char *argv[])
         }
         adbProces->waitForFinished(-1);
         QString tmp = adbProces->readAll();
-        qDebug()<<"adb version - "<<tmp.toStdString().c_str();
+        qDebug()<<" version - "<<tmp.toStdString().c_str();
         if (adbProces->exitCode() != 0)
         {
-            qDebug()<<"adb error - "<<adbProces->errorString().toStdString().c_str();
+            qDebug()<<" error - "<<adbProces->errorString().toStdString().c_str();
             QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("error"), QObject::tr("It seems that adb is not working properly"), QMessageBox::Ok);
             msgBox->exec();
             delete msgBox;
@@ -222,7 +223,7 @@ int main(int argc, char *argv[])
         adbProces->start("\"" + adb + "\"", QStringList() << "root");
         adbProces->waitForFinished(-1);
         tmp = adbProces->readAll();
-        qDebug()<<"adb root - "<<tmp.toStdString().c_str();
+        qDebug()<<" root - "<<tmp.toStdString().c_str();
 
         if (tmp.contains("adbd cannot run as root in production builds") && !settings.value("disableProductionBuildsMessage",false).toBool())
         {

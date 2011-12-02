@@ -21,6 +21,13 @@
 #include "fastbootwidget.h"
 #include "ui_fastbootwidget.h"
 
+extern QProcess *adbProces;
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QString busybox;
+extern QString fastboot;
+
 FastbootWidget::FastbootWidget(QWidget *parent,Phone *phone) :
     QWidget(parent),
     ui(new Ui::FastbootWidget)
@@ -29,9 +36,6 @@ FastbootWidget::FastbootWidget(QWidget *parent,Phone *phone) :
 
     this->setLayout(this->ui->layoutFastboot);
     this->phone=phone;
-
-    QSettings settings;
-    this->sdk=settings.value("sdkPath").toString();
 
     connect(this->ui->buttonBootIMG, SIGNAL(clicked()), this, SLOT(bootIMG()));
     connect(this->ui->buttonFlashRadio, SIGNAL(clicked()), this, SLOT(flashRadio()));
@@ -59,11 +63,11 @@ FastbootWidget::~FastbootWidget()
 void FastbootWidget::bootIMG()
 {
     QString output;
-    QProcess fastboot;
-    fastboot.setProcessChannelMode(QProcess::MergedChannels);
-    fastboot.start("\"" + this->sdk + "\"fastboot devices");
-    fastboot.waitForFinished();
-    output = fastboot.readAll();
+    QProcess fastboot_proc;
+    fastboot_proc.setProcessChannelMode(QProcess::MergedChannels);
+    fastboot_proc.start(QString("\"") + fastboot + "\"", QStringList()<<" devices");
+    fastboot_proc.waitForFinished();
+    output = fastboot_proc.readAll();
     if (output.contains("fastboot"))
     {
         QProcess *process=new QProcess();
@@ -72,7 +76,7 @@ void FastbootWidget::bootIMG()
         QString imgFileName = QFileDialog::getOpenFileName(this, tr("Choose img file..."), ".", tr("IMG File ")+"(*.img)");
         if (!imgFileName.isEmpty())
         {
-            process->start("\"" + sdk + "\"fastboot boot " + imgFileName);
+            process->start("\"" + fastboot + "\"", QStringList()<< imgFileName);
             process->waitForFinished(-1);
             process->terminate();
         }
@@ -89,11 +93,11 @@ void FastbootWidget::bootIMG()
 void FastbootWidget::flashSPL()
 {
     QString output;
-    QProcess fastboot;
-    fastboot.setProcessChannelMode(QProcess::MergedChannels);
-    fastboot.start("\"" + this->sdk + "\"fastboot devices");
-    fastboot.waitForFinished();
-    output = fastboot.readAll();
+    QProcess fastboot_proc;
+    fastboot_proc.setProcessChannelMode(QProcess::MergedChannels);
+    fastboot_proc.start("\"" + fastboot + "\"", QStringList()<<" devices");
+    fastboot_proc.waitForFinished();
+    output = fastboot_proc.readAll();
     if (output.contains("fastboot"))
     {
         QProcess *process=new QProcess();
@@ -102,7 +106,7 @@ void FastbootWidget::flashSPL()
         QString imgFileName = QFileDialog::getOpenFileName(this, tr("Choose hboot img file..."), ".", tr("IMG File ")+"(*.img)");
         if (!imgFileName.isEmpty())
         {
-            process->start("\"" + sdk + "\"fastboot flash hboot " + imgFileName);
+            process->start("\"" + fastboot + "\"", QStringList()<<" flash hboot " + imgFileName);
             process->waitForFinished(-1);
             tmp = process->readAll();
             if (tmp.contains("error"))
@@ -124,11 +128,11 @@ void FastbootWidget::flashSPL()
 void FastbootWidget::flashRadio()
 {
     QString output;
-    QProcess fastboot;
-    fastboot.setProcessChannelMode(QProcess::MergedChannels);
-    fastboot.start("\"" + this->sdk + "\"fastboot devices");
-    fastboot.waitForFinished();
-    output = fastboot.readAll();
+    QProcess fastboot_proc;
+    fastboot_proc.setProcessChannelMode(QProcess::MergedChannels);
+    fastboot_proc.start("\"" + fastboot + "\"", QStringList()<<" devices");
+    fastboot_proc.waitForFinished();
+    output = fastboot_proc.readAll();
     if (output.contains("fastboot"))
     {
         QProcess *process=new QProcess();
@@ -137,7 +141,7 @@ void FastbootWidget::flashRadio()
         QString imgFileName = QFileDialog::getOpenFileName(this, tr("Choose radio img file..."), ".", tr("IMG File ")+"(*.img)");
         if (!imgFileName.isEmpty())
         {
-            process->start("\"" + sdk + "\"fastboot flash radio " + imgFileName);
+            process->start("\"" + fastboot + "\"", QStringList()<<" flash radio " + imgFileName);
             process->waitForFinished(-1);
             tmp = process->readAll();
             if (tmp.contains("error"))
@@ -159,11 +163,11 @@ void FastbootWidget::flashRadio()
 void FastbootWidget::flashRecovery()
 {
     QString output;
-    QProcess fastboot;
-    fastboot.setProcessChannelMode(QProcess::MergedChannels);
-    fastboot.start("\"" + this->sdk + "\"fastboot devices");
-    fastboot.waitForFinished();
-    output = fastboot.readAll();
+    QProcess fastboot_proc;
+    fastboot_proc.setProcessChannelMode(QProcess::MergedChannels);
+    fastboot_proc.start("\"" + fastboot + "\"" , QStringList() <<" devices");
+    fastboot_proc.waitForFinished();
+    output = fastboot_proc.readAll();
     if (output.contains("fastboot"))
     {
         QProcess *process=new QProcess();
@@ -172,7 +176,7 @@ void FastbootWidget::flashRecovery()
         QString imgFileName = QFileDialog::getOpenFileName(this, tr("Choose recovery img file..."), ".", tr("IMG File ")+"(*.img)");
         if (!imgFileName.isEmpty())
         {
-            process->start("\"" + sdk + "\"fastboot flash recovery " + imgFileName);
+            process->start("\"" + fastboot + "\"", QStringList()<<" flash recovery " + imgFileName);
             process->waitForFinished(-1);
             tmp = process->readAll();
             if (tmp.contains("error"))

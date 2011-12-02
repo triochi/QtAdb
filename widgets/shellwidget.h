@@ -44,7 +44,6 @@ private:
     QTextCursor cursor;
 
     QColor fontColor;
-    QString sdk;
 
     QStringList commandHistory;
     QStringList commands;
@@ -80,7 +79,6 @@ private:
     Ui::ShellWidget *ui;
     QProcess *procesShell;
     bool processShellIsRunning;
-    QString sdk;
     QCompleter *completer;
     QStringList commandList;
     QStringListModel *commandModel;

@@ -64,7 +64,7 @@ class Phone: public QObject
 {
     Q_OBJECT
 public:
-    Phone(QString sdk, QString adb, QString aapt, bool isThreadNecessary);
+    Phone(bool isThreadNecessary);
     ~Phone();
 
     bool cd(QString dir);
@@ -75,7 +75,7 @@ public:
 //    FileList getFileList();
     QList<File> *getFileList();
     QList<File> *getFileList(QString);
-    static FileList *getStaticFileList(QString path, QString sdk, bool hiddenFiles);
+    static FileList *getStaticFileList(QString path, QString adb, bool hiddenFiles);
     bool getHiddenFilesState();
     QString getPath();
     QImage getScreenshot();

@@ -21,6 +21,13 @@
 #include "logcatdialog.h"
 #include "ui_logcatdialog.h"
 
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
+
 LogcatDialog::LogcatDialog(QWidget *parent) :
     QDialog(parent)
 {
@@ -29,7 +36,6 @@ LogcatDialog::LogcatDialog(QWidget *parent) :
     QSettings settings;
     this->bufferLimit = settings.value("logcatBufferLimit",0).toInt();
     this->spinBoxBufferLimit->setValue(this->bufferLimit);
-    this->sdk = settings.value("sdkPath").toString();
 
     checkBoxAutoScroll->setChecked(settings.value("logcatAutoScroll",true).toBool());
     this->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -58,7 +64,7 @@ LogcatDialog::LogcatDialog(QWidget *parent) :
     this->proces=new QProcess(this);
     proces->setProcessChannelMode(QProcess::MergedChannels);
     this->setWindowTitle("Logcat");
-    this->proces->start("\""+sdk+"\""+"adb logcat");
+    this->proces->start("\""+adb + "\"", QStringList()<<" logcat");
 
     this->tableView->setModel(this->filterModel);
     this->textBrowser->hide();
@@ -207,7 +213,7 @@ void LogcatDialog::startLogcat()
 {
     if (this->proces->isOpen())
         this->proces->close();
-    this->proces->start("\""+sdk+"\""+"adb logcat");
+    this->proces->start("\""+adb + "\"", QStringList()<<" logcat");
 }
 
 void LogcatDialog::on_pushButtonClearLogcat_pressed()

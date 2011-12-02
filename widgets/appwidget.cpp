@@ -21,6 +21,13 @@
 #include "appwidget.h"
 #include "ui_appwidget.h"
 
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
+
 AppWidget::AppWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::AppWidget)
@@ -55,11 +62,7 @@ AppWidget::AppWidget(QWidget *parent) :
     this->backupMenu = NULL;
 
     QSettings settings;
-    this->phone = new Phone(settings.value("sdkPath").toString(),
-                            settings.value("adbExecutable").toString(),
-                            settings.value("aaptExecutable").toString(),
-                            false);
-    this->sdk = this->phone->getSdk();
+    this->phone = new Phone( false);
 
     qRegisterMetaType<App>("App");
     qRegisterMetaType<Backup>("Backup");
@@ -176,7 +179,7 @@ void AppWidget::copyAppToPC()
 
     if (this->dialog != NULL)
         delete this->dialog;
-    this->dialog = new dialogKopiuj(this, tmpList, this->sdk, dialogKopiuj::AppsToComputer, path);
+    this->dialog = new dialogKopiuj(this, tmpList, dialogKopiuj::AppsToComputer, path);
     if (this->alwaysCloseCopy)
         this->dialog->closeAfterFinished();
     if (this->dialogKopiujShowModal)
@@ -397,7 +400,6 @@ void AppWidget::comboBoxAppsChanged()
             this->appModel->clear();
             this->ui->tableView->setModel(this->appSortModel);
             this->threadApps.systemApps = false;
-            this->threadApps.sdk=this->sdk;
             this->threadApps.start();
         }
         QStringList appColumnList = settings.value("appColumnList").toStringList();
@@ -431,7 +433,6 @@ void AppWidget::comboBoxAppsChanged()
         {
             this->backupModel->clear();
             this->ui->tableView->setModel(this->backupSortModel);
-            this->threadBackups.sdk = this->sdk;
             this->threadBackups.start();
         }
         QStringList backupColumnList = settings.value("backupColumnList").toStringList();
@@ -469,7 +470,6 @@ void AppWidget::comboBoxAppsChanged()
             this->systemAppModel->clear();
             this->ui->tableView->setModel(this->systemAppSortModel);
             this->threadApps.systemApps = true;
-            this->threadApps.sdk=this->sdk;
             this->threadApps.start();
         }
         QStringList appColumnList = settings.value("appColumnList").toStringList();
@@ -624,7 +624,7 @@ void AppWidget::missingAapt()
     if (msgBox->clickedButton() == download)
     {
         QDesktopServices::openUrl(QUrl("http://qtadb.wordpress.com/download/"));
-        QDesktopServices::openUrl(QUrl("file:///"+this->sdk));
+        QDesktopServices::openUrl(QUrl("file:///"+sdk));
     }
     delete closeMsg;
     delete download;
@@ -983,7 +983,7 @@ void ThreadBackups::run()
     Backup backupFound;
     int i;
 
-    proces->start("\"" + this->sdk + "\"adb shell busybox ls /sdcard/QtADB/backup/*.txt");
+    proces->start("\"" + adb + "\"", QStringList()<<" shell busybox ls /sdcard/QtADB/backup/*.txt");
 
     proces->waitForFinished(-1);
     output = proces->readAll();
@@ -1002,12 +1002,12 @@ void ThreadBackups::run()
         backupFound.packageName = outputLines.takeFirst();
         backupFound.packageName.remove(QRegExp("^.+/"));
         backupFound.packageName.remove(QRegExp("\\.txt\\s+$"));
-        proces->start("\"" + this->sdk + "\"adb shell cat /sdcard/QtADB/backup/"+backupFound.packageName+".txt");
+        proces->start("\"" + adb + "\"", QStringList()<<" shell cat /sdcard/QtADB/backup/"+backupFound.packageName+".txt");
         proces->waitForFinished(-1);
         output = proces->readAll();
         if (!settings.contains("apps/"+backupFound.packageName+"/icon"))
         {
-            proces->start("\"" + this->sdk + "\"adb pull /sdcard/QtADB/backup/"+backupFound.packageName+".png "+QDir::currentPath()+"/icons/"+backupFound.packageName+".png");
+            proces->start("\"" + adb + "\"", QStringList()<<" pull /sdcard/QtADB/backup/"+backupFound.packageName+".png "+QDir::currentPath()+"/icons/"+backupFound.packageName+".png");
             proces->waitForFinished(-1);
 
             QFile icon(QDir::currentPath()+"/icons/"+backupFound.packageName+".png");
@@ -1048,7 +1048,7 @@ void ThreadBackups::run()
                 backupFound.appVersion = tmp;
             }
         }
-        proces->start("\"" + this->sdk + "\"adb shell ls  /sdcard/QtADB/backup/"+backupFound.packageName+".apk");
+        proces->start("\"" + adb + "\"", QStringList()<<" shell ls  /sdcard/QtADB/backup/"+backupFound.packageName+".apk");
         proces->waitForFinished(-1);
         output = proces->readAll();
         output.remove(QString("%1[0m").arg( QChar( 0x1b )));
@@ -1058,7 +1058,7 @@ void ThreadBackups::run()
             backupFound.withApk = false;
         else
             backupFound.withApk = true;
-        proces->start("\"" + this->sdk + "\"adb shell ls /sdcard/QtADB/backup/"+backupFound.packageName+".DATA.tar.gz");
+        proces->start("\"" + adb + "\"", QStringList()<<" shell ls /sdcard/QtADB/backup/"+backupFound.packageName+".DATA.tar.gz");
         proces->waitForFinished(-1);
         output = proces->readAll();
         output.remove(QString("%1[0m").arg( QChar( 0x1b )));
@@ -1081,21 +1081,21 @@ void ThreadApps::run()
     App app;
 
     QProcess proces;
-    QProcess *aapt = new QProcess;
+    QProcess *aapt_proc = new QProcess;
     QSettings settings;
     QString output, tmp, sdFolder;
     QStringList lines, split;
-    aapt->setProcessChannelMode(QProcess::MergedChannels);
-    aapt->start("\"" + this->sdk + "\"aapt");
-    if (aapt->error() == QProcess::FailedToStart)
+    aapt_proc->setProcessChannelMode(QProcess::MergedChannels);
+    aapt_proc->start(QString("\"") + aapt+ "\"", QStringList());
+    if (aapt_proc->error() == QProcess::FailedToStart)
     {
         emit this->missingAapt();
         return;
     }
-    delete aapt;
+    delete aapt_proc;
     if (this->systemApps)
     {
-        proces.start("\"" + this->sdk + "\"adb shell busybox ls -l /system/app/*.apk");
+        proces.start("\"" + adb + "\"", QStringList()<<" shell busybox ls -l /system/app/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps system - "<<output;
@@ -1126,7 +1126,7 @@ void ThreadApps::run()
     }
     else
     {
-        proces.start("\"" + this->sdk + "\"adb shell busybox ls -l /data/app/*.apk");
+        proces.start("\"" + adb + "\"", QStringList()<<" shell busybox ls -l /data/app/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps data - "<<output;
@@ -1154,7 +1154,7 @@ void ThreadApps::run()
                 appList.append(app);
             }
         }
-        proces.start("\"" + this->sdk + "\"adb shell busybox ls -l /data/app-private/*.apk");
+        proces.start("\"" + adb + "\"", QStringList()<<" shell busybox ls -l /data/app-private/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps data - "<<output;
@@ -1182,7 +1182,7 @@ void ThreadApps::run()
                 appList.append(app);
             }
         }
-        proces.start("\"" + this->sdk + "\"adb shell busybox ls -l /mnt/asec/*/*.apk");
+        proces.start("\"" + adb + "\"", QStringList()<<" shell busybox ls -l /mnt/asec/*/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps sd - "<<output;
@@ -1211,7 +1211,7 @@ void ThreadApps::run()
                 appList.append(app);
             }
         }
-//        proces.start("\"" + this->sdk + "\"adb shell busybox mount");
+//        proces.start("\"" + adb + "\"", QStringList()<<" shell busybox mount");
 //        proces.waitForFinished(-1);
 //        tmp = proces.readAll();
 //        qDebug()<<"Get apps mount - "<<tmp;
@@ -1232,7 +1232,7 @@ void ThreadApps::run()
         {
             if (!sdFolder.endsWith("/",Qt::CaseInsensitive))
                 sdFolder.append("/");
-            proces.start("\"" + this->sdk + "\"adb shell busybox ls -l "+ sdFolder + "/*/*.apk");
+            proces.start("\"" + adb + "\"", QStringList()<<" shell busybox ls -l "+ sdFolder + "/*/*.apk");
             proces.waitForFinished(-1);
             output.append(proces.readAll());
             qDebug()<<"Get apps sd - "<<output;
@@ -1270,9 +1270,9 @@ void ThreadApps::run()
     QProcess zip;
     QString temp;
     zip.setProcessChannelMode(QProcess::MergedChannels);
-    zip.start("\""+sdk+"\""+"adb shell mkdir /sdcard/QtADB");
+    zip.start("\""+adb + "\"", QStringList()<<" shell mkdir /sdcard/QtADB");
     zip.waitForFinished(-1);
-    zip.start("\""+sdk+"\""+"adb shell mkdir /sdcard/QtADB/tmp");
+    zip.start("\""+adb + "\"", QStringList()<<" shell mkdir /sdcard/QtADB/tmp");
     zip.waitForFinished(-1);
     settings.beginGroup("apps");
     QStringList settingsList=settings.childKeys();
@@ -1295,13 +1295,13 @@ void ThreadApps::run()
             (settings.value("apps/" + app.packageName + "/date", "").toString() != app.date))
         {
             qDebug()<<"Apps needs to pull apk";
-            zip.start("\""+sdk+"\""+"adb pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
+            zip.start("\""+adb + "\"", QStringList()<<" pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
             zip.waitForFinished(-1);
             temp = zip.readAll();
             qDebug()<<"Apps copy - "<<temp;
             if (temp.contains("does not exist") || temp.contains("Android Debug Bridge"))
                 continue;
-            zip.start("\""+sdk+"\"aapt d badging \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
+            zip.start("\""+aapt+"\"", QStringList()<<" d badging \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
             zip.waitForReadyRead(-1);
             temp=zip.readAll();
             qDebug()<<"Apps aapt - "<<temp;
@@ -1377,7 +1377,7 @@ void ThreadApps::run()
             qDebug()<<"Apps there is missing icon i settings";
             if (!fileTmpList.contains(app.appFileName))
             {
-                zip.start("\""+sdk+"\""+"adb pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
+                zip.start("\""+adb + "\"", QStringList()<<" pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
                 zip.waitForFinished(-1);
                 QString out;
                 out = zip.readAll();
@@ -1472,7 +1472,7 @@ App * AppWidget::getAppInfo(QString filePath)
 
     QFileInfo *plik = new QFileInfo(filePath);
     settings.beginGroup("apps");
-    proces->start("\""+sdk+"\"aapt d badging \"" + filePath + "\"");
+    proces->start("\""+aapt+"\"", QStringList()<<" d badging \"" + filePath + "\"");
     proces->waitForReadyRead(-1);
     temp=proces->readAll();
     if (temp.contains("ERROR"))
@@ -1697,11 +1697,9 @@ quint16 AppWidget::qbytearrayToInt16(QByteArray array)
 
 void AppWidget::openMarket()
 {
-    QString sdk;
     QSettings settings;
-    sdk = settings.value("sdkPath").toString();
     QProcess proc;
-    proc.start("\"" + sdk + "\"adb shell am start -a android.intent.action.VIEW -d market://details?id="
+    proc.start("\"" + adb + "\"", QStringList()<<" shell am start -a android.intent.action.VIEW -d market://details?id="
                + this->ui->editAppsPackageName->text() + " -n com.android.vending/.AssetInfoActivity");
     proc.waitForFinished(-1);
 }

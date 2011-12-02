@@ -22,6 +22,13 @@
 #include "../classes/application.h"
 #include "ui_mainwindow.h"
 
+extern QProcess *adbProces;
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QString busybox;
+extern QString fastboot;
+
 MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
@@ -501,7 +508,7 @@ void MainWindow::restartInWifi()
             connect->setProcessChannelMode(QProcess::MergedChannels);
             connect->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList()<<"tcpip " << this->portNumber);
             if(!connect->waitForStarted()){
-                qDebug()<<"adb error - "<<adbProces->errorString().toStdString().c_str();
+                qDebug()<<" error - "<<adbProces->errorString().toStdString().c_str();
                 QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("error"), QObject::tr("It seems that adb is not working properly"), QMessageBox::Ok);
                 msgBox->exec();
                 delete msgBox;

@@ -44,7 +44,6 @@ class ThreadCopy : public QThread
     Q_OBJECT
 public:
     void run();
-    QString sdk;
     QString sourcePath;
     QString targetPath;
     QList<File> *fileList;
@@ -62,7 +61,6 @@ class ThreadProgress : public QThread
     Q_OBJECT
 public:
     void run();
-    QString sdk;
     QString filePath;
     int mode;
     int maxSize;
@@ -85,8 +83,8 @@ public:
         AppsToComputer = 3
     };
 
-    dialogKopiuj(QWidget *parent, QList<File> * fileList, QString sdk, int, QString sourcePath, QString targetPath);
-    dialogKopiuj(QWidget *parent, QList<App> * appList, QString sdk, int, QString targetPath);
+    dialogKopiuj(QWidget *parent, QList<File> * fileList, int, QString sourcePath, QString targetPath);
+    dialogKopiuj(QWidget *parent, QList<App> * appList, int, QString targetPath);
     ~dialogKopiuj();
 
     QList<QTableWidgetItem*> lista;

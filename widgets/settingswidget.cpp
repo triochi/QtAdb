@@ -21,6 +21,15 @@
 #include "settingswidget.h"
 #include "ui_settingswidget.h"
 
+
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
+
+
 SettingsWidget::SettingsWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::SettingsWidget)
@@ -434,7 +443,6 @@ void SettingsWidget::getSettings()
 //    this->phonePath = settings->value("phonePath", "/").toString();
 //    this->computerPath = settings->value("computerPath", "/").toString();
 
-    this->sdkPath = settings->value("sdkPath").toString();
     this->sdFolder = settings->value("sdFolder","empty").toString();
     if (this->sdFolder == "empty")
     {
@@ -801,7 +809,7 @@ void SettingsWidget::detectSdExtFolder()
         QString output;
         this->sdFolder = "";
 
-        shell->start("\"" + this->sdkPath + "\"adb shell 'busybox stat /data/app |grep \"File\"'");
+        shell->start("\"" + adb + "\"", QStringList()<<" shell 'busybox stat /data/app |grep \"File\"'");
         shell->waitForFinished();
         output = shell->readAll();
         if (output.contains("->"))
@@ -812,7 +820,7 @@ void SettingsWidget::detectSdExtFolder()
         }
         else
         {
-            shell->start("\"" + this->sdkPath + "\"adb shell busybox mount");
+            shell->start("\"" + adb + "\"", QStringList()<< " shell busybox mount");
             shell->waitForFinished();
             output = shell->readAll();
             if (output.contains("ext"))
@@ -843,7 +851,6 @@ void SettingsWidget::detectSdExtFolder()
 
 void SettingsWidget::on_pushButtonChangeSDKPath_pressed()
 {
-    QString sdk;
     QString tmp;
     bool sdkOk = false;
 
@@ -876,6 +883,6 @@ void SettingsWidget::on_pushButtonChangeSDKPath_pressed()
     {
 	QSettings settings;
 	settings.setValue("sdkPath",sdk);
-	this->sdkPath = sdk;
+
     }
 }

@@ -40,7 +40,6 @@ class ThreadBackup : public QThread
     Q_OBJECT
 public:
     void run();
-    QString sdk;
     bool withData;
     bool withApk;
     QList<App> appList;
@@ -54,7 +53,6 @@ class ThreadRestore : public QThread
     Q_OBJECT
 public:
     void run();
-    QString sdk;
     bool withData;
     bool withApk;
     QList<App> appList;
@@ -68,7 +66,6 @@ class ThreadInstall : public QThread
     Q_OBJECT
 public:
     void run();
-    QString sdk;
     QList<App> appList;
     bool reinstall;
 signals:
@@ -81,7 +78,6 @@ class ThreadUninstall : public QThread
     Q_OBJECT
 public:
     void run();
-    QString sdk;
     QList<App> appList;
     bool system;
     bool keepData;
@@ -128,7 +124,6 @@ private:
     Ui::appDialog *ui;
     QList<App> appList;
     int mode, operation;
-    QString sdk;
     int licznik;
     ThreadBackup *threadBackup;
     ThreadRestore *threadRestore;

@@ -52,7 +52,6 @@ private:
     dialogKopiuj *dialog;
 
     QString romFileName;
-    QString sdk;
 
     bool recoverySDmounted;
 

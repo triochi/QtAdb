@@ -39,7 +39,6 @@ protected:
 
 private:
     QProcess *proces;
-    QString sdk;
     LogcatModel *logcatModel;
     SortFilterProxyModel *filterModel;
     void executeBufferLimitation();

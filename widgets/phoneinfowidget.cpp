@@ -21,6 +21,15 @@
 #include "phoneinfowidget.h"
 #include "ui_phoneinfowidget.h"
 
+
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
+
+
 QString PhoneInfoWidget::humanReadableSize(QString size)
 {
     long double sizeTmp = 0.0;
@@ -59,8 +68,6 @@ PhoneInfoWidget::PhoneInfoWidget(QWidget *parent, QString serialNumber) :
     this->setLayout(ui->layoutPhoneInfo);
     ui->lineEditSerialNumber->setText(serialNumber);
 
-    QSettings settings;
-    this->sdk=settings.value("sdkPath").toString();
     this->timer.start(60000);
 
     connect(&this->timer, SIGNAL(timeout()), this , SLOT(showPhoneInfo()));
@@ -89,7 +96,7 @@ void PhoneInfoWidget::showPhoneInfo()
         QString data,tmp="1";
         QStringList list;
         QProcess *proces=new QProcess;
-        proces->start("\""+sdk+"\""+"adb shell getprop");
+        proces->start("\""+adb + "\"", QStringList()<<" shell getprop");
         while (!tmp.isEmpty())
         {
             proces->waitForReadyRead(-1);
@@ -145,7 +152,7 @@ void PhoneInfoWidget::showPhoneInfo()
 
 
 
-        proces->start("\""+sdk+"\""+"adb shell busybox cat /sys/class/power_supply/battery/capacity");
+        proces->start("\""+adb + "\"", QStringList()<<" shell busybox cat /sys/class/power_supply/battery/capacity");
         proces->waitForReadyRead(-1);
         tmp=proces->readLine();
         ui->progressBarBatteryLevel->setValue(tmp.toInt());
@@ -154,7 +161,7 @@ void PhoneInfoWidget::showPhoneInfo()
         QString sdFolder;
 //        QStringList lines, split;
 //        sdFolder.clear();
-//        proces->start("\"" + this->sdk + "\"adb shell busybox mount");
+//        proces->start("\"" + adb + "\"", QStringList()<<" shell busybox mount");
 //        proces->waitForFinished(-1);
 //        tmp = proces->readAll();
 //        qDebug()<<"Get phone info mount - "<<tmp;
@@ -183,7 +190,7 @@ void PhoneInfoWidget::showPhoneInfo()
             if (sdFolder.endsWith("/",Qt::CaseInsensitive))
                 sdFolder.chop(1);
         }
-        proces->start("\""+sdk+"\""+"adb shell busybox df");
+        proces->start("\""+adb + "\"", QStringList()<<" shell busybox df");
         tmp.clear();
 
         while (true)

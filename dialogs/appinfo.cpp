@@ -21,6 +21,15 @@
 #include "appinfo.h"
 #include "ui_appinfo.h"
 
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
+
+
+
 appInfo::appInfo(QWidget *parent, App *app) :
     QDialog(parent),
     ui(new Ui::appInfo)
@@ -45,11 +54,9 @@ appInfo::appInfo(QWidget *parent, App *app) :
     this->appsDialog = NULL;
     this->reinstall = false;
 
-    QString sdk;
     QSettings settings;
-    sdk = settings.value("sdkPath").toString();
     QProcess proc;
-    proc.start("\"" + sdk + "\"adb shell busybox ls /data/app/"
+    proc.start("\"" + adb + "\"", QStringList()<<" shell busybox ls /data/app/"
                + this->app->packageName + "*");
     proc.waitForFinished(-1);
     QString output = proc.readAll();
@@ -94,7 +101,7 @@ appInfo::appInfo(App *app) :
     QSettings settings;
     sdk = settings.value("sdkPath").toString();
     QProcess proc;
-    proc.start("\"" + sdk + "\"adb shell busybox ls /data/app/"
+    proc.start("\"" + adb + "\"", QStringList()<<" shell busybox ls /data/app/"
                + this->app->packageName + "*");
     proc.waitForFinished(-1);
     QString output = proc.readAll();
@@ -157,7 +164,7 @@ void appInfo::openMarket()
     QSettings settings;
     sdk = settings.value("sdkPath").toString();
     QProcess proc;
-    proc.start("\"" + sdk + "\"adb shell am start -a android.intent.action.VIEW -d market://details?id="
+    proc.start("\"" + adb + "\"", QStringList()<<" shell am start -a android.intent.action.VIEW -d market://details?id="
                + this->app->packageName + " -n com.android.vending/.AssetInfoActivity");
     proc.waitForFinished(-1);
 }

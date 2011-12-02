@@ -45,7 +45,6 @@ private slots:
 
 private:
     Ui::PhoneInfoWidget *ui;
-    QString sdk;
     QString humanReadableSize(QString size);
     QTimer timer;
 };

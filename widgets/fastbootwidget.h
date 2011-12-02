@@ -36,7 +36,6 @@ public:
     explicit FastbootWidget(QWidget *parent = 0, Phone *phone = NULL);
     ~FastbootWidget();
 
-    QString sdk;
 
 //protected:
 //    void changeEvent(QEvent *e);
