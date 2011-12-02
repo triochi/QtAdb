@@ -21,6 +21,10 @@
 #include "filewidget.h"
 #include "ui_filewidget.h"
 
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+
 quint32 qbytearrayToInt32(QByteArray array)
 {
     QDataStream stream(array);
@@ -241,7 +245,7 @@ FileWidget::FileWidget(QWidget *parent, SettingsWidget *settings) :
 
     this->sdk = this->settings->sdkPath;
 
-    this->phone=new Phone(this->sdk,true);
+    this->phone=new Phone(this->sdk, this->adb, this->aapt,true);
 //    connect(this->phone, SIGNAL(signalConnectionChanged(int)), this, SIGNAL(phoneConnectionChanged(int)));
     this->phone->setPath(this->settings->phonePath);
     this->computer->setPath(this->settings->computerPath);
@@ -265,7 +269,7 @@ FileWidget::FileWidget(QWidget *parent, SettingsWidget *settings) :
     this->leftTableView->horizontalHeader()->setVisible(this->settings->showComputerColumnsHeaders);
     this->rightTableView->horizontalHeader()->setVisible(this->settings->showPhoneColumnsHeaders);
 
-    this->phoneLeft=new Phone(sdk,false);
+    this->phoneLeft=new Phone(sdk, adb, aapt,false);
     this->phoneLeft->setPath(this->settings->phonePath);
     this->phoneLeft->setHiddenFiles(this->settings->phoneHiddenFiles);
 
@@ -1630,6 +1634,8 @@ void FileWidget::on_toolButtonFind_pressed()
         this->findModel->clear();
     this->rightTableView->setModel(this->findModel);
     threadFind.sdk=this->phone->getSdk();
+    threadFind.adb=this->phone->getAdb();
+    threadFind.aapt=this->phone->getAapt();
     threadFind.fileName=ui->rightFileNameFilter->text();
     threadFind.path=this->phone->getPath();
     threadFind.start();
@@ -1809,9 +1815,9 @@ void ThreadFind::run()
     QString output;
     QString path, file;
     QStringList strList;
-    proces->start("\""+this->sdk+"\"adb shell busybox find "+this->path+" -iname \'*"+this->fileName+"*\'");
+    proces->start("\""+this->adb+"\"" , QStringList() <<"shell" <<"busybox" << " find " << this->path <<" -iname" <<"\'*"+this->fileName+"*\'");
 
-    Phone phone(this->sdk,false);
+    Phone phone(this->sdk, this->adb, this->aapt, false);
     phone.setConnectionState(DEVICE);
 
     do

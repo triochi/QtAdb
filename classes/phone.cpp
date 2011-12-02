@@ -22,6 +22,10 @@
 #include <QSettings>
 #include <QTextCodec>
 
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
 
 void ConnectionThread::run()
 {
@@ -89,15 +93,14 @@ void ConnectionThread::run()
     }
 }
 
-Phone::Phone(QString sdk,bool isThreadNecessary)
+Phone::Phone(bool isThreadNecessary)
 {
     QProcess fastboot;
-    this->sdk=sdk;
     this->codec = QTextCodec::codecForLocale();
 
-    qDebug()<<"Phone::Phone - sdk="<<this->sdk;
+    qDebug()<<"Phone::Phone - sdk="<<sdk;
     fastboot.setProcessChannelMode(QProcess::MergedChannels);
-    fastboot.start("\"" + this->sdk + "\"adb remount");
+    fastboot.start("\"" + sdk + "\"adb remount");
     fastboot.waitForFinished();
     qDebug()<<"Phone::Phone - adb start-server: "<<fastboot.readAll();
     if (isThreadNecessary)
@@ -187,22 +190,39 @@ QList<File> *Phone::getFileList()
     {
         return NULL;
     }
+    QString outputLine="1";
+    QStringList outputLines;
 
-    QProcess *phone=new QProcess(this);
-    phone->setProcessChannelMode(QProcess::MergedChannels);
     QString command;
+    QString busyBoxStr;
+    command =  command="\""+this->sdk+"adb\" shell busybox ";
+    command = QDir::toNativeSeparators(command);
+    qDebug()<<"Phone::getFileList() - "<<command;
+    adbProces->start(command);
+    if (!phone->waitForStarted()) {
+        QMessageBox::critical(0,"Error","Error starting command: " + command );
+    } else {
+        adbProces->waitForFinished(-1);
+        outputLine=adbProces->readAll();
+        outputLines=outputLine.split("\n");
+        if (outputLines.first().contains("not")){
+            busyBoxStr = "";
+        } else {
+            busyBoxStr = "busybox";
+        }
+    }
+
 
     qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss");
     qDebug()<<"Phone::getFileList() - "<<this->getPath();
     if (this->hiddenFiles)
-        command="\""+this->sdk+"\""+"adb shell \"busybox ls -l -a \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\'\"";
+        command="\""+this->sdk+"adb\" shell \""+ busyBoxStr +" ls -l -a \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\'\"";
     else
-        command="\""+this->sdk+"\""+"adb shell \"busybox ls -l \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\'\"";
+        command="\""+this->sdk+"adb\" shell \""+ busyBoxStr +" ls -l \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\'\"";
 
     qDebug()<<"Phone::getFileList() - "<<command;
-    phone->start(command);
-    QString outputLine="1";
-    QStringList outputLines;
+    adbProces->start(command);
+
 
 //    while (!outputLine.isEmpty())
 //    {
@@ -212,13 +232,13 @@ QList<File> *Phone::getFileList()
 //        qDebug()<<"Phone::getFileList() - "<<outputLine;
 //        outputLines.append(outputLine);
 //    }
-    phone->waitForFinished(-1);
-    outputLine=phone->readAll();
+    adbProces->waitForFinished(-1);
+    outputLine=adbProces->readAll();
     outputLines=outputLine.split("\n");
     if (outputLines.first().contains("No such file or directory")||outputLines.first().contains("cannot")||outputLines.first().contains("Not a directory"))
     {
         qDebug()<<"Phone::getFileList() - "<<outputLine;
-        phone->terminate();
+        adbProces->terminate();
         delete phone;
         return NULL;
     }
@@ -362,10 +382,10 @@ QList<File> *Phone::getFileList()
                 fileList->append(tmpFile);
         }
     }
-    phone->close();
+    adbProces->close();
     qDebug()<<"Phone::getFileList() - skonczylem analizowac pliki";
 
-    phone->terminate();
+    adbProces->terminate();
     delete provider;
     delete phone;
     return fileList;
@@ -380,34 +400,46 @@ QList<File> *Phone::getFileList(QString filter)
     {
         return NULL;
     }
+    QString outputLine="1";
+    QStringList outputLines;
 
-    QProcess *phone=new QProcess(this);
-    phone->setProcessChannelMode(QProcess::MergedChannels);
     QString command;
+
+    QString busyBoxStr;
+    command =  command="\""+this->sdk+"\""+"adb shell \"busybox ls";
+    qDebug()<<"Phone::getFileList() - "<<command;
+    adbProces->start(command);
+    adbProces->waitForFinished(-1);
+    outputLine=adbProces->readAll();
+    outputLines=outputLine.split("\n");
+    if (outputLines.first().contains("not")){
+        busyBoxStr = "";
+    } else {
+        busyBoxStr = "busybox";
+    }
 
     qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss");
     qDebug()<<"Phone::getFileList() - "<<this->getPath();
     if (this->hiddenFiles)
-        command="\""+this->sdk+"\""+"adb shell \"busybox ls -l -a \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\' | grep \'" + filter + "\'\"";
+        command="\""+this->sdk+"\""+"adb shell \"" + busyBoxStr + " ls -l -a \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\' | grep \'" + filter + "\'\"";
     else
-        command="\""+this->sdk+"\""+"adb shell \"busybox ls -l \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\' | grep \'" + filter + "\'\"";
+        command="\""+this->sdk+"\""+"adb shell \"" + busyBoxStr + " ls -l \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\' | grep \'" + filter + "\'\"";
 
     qDebug()<<"Phone::getFileList() - "<<command;
-    phone->start(command);
-    QString outputLine="1";
-    QStringList outputLines;
+    adbProces->start(command);
+
 
     while (!outputLine.isEmpty())
     {
         qApp->processEvents();
-        phone->waitForReadyRead(-1);
+        adbProces->waitForReadyRead(-1);
         outputLine = phone->readLine();
         qDebug()<<"Phone::getFileList() - "<<outputLine;
         outputLines.append(outputLine);
     }
     if (outputLines.first().contains("No such file or directory")||outputLines.first().contains("cannot")||outputLines.first().contains("Not a directory"))
     {
-        phone->terminate();
+        adbProces->terminate();
         delete phone;
         return NULL;
     }
@@ -552,12 +584,11 @@ QList<File> *Phone::getFileList(QString filter)
                 fileList->append(tmpFile);
         }
     }
-    phone->close();
+    adbProces->close();
     qDebug()<<"Phone::getFileList() - skonczylem analizowac pliki";
 
-    phone->terminate();
+    adbProces->terminate();
 //    delete provider;
-    delete phone;
     return fileList;
 }
 
@@ -565,35 +596,46 @@ FileList *Phone::getStaticFileList(QString path, QString sdk, bool hiddenFiles)
 {
     QTextCodec *codec = QTextCodec::codecForLocale();
     FileList *fileList = new FileList;
+    QString outputLine="1";
+    QStringList outputLines;
 
-    QProcess *phone=new QProcess;
-    phone->setProcessChannelMode(QProcess::MergedChannels);
     QString command;
+
+    QString busyBoxStr;
+    command =  command="\"" + sdk+"\""+"adb shell \"busybox ls";
+    qDebug()<<"Phone::getFileList() - "<<command;
+    adbProces->start(command);
+    adbProces->waitForFinished(-1);
+    outputLine=adbProces->readAll();
+    outputLines=outputLine.split("\n");
+    if (outputLines.first().contains("not")){
+        busyBoxStr = "";
+    } else {
+        busyBoxStr = "busybox";
+    }
 
     qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss");
     qDebug()<<"Phone::getFileList() - "<<path;
     if (hiddenFiles)
-        command="\""+sdk+"\""+"adb shell \"busybox ls -l -a \'"+codec->toUnicode(path.toAscii())+"\'\"";
+        command="\""+sdk+"\""+"adb shell \"" + busyBoxStr + " ls -l -a \'"+codec->toUnicode(path.toAscii())+"\'\"";
     else
-        command="\""+sdk+"\""+"adb shell \"busybox ls -l \'"+codec->toUnicode(path.toAscii())+"\'\"";
+        command="\""+sdk+"\""+"adb shell \"" + busyBoxStr + " ls -l \'"+codec->toUnicode(path.toAscii())+"\'\"";
 
     qDebug()<<"Phone::getFileList() - "<<command;
-    phone->start(command);
-    QString outputLine="1";
-    QStringList outputLines;
+    adbProces->start(command);
+
 
     while (!outputLine.isEmpty())
     {
-        phone->waitForReadyRead(-1);
-        outputLine = phone->readLine();
+        adbProces->waitForReadyRead(-1);
+        outputLine = adbProces->readLine();
         qDebug()<<"Phone::getFileList() - "<<outputLine;
         outputLines.append(outputLine);
     }
     if (outputLines.first().contains("No such file or directory")||outputLines.first().contains("cannot")||outputLines.first().contains("Not a directory"))
     {
         fileList->name.append("error");
-        phone->terminate();
-        delete phone;
+        adbProces->terminate();
         return fileList;
     }
 
@@ -636,7 +678,7 @@ FileList *Phone::getStaticFileList(QString path, QString sdk, bool hiddenFiles)
                 fileList->type.append("device");
         }
     }
-    phone->close();
+    adbProces->close();
     qDebug()<<"Phone::getFileList() - skonczylem analizowac pliki";
     if (fileList->name.count()>0)
     {
@@ -663,8 +705,7 @@ FileList *Phone::getStaticFileList(QString path, QString sdk, bool hiddenFiles)
         }
     }
     qDebug()<<"Phone::getFileList() - . i .. usuniete, koncze funkcje";
-    phone->terminate();
-    delete phone;
+    adbProces->terminate();
     return fileList;
 }
 
@@ -681,29 +722,21 @@ QString Phone::getPath()
         return this->path + "/";
 }
 
-QString Phone::getSdk()
-{
-    return this->sdk;
-}
-
 bool Phone::makeDir(QString newDir)
 {
     if ((this->getConnectionState() != RECOVERY) && (this->getConnectionState() != DEVICE))
         return false;
 
-    QProcess *phone=new QProcess(this);
-    phone->setProcessChannelMode(QProcess::MergedChannels);
     QString command;
 
     newDir.prepend(this->getPath());
     command="\""+this->sdk+"\""+"adb shell busybox mkdir \""+this->codec->toUnicode(newDir.toUtf8())+"\"";
-    phone->start(command);
+    adbProces->start(command);
 
-    phone->waitForReadyRead(-1);
-    QString outputLine=phone->readLine();
+    adbProces->waitForReadyRead(-1);
+    QString outputLine=adbProces->readLine();
 
-    phone->terminate();
-    delete phone;
+    adbProces->terminate();
 
     if (outputLine.contains(QRegExp("can.+t create directory")))
         return false;
@@ -800,19 +833,16 @@ bool Phone::remove(QString name)
 //    if ((this->getConnectionState() != RECOVERY) && (this->getConnectionState() != DEVICE))
 //        return false;
 
-    QProcess *phone=new QProcess(this);
-    phone->setProcessChannelMode(QProcess::MergedChannels);
     QString command;
 
     command="\""+this->sdk+"\""+"adb shell busybox rm -r "+"\""+this->codec->toUnicode(this->getPath().toUtf8())+
             this->codec->toUnicode(name.toUtf8())+"\"";
-    phone->start(command);
+    adbProces->start(command);
 
-    phone->waitForReadyRead(-1);
-    QString outputLine=phone->readLine();
+    adbProces->waitForReadyRead(-1);
+    QString outputLine=adbProces->readLine();
 
-    phone->terminate();
-    delete phone;
+    adbProces->terminate();
 
     if (outputLine.contains("cannot remove"))
         return false;
@@ -824,19 +854,16 @@ bool Phone::rename(QString oldName, QString newName)
     if ((this->getConnectionState() != RECOVERY) && (this->getConnectionState() != DEVICE))
         return false;
 
-    QProcess *phone=new QProcess(this);
-    phone->setProcessChannelMode(QProcess::MergedChannels);
     QString command;
 
     command="\""+this->sdk+"\""+"adb shell busybox mv \""+this->codec->toUnicode(this->getPath().toUtf8())+this->codec->toUnicode(oldName.toUtf8())+
             "\" \""+this->codec->toUnicode(this->getPath().toUtf8())+this->codec->toUnicode(newName.toUtf8())+"\"";
-    phone->start(command);
+    adbProces->start(command);
 
-    phone->waitForReadyRead(-1);
-    QString outputLine=phone->readLine();
+    adbProces->waitForReadyRead(-1);
+    QString outputLine=adbProces->readLine();
 
-    phone->terminate();
-    delete phone;
+    adbProces->terminate();
 
     if (outputLine.contains("cannot rename"))
         return false;
@@ -845,67 +872,53 @@ bool Phone::rename(QString oldName, QString newName)
 
 void Phone::adbPowerOff()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"adb shell shutdown");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+sdk+"\"adb shell shutdown");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
 }
 
 void Phone::adbReboot()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"adb shell reboot");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+sdk+"\"adb shell reboot");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
 }
 
 void Phone::adbRebootBootloader()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"adb shell reboot bootloader");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+sdk+"\"adb shell reboot bootloader");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
 }
 
 void Phone::adbRebootRecovery()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"adb shell reboot recovery");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+sdk+"\"adb shell reboot recovery");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
 }
 
 void Phone::fastbootPowerOff()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"fastboot oem powerdown");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+sdk+"\"fastboot oem powerdown");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
     this->slotConnectionChanged(FASTBOOT, this->serialNumber);
 }
 
 void Phone::fastbootReboot()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"fastboot reboot");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+sdk+"\"fastboot reboot");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
     this->slotConnectionChanged(FASTBOOT, this->serialNumber);
 }
 
 void Phone::fastbootRebootBootloader()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"fastboot reboot-bootloader");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+sdk+"\"fastboot reboot-bootloader");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
     this->slotConnectionChanged(FASTBOOT, this->serialNumber);
 }
 

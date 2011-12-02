@@ -21,6 +21,10 @@
 #include "recoverywidget.h"
 #include "ui_recoverywidget.h"
 
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+
 RecoveryWidget::RecoveryWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::RecoveryWidget)

@@ -24,7 +24,14 @@
 ////////////////////////////////////////
 #include <QtDebug>
 #include <QFile>
+#include <QProcess>
 #include <QTextStream>
+
+QProcess *adbProces;
+QString sdk;
+QString adb;
+QString aapt;
+QString busybox;
 
 void myMessageHandler(QtMsgType type, const char *msg)
 {
@@ -60,12 +67,13 @@ void myMessageHandler(QtMsgType type, const char *msg)
 
 int main(int argc, char *argv[])
 {
+
     QCoreApplication::setOrganizationName("Bracia");
     QCoreApplication::setApplicationName("QtADB");
     QCoreApplication::setApplicationVersion("0.8.1");
     QCoreApplication::setOrganizationDomain("http://qtadb.com");
     Application a(argc, argv);
-    qInstallMsgHandler(myMessageHandler);
+//    qInstallMsgHandler(myMessageHandler);
     a.loadTranslations(":/lang");
     a.loadTranslations(qApp->applicationDirPath());
     a.setQuitOnLastWindowClosed(true);
@@ -86,8 +94,9 @@ int main(int argc, char *argv[])
 //    qDebug()<<"system: "<<QSysInfo::windowsVersion();
 //    qDebug()<<"bits: "<<QSysInfo::WordSize;
     QSettings settings;
-    QString sdk;
     sdk = settings.value("sdkPath").toString();
+    adb = settings.value("adbExecutable").toString();
+    aapt = settings.value("aaptExecutable").toString();
 
 
     QString locale = QLocale::system().name().left(2);
@@ -115,16 +124,18 @@ int main(int argc, char *argv[])
     }
 
     bool sdkOk = false;
+    bool adbOk = false;
+    bool aaptOk = false;
     do{
-        QString tmp;
+        QFileInfo tmp;
         if (sdk.isEmpty())
         {
             QDir checkSDK(QDir::currentPath());
             QFileInfoList list=checkSDK.entryInfoList();
             while(list.length()>0)
             {
-                tmp = list.takeFirst().fileName();
-                if (tmp.contains("adb"))
+                tmp = list.takeFirst();
+                if (tmp.fileName().contains("adb"))
                 {
                     sdk = QDir::currentPath();
                     sdk.append("/");
@@ -145,13 +156,18 @@ int main(int argc, char *argv[])
             QFileInfoList list=checkSDK.entryInfoList();
             while(list.length()>0)
             {
-                tmp = list.takeFirst().fileName();
-                if (tmp.contains("adb"))
+                tmp = list.takeFirst();
+                if (tmp.fileName().contains("adb"))
                 {
-                    sdkOk=true;
-                    break;
+                    adbOk = true;
+                    adb = tmp.canonicalFilePath();
+                } else  if (tmp.fileName().contains("aapt"))
+                {
+                    aaptOk = true;
+                    aapt = tmp.canonicalFilePath();
                 }
             }
+            sdkOk = adbOk && aaptOk;
         }
         if (!sdkOk)
         {
@@ -178,27 +194,35 @@ int main(int argc, char *argv[])
     }while(true);
     if (sdkOk){
         settings.setValue("sdkPath", sdk);
-        QProcess proces;
+        settings.setValue("adbExecutable", adb);
+        settings.setValue("aaptExecutable", aapt);
+        adbProces = new QProcess(&a);
+        adbProces->setObjectName("adb process");
+        adbProces->setReadChannel(QProcess::StandardOutput);
+        adbProces->setProcessChannelMode(QProcess::MergedChannels);
+        adbProces->setWorkingDirectory(sdk);
 //        adbd cannot run as root in production builds
-        proces.setProcessChannelMode(QProcess::MergedChannels);
-        proces.start("\"" + sdk + "\"adb version");
-        proces.waitForFinished(-1);
-        QString tmp = proces.readAll();
-        qDebug()<<"adb version - "<<tmp;
-        if (proces.exitCode() != 0)
+        adbProces->start("\"" + adb + "\"",QStringList()<< "version");
+        if (!adbProces->waitForStarted(5000)){
+            QMessageBox::critical(0,"Error", "Error strarting adb. This is fatal!\n" );
+            exit(0);
+        }
+        adbProces->waitForFinished(-1);
+        QString tmp = adbProces->readAll();
+        qDebug()<<"adb version - "<<tmp.toStdString().c_str();
+        if (adbProces->exitCode() != 0)
         {
-            qDebug()<<"adb error - "<<proces.errorString();
+            qDebug()<<"adb error - "<<adbProces->errorString().toStdString().c_str();
             QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("error"), QObject::tr("It seems that adb is not working properly"), QMessageBox::Ok);
             msgBox->exec();
             delete msgBox;
             return 1;
         }
 //        adbd cannot run as root in production builds
-        proces.setProcessChannelMode(QProcess::MergedChannels);
-        proces.start("\"" + sdk + "\"adb root");
-        proces.waitForFinished(-1);
-        tmp = proces.readAll();
-        qDebug()<<"adb root - "<<tmp;
+        adbProces->start("\"" + adb + "\"", QStringList() << "root");
+        adbProces->waitForFinished(-1);
+        tmp = adbProces->readAll();
+        qDebug()<<"adb root - "<<tmp.toStdString().c_str();
 
         if (tmp.contains("adbd cannot run as root in production builds") && !settings.value("disableProductionBuildsMessage",false).toBool())
         {

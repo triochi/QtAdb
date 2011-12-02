@@ -55,7 +55,10 @@ AppWidget::AppWidget(QWidget *parent) :
     this->backupMenu = NULL;
 
     QSettings settings;
-    this->phone = new Phone(settings.value("sdkPath").toString(),false);
+    this->phone = new Phone(settings.value("sdkPath").toString(),
+                            settings.value("adbExecutable").toString(),
+                            settings.value("aaptExecutable").toString(),
+                            false);
     this->sdk = this->phone->getSdk();
 
     qRegisterMetaType<App>("App");

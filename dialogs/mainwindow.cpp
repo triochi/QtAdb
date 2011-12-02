@@ -76,8 +76,8 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWind
 //    this->codec = QTextCodec::codecForLocale();
 
 //    ////Debugging
-    qDebug()<<QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss");
-    qDebug()<<"App version - "<<QCoreApplication::applicationVersion();
+    qDebug()<<QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss").toStdString().c_str();
+    qDebug()<<"App version - "<<QCoreApplication::applicationVersion().toStdString().c_str();
 
 //    this->setWindowTitle("QtADB");
 
@@ -199,7 +199,7 @@ MainWindow::~MainWindow()
     {
 	QProcess *kill=new QProcess;
 	QSettings settings;
-	kill->start("\""+settings.value("sdkPath").toString()+"\"adb kill-server");
+    kill->start("\""+settings.value("adbExecutable").toString()+"\"", QStringList()<< "kill-server");
 	kill->waitForFinished(-1);
 	delete kill;
     }
@@ -247,7 +247,7 @@ void MainWindow::connectWifi()
     QProcess *connect = new QProcess;
     QSettings settings;
     connect->setProcessChannelMode(QProcess::MergedChannels);
-    connect->start("\"" + settings.value("sdkPath").toString() + "\"adb connect " + this->ipAddress + ":" + this->portNumber);
+    connect->start("\"" + settings.value("adbExecutable").toString() + "\"" , QStringList() << "connect " << this->ipAddress + ":" + this->portNumber);
     connect->waitForFinished(2000);
     connect->terminate();
     delete connect;
@@ -499,7 +499,13 @@ void MainWindow::restartInWifi()
         {
             QProcess *connect = new QProcess;
             connect->setProcessChannelMode(QProcess::MergedChannels);
-            connect->start("\"" + settings.value("sdkPath").toString() + "\"adb tcpip " + this->portNumber);
+            connect->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList()<<"tcpip " << this->portNumber);
+            if(!connect->waitForStarted()){
+                qDebug()<<"adb error - "<<adbProces->errorString().toStdString().c_str();
+                QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("error"), QObject::tr("It seems that adb is not working properly"), QMessageBox::Ok);
+                msgBox->exec();
+                delete msgBox;
+            }
             connect->waitForFinished(2000);
             connect->terminate();
             delete connect;
@@ -516,7 +522,7 @@ void MainWindow::restartInUsb()
     QSettings settings;
     QProcess *connect = new QProcess;
     connect->setProcessChannelMode(QProcess::MergedChannels);
-    connect->start("\"" + settings.value("sdkPath").toString() + "\"adb usb");
+    connect->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList() << " usb");
     connect->waitForFinished(2000);
     connect->terminate();
     delete connect;

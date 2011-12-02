@@ -18,6 +18,22 @@
 QT += network
 QT += declarative
 TARGET = QtADB
+DESTDIR = .
+DEFINES += BUILDDIR "build"
+
+    CONFIG(release, debug|release) {
+            OBJECTS_DIR = release/.obj
+            MOC_DIR = release/.moc
+            RCC_DIR = release/.rcc
+            UI_DIR = release/.ui
+        }
+    else {
+            OBJECTS_DIR = release/.obj
+            MOC_DIR = release/.moc
+            RCC_DIR = release/.rcc
+            UI_DIR = release/.ui
+        }
+
 
 TEMPLATE = app
 SOURCES += main.cpp \

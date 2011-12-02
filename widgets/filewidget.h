@@ -43,6 +43,8 @@ public:
     QString path;
     QString fileName;
     QString sdk;
+    QString adb;
+    QString aapt;
 
 signals:
     void foundFile(File);
@@ -96,6 +98,8 @@ private:
     bool rightChangeName;
     bool rightNewDir;
     QString sdk;
+    QString adb;
+    QString aapt;
 
     Phone *phoneLeft;
     QTabBar *rightTabBar;
