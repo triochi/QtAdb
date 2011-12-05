@@ -56,7 +56,7 @@ appInfo::appInfo(QWidget *parent, App *app) :
 
     QSettings settings;
     QProcess proc;
-    proc.start("\"" + adb + "\"", QStringList()<<" shell busybox ls /data/app/"
+    proc.start("\"" + adb + "\" shell " +  busybox + " ls /data/app/"
                + this->app->packageName + "*");
     proc.waitForFinished(-1);
     QString output = proc.readAll();
@@ -101,7 +101,7 @@ appInfo::appInfo(App *app) :
     QSettings settings;
     sdk = settings.value("sdkPath").toString();
     QProcess proc;
-    proc.start("\"" + adb + "\"", QStringList()<<" shell busybox ls /data/app/"
+    proc.start("\"" + adb + "\" shell " + busybox + " ls /data/app/"
                + this->app->packageName + "*");
     proc.waitForFinished(-1);
     QString output = proc.readAll();

@@ -1098,13 +1098,13 @@ void ThreadApps::run()
         proces.start("\"" + adb + "\" shell " + busybox +" ls -l /system/app/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
-        qDebug()<<"Get apps system - "<<output;
+        qDebug()<<"Get apps system - "<<output.toStdString().c_str();
         lines = output.split("\n", QString::SkipEmptyParts);
         while (lines.size() > 0)
         {
             tmp = lines.takeFirst();
             split = tmp.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-            if (split.size() > 7)
+            if ((!busybox.isEmpty())&&(split.size() > 7))
             {
                 app.appSize = split.at(4);
                 tmp = split.at(8);
@@ -1118,6 +1118,22 @@ void ThreadApps::run()
                 app.packageName = settings.value("apps/" + app.appFileName, "").toString();
 
                 tmp = split.at(5) + split.at(6) + split.at(7);
+                app.date = tmp;
+
+                appList.append(app);
+            } else if (split.size() > 5){
+                app.appSize = split.at(3);
+                tmp = split.at(6);
+                tmp.remove(QString("%1[0m").arg( QChar( 0x1b )));
+                tmp.remove(QChar( 0x1b ), Qt::CaseInsensitive);
+                tmp.remove(QRegExp("\\[\\d;\\d+m"));
+                tmp.remove("/system/app/");
+                app.appFileName = tmp;
+                app.appFile = "/system/app/" + tmp;
+                app.location = "system";
+                app.packageName = settings.value("apps/" + app.appFileName, "").toString();
+
+                tmp = split.at(4) + split.at(5);
                 app.date = tmp;
 
                 appList.append(app);

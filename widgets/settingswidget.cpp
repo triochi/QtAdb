@@ -809,7 +809,7 @@ void SettingsWidget::detectSdExtFolder()
         QString output;
         this->sdFolder = "";
 
-        shell->start("\"" + adb + "\"", QStringList()<<" shell 'busybox stat /data/app |grep \"File\"'");
+        shell->start("\"" + adb + "\" shell " + busybox + " stat /data/app |grep \"File\""); //'- remove. Does it work? TEST!!!
         shell->waitForFinished();
         output = shell->readAll();
         if (output.contains("->"))
@@ -820,7 +820,7 @@ void SettingsWidget::detectSdExtFolder()
         }
         else
         {
-            shell->start("\"" + adb + "\"", QStringList()<< " shell busybox mount");
+            shell->start("\"" + adb + "\" shell " + busybox + " mount");
             shell->waitForFinished();
             output = shell->readAll();
             if (output.contains("ext"))

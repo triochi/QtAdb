@@ -96,7 +96,7 @@ void PhoneInfoWidget::showPhoneInfo()
         QString data,tmp="1";
         QStringList list;
         QProcess *proces=new QProcess;
-        proces->start("\""+adb + "\"", QStringList()<<" shell getprop");
+        proces->start("\""+adb + "\" shell getprop");
         while (!tmp.isEmpty())
         {
             proces->waitForReadyRead(-1);
@@ -152,7 +152,7 @@ void PhoneInfoWidget::showPhoneInfo()
 
 
 
-        proces->start("\""+adb + "\"", QStringList()<<" shell busybox cat /sys/class/power_supply/battery/capacity");
+        proces->start("\""+adb + "\" shell "+ busybox +" cat /sys/class/power_supply/battery/capacity");
         proces->waitForReadyRead(-1);
         tmp=proces->readLine();
         ui->progressBarBatteryLevel->setValue(tmp.toInt());
@@ -190,7 +190,7 @@ void PhoneInfoWidget::showPhoneInfo()
             if (sdFolder.endsWith("/",Qt::CaseInsensitive))
                 sdFolder.chop(1);
         }
-        proces->start("\""+adb + "\"", QStringList()<<" shell busybox df");
+        proces->start("\""+adb + "\" shell " + busybox +" df");
         tmp.clear();
 
         while (true)
