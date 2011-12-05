@@ -60,9 +60,10 @@ ShellWidget::ShellWidget(QWidget *parent) :
 
     //qDebug()<<"MainWindow::showPageShell() - process shell is not running, starting...";
     this->process.setProcessChannelMode(QProcess::MergedChannels);
-    this->process.start("\""+adb + "\"", QStringList()<<" shell");
+    this->process.start("\""+adb + "\" shell");
 
     connect(&this->process, SIGNAL(readyRead()), this, SLOT(readFromProcess()));
+    this->insertPlainText("QtADB shell. Type 'qtadb -help' for instructions\n");
 }
 
 ShellWidget::~ShellWidget()

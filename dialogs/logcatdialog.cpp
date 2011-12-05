@@ -64,7 +64,7 @@ LogcatDialog::LogcatDialog(QWidget *parent) :
     this->proces=new QProcess(this);
     proces->setProcessChannelMode(QProcess::MergedChannels);
     this->setWindowTitle("Logcat");
-    this->proces->start("\""+adb + "\"", QStringList()<<" logcat");
+    this->proces->start("\""+adb + "\" logcat");
 
     this->tableView->setModel(this->filterModel);
     this->textBrowser->hide();
@@ -213,7 +213,7 @@ void LogcatDialog::startLogcat()
 {
     if (this->proces->isOpen())
         this->proces->close();
-    this->proces->start("\""+adb + "\"", QStringList()<<" logcat");
+    this->proces->start("\""+adb + "\" logcat");
 }
 
 void LogcatDialog::on_pushButtonClearLogcat_pressed()

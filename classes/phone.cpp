@@ -132,12 +132,12 @@ bool Phone::cd(QString dir)
     QString command;
     if (dir.contains("/"))
     {
-        command="\""+ adb + "\"", QStringList()<<" shell cd \""+this->codec->toUnicode(dir.toUtf8())+"\"";
+        command="\""+ adb + "\" shell cd \""+this->codec->toUnicode(dir.toUtf8())+"\"";
     }
     else
     {
         dir.prepend(this->getPath());
-        command="\""+ adb +"\"", QStringList() <<" shell cd \""+this->codec->toUnicode(dir.toUtf8())+"\"";
+        command="\""+ adb +"\" shell cd \""+this->codec->toUnicode(dir.toUtf8())+"\"";
     }
     phone->start(command);
     phone->waitForReadyRead(-1);
@@ -256,13 +256,17 @@ QList<File> *Phone::getFileList()
     while (outputLines.length()>0)
     {
         qApp->processEvents();
+        if(outputLines.startsWith("error:")) {
+            QMessageBox::critical(0,"error",outputLines.takeFirst() );
+            break;
+        }
         lineParts.clear();
         name.clear();
         tmp.clear();
         tmp = outputLines.takeFirst();
         tmp.remove(QRegExp("\\s+$"));
         lineParts=tmp.split(QRegExp("\\s+"));
-        if ((0)&&(lineParts.length()>8)) // Variant of ls used
+        if ((!busybox.isEmpty())&&(lineParts.length()>8)) // Variant of ls used
         {
             if (lineParts[4].contains(","))
             {
