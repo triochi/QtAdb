@@ -49,6 +49,7 @@ public slots:
     void filter();
     void startLogcat();
 private slots:
+    void on_saveButton_clicked();
     void on_pushButtonClearLogcat_pressed();
     void on_spinBoxBufferLimit_editingFinished();
     void on_checkBoxAutoScroll_toggled(bool checked);

@@ -1095,7 +1095,7 @@ void ThreadApps::run()
     delete aapt_proc;
     if (this->systemApps)
     {
-        proces.start("\"" + adb + "\"", QStringList()<<" shell busybox ls -l /system/app/*.apk");
+        proces.start("\"" + adb + "\" shell " + busybox +" ls -l /system/app/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps system - "<<output;
@@ -1126,7 +1126,7 @@ void ThreadApps::run()
     }
     else
     {
-        proces.start("\"" + adb + "\"", QStringList()<<" shell busybox ls -l /data/app/*.apk");
+        proces.start("\"" + adb + "\" shell " +  busybox + "ls -l /data/app/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps data - "<<output;
@@ -1154,7 +1154,7 @@ void ThreadApps::run()
                 appList.append(app);
             }
         }
-        proces.start("\"" + adb + "\"", QStringList()<<" shell busybox ls -l /data/app-private/*.apk");
+        proces.start("\"" + adb + "\" shell " + busybox + " ls -l /data/app-private/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps data - "<<output;
@@ -1182,7 +1182,7 @@ void ThreadApps::run()
                 appList.append(app);
             }
         }
-        proces.start("\"" + adb + "\"", QStringList()<<" shell busybox ls -l /mnt/asec/*/*.apk");
+        proces.start("\"" + adb + "\" shell " + busybox + " ls -l /mnt/asec/*/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps sd - "<<output;
@@ -1232,7 +1232,7 @@ void ThreadApps::run()
         {
             if (!sdFolder.endsWith("/",Qt::CaseInsensitive))
                 sdFolder.append("/");
-            proces.start("\"" + adb + "\"", QStringList()<<" shell busybox ls -l "+ sdFolder + "/*/*.apk");
+            proces.start("\"" + adb + "\" shell " + busybox + " ls -l "+ sdFolder + "/*/*.apk");
             proces.waitForFinished(-1);
             output.append(proces.readAll());
             qDebug()<<"Get apps sd - "<<output;
@@ -1270,9 +1270,9 @@ void ThreadApps::run()
     QProcess zip;
     QString temp;
     zip.setProcessChannelMode(QProcess::MergedChannels);
-    zip.start("\""+adb + "\"", QStringList()<<" shell mkdir /sdcard/QtADB");
+    zip.start("\""+adb + "\" shell mkdir /sdcard/QtADB");
     zip.waitForFinished(-1);
-    zip.start("\""+adb + "\"", QStringList()<<" shell mkdir /sdcard/QtADB/tmp");
+    zip.start("\""+adb + "\" shell mkdir /sdcard/QtADB/tmp");
     zip.waitForFinished(-1);
     settings.beginGroup("apps");
     QStringList settingsList=settings.childKeys();
@@ -1295,13 +1295,13 @@ void ThreadApps::run()
             (settings.value("apps/" + app.packageName + "/date", "").toString() != app.date))
         {
             qDebug()<<"Apps needs to pull apk";
-            zip.start("\""+adb + "\"", QStringList()<<" pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
+            zip.start("\""+adb + "\" pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
             zip.waitForFinished(-1);
             temp = zip.readAll();
             qDebug()<<"Apps copy - "<<temp;
             if (temp.contains("does not exist") || temp.contains("Android Debug Bridge"))
                 continue;
-            zip.start("\""+aapt+"\"", QStringList()<<" d badging \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
+            zip.start("\""+aapt+"\" d badging \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
             zip.waitForReadyRead(-1);
             temp=zip.readAll();
             qDebug()<<"Apps aapt - "<<temp;
@@ -1377,7 +1377,7 @@ void ThreadApps::run()
             qDebug()<<"Apps there is missing icon i settings";
             if (!fileTmpList.contains(app.appFileName))
             {
-                zip.start("\""+adb + "\"", QStringList()<<" pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
+                zip.start("\""+adb + "\" pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
                 zip.waitForFinished(-1);
                 QString out;
                 out = zip.readAll();
@@ -1472,7 +1472,7 @@ App * AppWidget::getAppInfo(QString filePath)
 
     QFileInfo *plik = new QFileInfo(filePath);
     settings.beginGroup("apps");
-    proces->start("\""+aapt+"\"", QStringList()<<" d badging \"" + filePath + "\"");
+    proces->start("\""+aapt+"\" d badging \"" + filePath + "\"");
     proces->waitForReadyRead(-1);
     temp=proces->readAll();
     if (temp.contains("ERROR"))
@@ -1699,7 +1699,7 @@ void AppWidget::openMarket()
 {
     QSettings settings;
     QProcess proc;
-    proc.start("\"" + adb + "\"", QStringList()<<" shell am start -a android.intent.action.VIEW -d market://details?id="
+    proc.start("\"" + adb + "\" shell am start -a android.intent.action.VIEW -d market://details?id="
                + this->ui->editAppsPackageName->text() + " -n com.android.vending/.AssetInfoActivity");
     proc.waitForFinished(-1);
 }

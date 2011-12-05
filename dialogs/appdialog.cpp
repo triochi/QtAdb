@@ -425,7 +425,7 @@ void ThreadBackup::run()
     QSettings settings;
     QByteArray ba;
     App app;
-    proces->start("\"" + adb + "\"", QStringList()<< " shell" << busybox <<" mkdir /sdcard/QtADB/backup");
+    proces->start("\"" + adb + "\" shell " + busybox + " mkdir /sdcard/QtADB/backup");
     proces->waitForFinished(-1);
     qDebug()<<"mkdir - "<<proces->readAll();
     while (this->appList.size() > 0)
@@ -438,11 +438,11 @@ void ThreadBackup::run()
 //        version = this->appList.version.takeFirst();
 
         emit this->nextApp(app);
-        proces->start("\""+adb+"\"", QStringList()<<" shell echo -e \"app.name="+codec->toUnicode(app.appName.toUtf8())+"\" > /sdcard/QtADB/backup/"+app.packageName+".txt");
+        proces->start("\""+adb+"\" shell echo -e \"app.name="+codec->toUnicode(app.appName.toUtf8())+"\" > /sdcard/QtADB/backup/"+app.packageName+".txt");
         proces->waitForFinished(-1);
-        proces->start("\""+adb+"\"", QStringList()<<" shell echo -e \"app.size="+app.appSize+"\" >> /sdcard/QtADB/backup/"+app.packageName+".txt");
+        proces->start("\""+adb+"\" shell echo -e \"app.size="+app.appSize+"\" >> /sdcard/QtADB/backup/"+app.packageName+".txt");
         proces->waitForFinished(-1);
-        proces->start("\""+adb+"\"", QStringList()<<" shell echo -e \"app.version="+app.appVersion+"\" >> /sdcard/QtADB/backup/"+app.packageName+".txt");
+        proces->start("\""+adb+"\" shell echo -e \"app.version="+app.appVersion+"\" >> /sdcard/QtADB/backup/"+app.packageName+".txt");
         proces->waitForFinished(-1);
         ba = settings.value("apps/"+app.packageName+"/icon").toByteArray();
         QFile ikona(QDir::currentPath()+"/icons/"+app.packageName+".png");
@@ -451,7 +451,7 @@ void ThreadBackup::run()
             ikona.write(ba);
         }
         ikona.close();
-        proces->start("\""+adb +"\""+"adb push \""+QDir::currentPath()+"/icons/"+app.packageName+".png\" /sdcard/QtADB/backup/");
+        proces->start("\""+adb +"\" push \""+QDir::currentPath()+"/icons/"+app.packageName+".png\" /sdcard/QtADB/backup/");
         proces->waitForFinished(-1);
         output = proces->readAll();
         qDebug()<<"Backup app - "<<output;
@@ -459,14 +459,14 @@ void ThreadBackup::run()
         ikona.remove();
         if (this->withData)
         {
-            proces->start("\""+adb+"\"", QStringList()<<" shell tar -zcf /sdcard/QtADB/backup/"+app.packageName+".DATA.tar.gz /data/data/"+app.packageName);
+            proces->start("\""+adb+"\" shell tar -zcf /sdcard/QtADB/backup/"+app.packageName+".DATA.tar.gz /data/data/"+app.packageName);
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Backup app - "<<output;
         }
         if (this->withApk)
         {
-            proces->start("\""+adb+"\"", QStringList()<<" shell cp "+app.appFile+ " /sdcard/QtADB/backup/"+app.packageName+".apk");
+            proces->start("\""+adb+"\" shell cp "+app.appFile+ " /sdcard/QtADB/backup/"+app.packageName+".apk");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Backup app - "<<output;
@@ -489,21 +489,21 @@ void ThreadRestore::run()
         emit this->nextApp(app);
         if (this->withApk)
         {
-            proces->start("\""+adb+"\"", QStringList()<<" shell pm install /sdcard/QtADB/backup/" +app.packageName + ".apk");
+            proces->start("\""+adb+"\" shell pm install /sdcard/QtADB/backup/" +app.packageName + ".apk");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Restore pm - "<<output;
             if (output.contains("Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]"))
             {
-                proces->start("\""+adb+"\"", QStringList()<<" shell cp /sdcard/QtADB/backup/" +app.packageName + ".apk /data/local/tmp/");
+                proces->start("\""+adb+"\" shell cp /sdcard/QtADB/backup/" +app.packageName + ".apk /data/local/tmp/");
                 proces->waitForFinished(-1);
                 output = proces->readAll();
                 qDebug()<<"Restore cp - "<<output;
-                proces->start("\""+adb+"\"", QStringList()<<" shell pm install /data/local/tmp/" +app.packageName + ".apk");
+                proces->start("\""+adb+"\" shell pm install /data/local/tmp/" +app.packageName + ".apk");
                 proces->waitForFinished(-1);
                 output = proces->readAll();
                 qDebug()<<"Restore pm - "<<output;
-                proces->start("\""+adb+"\"", QStringList()<<" shell busybox rm -f /data/local/tmp/" +app.packageName + ".apk");
+                proces->start("\""+adb+"\" shell " + busybox + " rm -f /data/local/tmp/" +app.packageName + ".apk");
                 proces->waitForFinished(-1);
             }
             if (output.contains("Failure"))
@@ -516,15 +516,15 @@ void ThreadRestore::run()
             {
                 if (this->withData)
                 {
-                    proces->start("\""+adb+"\"", QStringList()<<" shell busybox rm -rf /data/data/"+app.packageName);
+                    proces->start("\""+adb+"\" shell " + busybox + " rm -rf /data/data/"+app.packageName);
                     proces->waitForFinished(-1);
                     output = proces->readAll();
                     qDebug()<<"Restore rm - "<<output;
-                    proces->start("\""+adb+"\"", QStringList()<<" shell busybox tar -xzf /sdcard/QtADB/backup/"+app.packageName+".DATA.tar.gz -C /");
+                    proces->start("\""+adb+"\" shell " + busybox + " tar -xzf /sdcard/QtADB/backup/"+app.packageName+".DATA.tar.gz -C /");
                     proces->waitForFinished(-1);
                     output = proces->readAll();
                     qDebug()<<"Restore tar - "<<output;
-                    proces->start("\""+adb+"\"", QStringList()<<" shell \"cat /data/system/packages.xml|busybox grep '^<package.*"+app.packageName+"'\"");
+                    proces->start("\""+adb+"\" shell \"cat /data/system/packages.xml|" + busybox + " grep '^<package.*"+app.packageName+"'\"");
                     proces->waitForFinished(-1);
                     output = proces->readAll();
                     qDebug()<<"Restore cat - "<<output;
@@ -532,11 +532,11 @@ void ThreadRestore::run()
                     if (start > 7)
                     {
                         userId = output.mid(start, output.indexOf("\"", start) - start);
-                        proces->start("\""+adb+"\"", QStringList()<<" shell busybox chown -R "+userId+":"+userId+" /data/data/"+app.packageName);
+                        proces->start("\""+adb+"\" shell " + busybox + " chown -R "+userId+":"+userId+" /data/data/"+app.packageName);
                         proces->waitForFinished(-1);
                         output = proces->readAll();
                         qDebug()<<"Restore chown - "<<output;
-                        proces->start("\""+adb+"\"", QStringList()<<" shell busybox chmod -R 775 /data/data/"+app.packageName);
+                        proces->start("\""+adb+"\" shell " + busybox + " chmod -R 775 /data/data/"+app.packageName);
                         proces->waitForFinished(-1);
                         output = proces->readAll();
                         qDebug()<<"Restore chmod - "<<output;
@@ -553,15 +553,15 @@ void ThreadRestore::run()
         }
         else if (this->withData)
         {
-            proces->start("\""+adb+"\"", QStringList()<<" shell busybox rm -rf /data/data/"+app.packageName);
+            proces->start("\""+adb+"\" shell " + busybox +" rm -rf /data/data/"+app.packageName);
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Restore rm - "<<output;
-            proces->start("\""+adb+"\"", QStringList()<<" shell busybox tar -xzf /sdcard/QtADB/backup/"+app.packageName+".DATA.tar.gz -C /");
+            proces->start("\""+adb+"\" shell " + busybox + " tar -xzf /sdcard/QtADB/backup/"+app.packageName+".DATA.tar.gz -C /");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Restore tar - "<<output;
-            proces->start("\""+adb+"\"", QStringList()<<" shell \"cat /data/system/packages.xml|busybox grep '^<package.*"+app.packageName+"'\"");
+            proces->start("\""+adb+"\" shell \"cat /data/system/packages.xml|" + busybox +" grep '^<package.*"+app.packageName+"'\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Restore cat - "<<output;
@@ -569,11 +569,11 @@ void ThreadRestore::run()
             if (start > 7)
             {
                 userId = output.mid(start, output.indexOf("\"", start) - start);
-                proces->start("\""+adb+"\"", QStringList()<<" shell busybox chown -R "+userId+":"+userId+" /data/data/"+app.packageName);
+                proces->start("\""+adb+"\" shell " + busybox+" chown -R "+userId+":"+userId+" /data/data/"+app.packageName);
                 proces->waitForFinished(-1);
                 output = proces->readAll();
                 qDebug()<<"Restore chown - "<<output;
-                proces->start("\""+adb+"\"", QStringList()<<" shell busybox chmod -R 775 /data/data/"+app.packageName);
+                proces->start("\""+adb+"\" shell " + busybox + " chmod -R 775 /data/data/"+app.packageName);
                 proces->waitForFinished(-1);
                 output = proces->readAll();
                 qDebug()<<"Restore chmod - "<<output;
@@ -600,7 +600,7 @@ void ThreadInstall::run()
 //        file = this->appList.package.takeFirst();
         app = this->appList.takeFirst();
         emit this->nextApp(app);
-        proces->start( "\""+ adb + "\"", QStringList()<<QString(" install ") + (this->reinstall ? "-r " : "") + "\""+app.appFile+"\"");
+        proces->start( "\""+ adb + "\"" + QString(" install ") + (this->reinstall ? "-r " : "") + "\""+app.appFile+"\"");
         proces->waitForFinished(-1);
         output = proces->readAll();
         qDebug()<<(this->reinstall ? "AppReInstall - " : "AppInstall - ")<<output;
@@ -635,25 +635,25 @@ void ThreadUninstall::run()
 
         if (this->system)
         {
-            proces->start("\""+adb+"\"", QStringList()<<" remount");
+            proces->start("\""+adb+"\" remount");
             proces->waitForFinished(-1);
             output = proces->readAll();
-            qDebug()<<"Remove system - "<<output;
+            qDebug()<<"Remove system - "<<output.toStdString().c_str();
             if (this->keepData)
             {
-                proces->start("\""+adb+"\"", QStringList()<<" shell" << busybox <<" rm -rf /data/data/"+app.packageName);
+                proces->start("\""+adb+"\" shell" +  busybox + " rm -rf /data/data/"+app.packageName);
                 proces->waitForFinished(-1);
                 output = proces->readAll();
-                qDebug()<<"Remove system - "<<output;
+                qDebug()<<"Remove system - "<<output.toStdString().c_str();
             }
-            proces->start("\""+adb+"\"", QStringList()<<" shell busybox rm -rf "+app.appFile);
+            proces->start("\""+adb+"\" shell " + busybox + " rm -rf "+app.appFile);
         }
         else
         {
             if (this->keepData)
-                proces->start("\""+adb+"\"", QStringList()<<" uninstall -k "+app.packageName);
+                proces->start("\""+adb+"\" uninstall -k "+app.packageName);
             else
-                proces->start("\"" + adb + "\"", QStringList()<<" uninstall "+app.packageName);
+                proces->start("\"" + adb + "\" uninstall "+app.packageName);
         }
         proces->waitForFinished(-1);
         output = proces->readAll();

@@ -291,3 +291,27 @@ void LogcatDialog::exportSelectedToFile()
         file.close();
     }
 }
+
+void LogcatDialog::on_saveButton_clicked()
+{
+    QList<LogcatMessage> list;
+    for (int i = 0 ; i<this->logcatModel->rowCount(); i++ )
+    {
+        list.append(this->logcatModel->getRow(i));
+    }
+    QString output;
+    foreach (LogcatMessage item, list)
+    {
+        output.append(item.timestamp+" "+item.type+" "+item.sender+" "+item.pid+" "+item.message+"\n");
+    }
+
+    QFile file;
+    file.setFileName(QFileDialog::getSaveFileName(this, tr("Save File..."), "./logcat.txt", tr("txt file")+" (*.txt)"));
+    if (file.fileName().isEmpty())
+        return;
+    if (file.open(QFile::WriteOnly))
+    {
+        file.write(output.toLatin1());
+        file.close();
+    }
+}
