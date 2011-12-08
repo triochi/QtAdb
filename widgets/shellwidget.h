@@ -31,6 +31,7 @@ public:
     ~ShellWidget();
     void setProcessPath(QString processPath);
     QString getProcessPath();
+    void Refresh();
 
 protected:
     void keyPressEvent(QKeyEvent *e);

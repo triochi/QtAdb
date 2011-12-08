@@ -71,6 +71,12 @@ ShellWidget::~ShellWidget()
     this->process.close();
 }
 
+void ShellWidget::Refresh(){
+    if (this->process.state() != QProcess::Running){
+         this->process.start("\""+adb + "\" shell");
+    }
+}
+
 void ShellWidget::keyPressEvent(QKeyEvent *e)
 {
     if (e->modifiers() == Qt::ControlModifier)
@@ -138,6 +144,7 @@ void ShellWidget::keyPressEvent(QKeyEvent *e)
 
     if (e->key() == Qt::Key_Return)
     {
+        Refresh();
         this->cursor.movePosition(QTextCursor::End);
         this->setTextCursor(this->cursor);
         this->cursorPosition = 0;
