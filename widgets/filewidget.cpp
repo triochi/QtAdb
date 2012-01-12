@@ -717,7 +717,7 @@ QList<File> * FileWidget::computerFilesToCopy(QList<File> *fileList)
     QList<File> *tmpFiles = NULL;
     for (int i=0; i<x; i++)
     {
-        if (fileList->at(i).fileType == "dir")
+        if (fileList->at(i).fileType == File::dir)
         {
             this->computer->cd(fileList->takeAt(i).fileName);
             tmpFiles = this->computerFilesToCopy(this->computer->getFileList());
@@ -1439,7 +1439,7 @@ QList<File> *FileWidget::phoneFilesToCopy(QList<File> *fileList, Phone *phone)
     QList<File> *tmpFiles = NULL;
     for (int i=0; i<x; i++)
     {
-        if (fileList->at(i).fileType == "dir")
+        if (fileList->at(i).fileType == File::dir)
         {
             phone->cd(fileList->takeAt(i).fileName);
             tmpFiles = this->phoneFilesToCopy(phone->getFileList(), phone);
@@ -1704,7 +1704,7 @@ void FileWidget::rightDoubleClick()
             index = this->rightTableView->selectionModel()->selection().indexes().takeFirst();
             file = this->findModel->getFile(index.row());
             fileName=file.fileName;
-            if (file.fileType == "file")
+            if (file.fileType == File::file)
                 fileName = fileName.left(fileName.lastIndexOf("/"));
         }
         else
@@ -1854,7 +1854,7 @@ void FileWidget::foundFile(File file)
 {
     QFile plik;
     QFileIconProvider *provider = new QFileIconProvider;
-    if (file.fileType == "file" || file.fileType == "device")
+    if (file.fileType == File::file || file.fileType == File::device)
     {
         QString name;
         name = file.fileName.right(file.fileName.size() - file.fileName.lastIndexOf("/") - 1);
@@ -1864,7 +1864,7 @@ void FileWidget::foundFile(File file)
         file.fileIcon = provider->icon(QFileInfo(plik));
         plik.remove();
     }
-    else if (file.fileType == "link")
+    else if (file.fileType == File::link)
     {
         file.fileIcon = QApplication::style()->standardIcon(QStyle::SP_FileLinkIcon);
     }

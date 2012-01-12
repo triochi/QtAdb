@@ -21,6 +21,7 @@
 #include <QtGui/QApplication>
 #include "./classes/application.h"
 #include "./dialogs/mainwindow.h"
+#include "./classes/sockets.h"
 ////////////////////////////////////////
 #include <QtDebug>
 #include <QFile>
@@ -34,6 +35,7 @@ QString adb;
 QString aapt;
 QString busybox;
 QString fastboot;
+Socket socket_global;
 
 void myMessageHandler(QtMsgType type, const char *msg)
 {

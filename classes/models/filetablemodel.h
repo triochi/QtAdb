@@ -26,6 +26,7 @@
 
 class File : public QObject{
 public:
+    enum fileTypes {file, dir, link, device, unknown};
     File(QObject *parent=0);
     File(const File&);
     QIcon fileIcon;
@@ -35,7 +36,7 @@ public:
     QString filePath;
     QString filePermissions;
     QString fileOwner;
-    QString fileType;
+    fileTypes fileType;
     QColor fileColor;
     File& operator =(const File&);
 };

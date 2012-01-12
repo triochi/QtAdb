@@ -69,7 +69,8 @@ SOURCES += main.cpp \
     classes/models/logcatmodel.cpp \
     classes/ecwin7.cpp \
     classes/mytableview.cpp \
-    dialogs/registerdialog.cpp
+    dialogs/registerdialog.cpp \
+    classes/sockets.cpp
 HEADERS += ./dialogs/mainwindow.h \
     ./dialogs/dialogkopiuj.h \
     ./classes/phone.h \
@@ -102,7 +103,8 @@ HEADERS += ./dialogs/mainwindow.h \
     classes/models/logcatmodel.h \
     classes/ecwin7.h \
     classes/mytableview.h \
-    dialogs/registerdialog.h
+    dialogs/registerdialog.h \
+    classes/sockets.h
 FORMS += ./dialogs/mainwindow.ui \
     ./dialogs/dialogkopiuj.ui \
     ./dialogs/connectWifi.ui \

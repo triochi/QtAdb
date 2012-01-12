@@ -21,6 +21,7 @@
 #include "phone.h"
 #include <QSettings>
 #include <QTextCodec>
+#include "sockets.h"
 
 extern QString sdk;
 extern QString adb;
@@ -28,7 +29,7 @@ extern QString aapt;
 extern QProcess *adbProces;
 extern QString busybox;
 extern QString fastboot;
-
+extern Socket socket_global;
 
 void ConnectionThread::run()
 {
@@ -201,30 +202,17 @@ QList<File> *Phone::getFileList()
     command =  command="\""+adb+"\" shell busybox ";
     command = QDir::toNativeSeparators(command);
     qDebug()<<"Phone::getFileList() - "<<command.toStdString().c_str();
-    adbProces->start(command);
-    if (!adbProces->waitForStarted()) {
-        QMessageBox::critical(0,"Error","Error starting command: " + command );
-    } else {
-        adbProces->waitForFinished(-1);
-        outputLine=adbProces->readAll();
-        outputLines=outputLine.split("\n");
-        if (outputLines.first().contains("not")){
-            busybox = "";
-        } else {
-            busybox = "busybox";
-        }
-    }
-
 
     qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss");
     qDebug()<<"Phone::getFileList() - "<<this->getPath();
-    if (this->hiddenFiles)
-        command="\""+adb + "\" shell \""+ busybox +" ls -l -a \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\'\"";
-    else
-        command="\""+adb+"\" shell \""+ busybox +" ls -l \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\'\"";
+//    if (this->hiddenFiles)
+//        command="\""+adb + "\" shell \""+ busybox +" ls -l -a \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\'\"";
+//    else
+//        command="\""+adb+"\" shell \""+ busybox +" ls -l \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\'\"";
+    outputLine= socket_global.listFiles(this->codec->toUnicode(this->getPath().toUtf8()));
 
-    qDebug()<<"Phone::getFileList() - "<<command.toStdString().c_str();
-    adbProces->start(command);
+//    qDebug()<<"Phone::getFileList() - "<<command.toStdString().c_str();
+//    adbProces->start(command);
 
 
 //    while (!outputLine.isEmpty())
@@ -235,17 +223,18 @@ QList<File> *Phone::getFileList()
 //        qDebug()<<"Phone::getFileList() - "<<outputLine;
 //        outputLines.append(outputLine);
 //    }
-    adbProces->waitForFinished(-1);
-    outputLine=adbProces->readAll();
-    outputLines=outputLine.split("\n");
-    if (outputLines.first().contains("No such file or directory")||outputLines.first().contains("cannot")||outputLines.first().contains("Not a directory"))
+//    adbProces->waitForFinished(-1);
+//    outputLine=adbProces->readAll();
+
+    if (outputLine.isEmpty())
+//            (outputLines.first().contains("No such file or directory")||outputLines.first().contains("cannot")||outputLines.first().contains("Not a directory"))
     {
-        qDebug()<<"Phone::getFileList() - "<<outputLine;
-        adbProces->terminate();
+//        qDebug()<<"Phone::getFileList() - "<<outputLine;
+//        adbProces->terminate();
         return NULL;
     }
-
-    outputLines.removeLast();   // pusty
+    outputLines=outputLine.split("\n");
+//    outputLines.removeLast();   // pusty
 
     QStringList lineParts;
     QString name;
@@ -256,32 +245,24 @@ QList<File> *Phone::getFileList()
     while (outputLines.length()>0)
     {
         qApp->processEvents();
-        if(outputLines.startsWith("error:")) {
-            QMessageBox::critical(0,"error",outputLines.takeFirst() );
-            break;
-        }
+//        if(outputLines.startsWith("error:")) {
+//            QMessageBox::critical(0,"error",outputLines.takeFirst() );
+//            break;
+//        }
         lineParts.clear();
         name.clear();
         tmp.clear();
         tmp = outputLines.takeFirst();
         tmp.remove(QRegExp("\\s+$"));
-        lineParts=tmp.split(QRegExp("\\s+"));
-        if ((!busybox.isEmpty())&&(lineParts.length()>8)) // Variant of ls used
+//        lineParts=tmp.split(QRegExp("\\s+"));
+        lineParts=tmp.split("\t");
+//        if ((!busybox.isEmpty())&&(lineParts.length()>8)) // Variant of ls used
+        if((lineParts.count()>3)&&(((QString)lineParts[0]).length()>14))
         {
-            if (lineParts[4].contains(","))
-            {
-                tmpFile.fileSize = lineParts.at(4)+lineParts.at(5);
-                lineParts.removeAt(5);
-            }
-            else
-                tmpFile.fileSize = lineParts.at(4);
-            tmpFile.fileDate = lineParts[5]+" "+lineParts[6]+" "+lineParts[7];
-
-            for (int i=8;i<lineParts.length();i++)
-                name.append(lineParts.at(i)+" ");
-            name.chop(1);
-            name.remove(QString("%1[0m").arg( QChar( 0x1b )));
-            name.remove(QChar( 0x1b ), Qt::CaseInsensitive);
+            tmpFile.fileSize = lineParts.at(1);
+            name.append(lineParts.at(3));
+//            name.chop(1);
+            tmpFile.filePermissions = lineParts[0].right(9);
             if (name.contains("0;30"))//black
             {
                 tmpFile.fileColor = QColor(Qt::black);
@@ -290,7 +271,7 @@ QList<File> *Phone::getFileList()
             {
                 tmpFile.fileColor = QColor(Qt::blue);
             }
-            else if (name.contains("0;32"))//green
+            else if (tmpFile.filePermissions.length()>2 && (tmpFile.filePermissions.at(2)=='1'))//green
             {
                 tmpFile.fileColor = QColor(Qt::green);
             }
@@ -348,34 +329,38 @@ QList<File> *Phone::getFileList()
             }
             else
                 tmpFile.fileColor = QColor(Qt::black);
-            name.remove(QRegExp("\\[\\d;\\d+m"));
+//            name.remove(QRegExp("\\[\\d;\\d+m"));
 
             tmpFile.fileName = QString::fromUtf8(name.toAscii());
             tmpFile.filePath = this->getPath() + tmpFile.fileName;
+            tmpFile.fileDate = lineParts[2];
 
             qDebug()<<"Phone::getFileList() - plik: "<<name<< " - " <<lineParts.first();
 
-            if (lineParts.first()[0]=='d')
-                tmpFile.fileType = "dir";
-            else if (lineParts.first()[0]=='-'||lineParts.first()[0]=='s')
-                tmpFile.fileType = "file";
-            else if (lineParts.first()[0]=='l')
-                tmpFile.fileType = "link";
-            else if (lineParts.first()[0]=='c'||lineParts.first()[0]=='b'||lineParts.first()[0]=='p')
-                tmpFile.fileType = "device";
+            if (((QString)lineParts[0]).length() == 15){
+                tmpFile.fileName = tmpFile.fileName;
+                tmpFile.fileType = File::dir;
+            }
+            else if (((QString)(lineParts[0]))[2]=='0')
+                tmpFile.fileType = File::file;
+            else if (((QString)(lineParts[0]))[2]=='1')
+                tmpFile.fileType = File::link;
+            else if (((QString)(lineParts[0]))[2]=='0') // TODO: FIX ME!!!
+                tmpFile.fileType = File::device;
 
             name = tmpFile.fileName;
-            name.remove(QString("%1[0m").arg( QChar( 0x1b )));
-            name.remove(QChar( 0x1b ), Qt::CaseInsensitive);
-            name.remove(QRegExp("\\[\\d;\\d+m"));
-            if (tmpFile.fileType == "file" || tmpFile.fileType == "device")
+
+//            name.remove(QString("%1[0m").arg( QChar( 0x1b )));
+//            name.remove(QChar( 0x1b ), Qt::CaseInsensitive);
+//            name.remove(QRegExp("\\[\\d;\\d+m"));
+            if (tmpFile.fileType == File::file || tmpFile.fileType == File::device)
             {
                 plik.setFileName(QDir::currentPath()+"/tmp/"+name);
                 plik.open(QFile::WriteOnly);
                 tmpFile.fileIcon = provider->icon(QFileInfo(plik));
                 plik.remove();
             }
-            else if (tmpFile.fileType == "link")
+            else if (tmpFile.fileType == File::link)
             {
                 tmpFile.fileIcon = QApplication::style()->standardIcon(QStyle::SP_FileLinkIcon);
             }
@@ -386,7 +371,10 @@ QList<File> *Phone::getFileList()
                 continue;
             else
                 fileList->append(tmpFile);
-        } else
+        }
+
+        /*
+        else
             if ((1)&&(lineParts.length()>5)) // Variant of ls used 1
             {
             if (lineParts[4].contains("-"))
@@ -507,12 +495,13 @@ QList<File> *Phone::getFileList()
             else
                 fileList->append(tmpFile);
         }
+        */
 
     }
-    adbProces->close();
+//    adbProces->close();
     qDebug()<<"Phone::getFileList() - skonczylem analizowac pliki";
 
-    adbProces->terminate();
+//    adbProces->terminate();
     delete provider;
     return fileList;
 }
@@ -676,13 +665,13 @@ QList<File> *Phone::getFileList(QString filter)
             qDebug()<<"Phone::getFileList() - plik: "<<name<< " - " <<lineParts.first();
 
             if (lineParts.first()[0]=='d')
-                tmpFile.fileType = "dir";
-            else if (lineParts.first()[0]=='-'||lineParts.first()[0]=='s')
-                tmpFile.fileType = "file";
-            else if (lineParts.first()[0]=='l')
-                tmpFile.fileType = "link";
+                tmpFile.fileType = File::dir;
+            else if (lineParts.first()[2]=='0')
+                tmpFile.fileType = File::file;
+            else if (lineParts.first()[2]=='l')
+                tmpFile.fileType = File::link;
             else if (lineParts.first()[0]=='c'||lineParts.first()[0]=='b'||lineParts.first()[0]=='p')
-                tmpFile.fileType = "device";
+                tmpFile.fileType = File::device;
 
             name = tmpFile.fileName;
             name.remove(QString("%1[0m").arg( QChar( 0x1b )));

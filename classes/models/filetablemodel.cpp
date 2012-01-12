@@ -141,7 +141,7 @@ QVariant FileTableModel::data(const QModelIndex &index, int role) const
         case 1:
             return file.fileName;
         case 2:
-            if (file.fileType == "dir")
+            if (file.fileType == File::dir)
                 return "";
             else
                 return FileTableModel::humanReadableSize(file.fileSize);
@@ -163,7 +163,7 @@ QVariant FileTableModel::data(const QModelIndex &index, int role) const
         case 1:
             return file.fileName;
         case 2:
-            if (file.fileType == "dir")
+            if (file.fileType == File::dir)
                 return "";
             else
                 return FileTableModel::humanReadableSize(file.fileSize);
