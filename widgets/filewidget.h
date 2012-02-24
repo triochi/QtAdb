@@ -186,6 +186,7 @@ private slots:
     void copySlotToComputer(QStringList list);
     void copySlotToPhone(QStringList list);
     void copySlotToPhoneLeft(QStringList list);
+    void permissions();
 signals:
     void phoneConnectionChanged(int);
     void progressValue(int value, int max);

@@ -1178,7 +1178,7 @@ void FileWidget::phoneContextMenu(const QPoint &pos,QTableView *tableView)
             this->phoneRightMenu->setLayoutDirection(Qt::LeftToRight);
         if (layoutDirection == 1)
             this->phoneRightMenu->setLayoutDirection(Qt::RightToLeft);
-        QAction *usun,*selectAll,*selectNone,*odswiez,*nowyFolder,*zmienNazwe,*ukryte, *copy, *openInNewTab/*, *install*/;
+        QAction *usun,*selectAll,*selectNone,*odswiez,*nowyFolder,*zmienNazwe,*ukryte, *copy, *openInNewTab, *permissions/*, *install*/;
 
         zmienNazwe = this->phoneRightMenu->addAction(QIcon(":icons/rename.png"),tr("rename", "phone right click menu"),this,SLOT(phoneRename()));
         zmienNazwe->setData(QString("rename"));
@@ -1198,6 +1198,8 @@ void FileWidget::phoneContextMenu(const QPoint &pos,QTableView *tableView)
         ukryte->setData(QString("hidden files"));
         openInNewTab = this->phoneRightMenu->addAction(QApplication::style()->standardIcon(QStyle::SP_DirIcon),tr("open in new tab", "phone right click menu"),this,SLOT(phoneOpenInNewTab()));
         openInNewTab->setData(QString("open in new tab"));
+        permissions = this->phoneRightMenu->addAction(QIcon(":icons/info.png"),tr("file permissions", "phone right click menu"),this,SLOT(permissions()));
+        ukryte->setData(QString("file permissions"));
     }
     if (rightTableView->model() == this->findModel)
     {
@@ -2221,4 +2223,41 @@ void FileWidget::copySlotToPhoneLeft(QStringList list)
 
     connect(this->dialog,SIGNAL(finished(int)),this,SLOT(leftRefresh()));
     connect(this->dialog,SIGNAL(finished(int)),this,SLOT(rightRefresh()));
+}
+
+void FileWidget::permissions()
+{
+    QTableView * tableView;
+    Phone * phoneTmp;
+    FileSortModel * sortModel;
+    FileTableModel * fileModel;
+    if (this->leftTableView->hasFocus())
+    {
+        phoneTmp = this->phoneLeft;
+        tableView = this->leftTableView;
+        sortModel = this->phoneLeftSortModel;
+        fileModel = this->phoneLeftModel;
+        this->leftChangeName = true;
+    }
+    else
+    {
+        phoneTmp = this->phone;
+        tableView = this->rightTableView;
+        sortModel = this->phoneSortModel;
+        fileModel = this->phoneModel;
+    }
+
+    QModelIndexList indexList = tableView->selectionModel()->selectedRows(1);
+    if (indexList.size() == 1)
+    {
+        QModelIndex index = indexList.first();
+        QString fileName;
+        File file;
+//        index = this->rightTableView->selectionModel()->selection().indexes().takeFirst();
+        file = this->findModel->getFile(index.row());
+        fileName=file.fileName;
+        if (file.fileType == File::file)
+            fileName = fileName.left(fileName.lastIndexOf("/"));
+        QMessageBox::about(0,"Permissions", "File Permissions for file: " + fileName + " are :" +file.filePermissions);
+    }
 }

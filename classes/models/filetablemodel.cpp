@@ -481,6 +481,13 @@ bool FileSortModel::lessThan(const QModelIndex &left, const QModelIndex &right) 
     {
         return false;
     }
+    else if (leftType == "1" && rightType != "1"){
+        return true;
+    }
+    else if (leftType != "1" && rightType == "1")
+    {
+        return false;
+    }
     else
     {
         if (leftName.contains(QRegExp("B$")) && rightName.contains(QRegExp("B$")))

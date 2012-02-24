@@ -205,37 +205,12 @@ QList<File> *Phone::getFileList()
 
     qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss");
     qDebug()<<"Phone::getFileList() - "<<this->getPath();
-//    if (this->hiddenFiles)
-//        command="\""+adb + "\" shell \""+ busybox +" ls -l -a \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\'\"";
-//    else
-//        command="\""+adb+"\" shell \""+ busybox +" ls -l \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\'\"";
     outputLine= socket_global.listFiles(this->codec->toUnicode(this->getPath().toUtf8()));
-
-//    qDebug()<<"Phone::getFileList() - "<<command.toStdString().c_str();
-//    adbProces->start(command);
-
-
-//    while (!outputLine.isEmpty())
-//    {
-//        qApp->processEvents();
-//        phone->waitForReadyRead(-1);
-//        outputLine = phone->readLine();
-//        qDebug()<<"Phone::getFileList() - "<<outputLine;
-//        outputLines.append(outputLine);
-//    }
-//    adbProces->waitForFinished(-1);
-//    outputLine=adbProces->readAll();
-
     if (outputLine.isEmpty())
-//            (outputLines.first().contains("No such file or directory")||outputLines.first().contains("cannot")||outputLines.first().contains("Not a directory"))
     {
-//        qDebug()<<"Phone::getFileList() - "<<outputLine;
-//        adbProces->terminate();
         return NULL;
     }
     outputLines=outputLine.split("\n");
-//    outputLines.removeLast();   // pusty
-
     QStringList lineParts;
     QString name;
     QFile plik;
@@ -245,114 +220,49 @@ QList<File> *Phone::getFileList()
     while (outputLines.length()>0)
     {
         qApp->processEvents();
-//        if(outputLines.startsWith("error:")) {
-//            QMessageBox::critical(0,"error",outputLines.takeFirst() );
-//            break;
-//        }
         lineParts.clear();
         name.clear();
         tmp.clear();
         tmp = outputLines.takeFirst();
         tmp.remove(QRegExp("\\s+$"));
-//        lineParts=tmp.split(QRegExp("\\s+"));
         lineParts=tmp.split("\t");
-//        if ((!busybox.isEmpty())&&(lineParts.length()>8)) // Variant of ls used
         if((lineParts.count()>3)&&(((QString)lineParts[0]).length()>14))
         {
             tmpFile.fileSize = lineParts.at(1);
             name.append(lineParts.at(3));
-//            name.chop(1);
             tmpFile.filePermissions = lineParts[0].right(9);
-            if (name.contains("0;30"))//black
-            {
-                tmpFile.fileColor = QColor(Qt::black);
-            }
-            else if (name.contains("0;34"))//blue
-            {
-                tmpFile.fileColor = QColor(Qt::blue);
-            }
-            else if (tmpFile.filePermissions.length()>2 && (tmpFile.filePermissions.at(2)=='1'))//green
-            {
-                tmpFile.fileColor = QColor(Qt::green);
-            }
-            else if (name.contains("0;36"))//cyan
-            {
-                tmpFile.fileColor = QColor(Qt::cyan);
-            }
-            else if (name.contains("0;31"))//red
-            {
-                tmpFile.fileColor = QColor(Qt::red);
-            }
-            else if (name.contains("0;35"))//purple
-            {
-                tmpFile.fileColor = QColor(0, 0, 0);
-            }
-            else if (name.contains("0;33"))//brown
-            {
-                tmpFile.fileColor = QColor(0, 0, 0);
-            }
-            else if (name.contains("0;37"))//light gray
-            {
-                tmpFile.fileColor = QColor(Qt::lightGray);
-            }
-            else if (name.contains("1;30"))//dark gray
-            {
-                tmpFile.fileColor = QColor(Qt::darkGray);
-            }
-            else if (name.contains("1;34"))//dark gray
-            {
-                tmpFile.fileColor = QColor(Qt::blue);
-            }
-            else if (name.contains("1;32"))//light green
-            {
-                tmpFile.fileColor = QColor(Qt::green);
-            }
-            else if (name.contains("1;36"))//light cyan
-            {
-                tmpFile.fileColor = QColor(Qt::cyan);
-            }
-            else if (name.contains("1;31"))//light red
-            {
-                tmpFile.fileColor = QColor(Qt::red);
-            }
-            else if (name.contains("1;35"))//light purple
-            {
-                tmpFile.fileColor = QColor(0, 0, 0);
-            }
-            else if (name.contains("1;33"))//yellow
-            {
-                tmpFile.fileColor = QColor(Qt::yellow);
-            }
-            else if (name.contains("1;37"))//white
-            {
-                tmpFile.fileColor = QColor(Qt::white);
-            }
-            else
-                tmpFile.fileColor = QColor(Qt::black);
-//            name.remove(QRegExp("\\[\\d;\\d+m"));
+            tmpFile.fileColor = QColor(Qt::black);
+            if(tmpFile.filePermissions.length()<2) tmpFile.filePermissions = "111111111";
 
             tmpFile.fileName = QString::fromUtf8(name.toAscii());
             tmpFile.filePath = this->getPath() + tmpFile.fileName;
             tmpFile.fileDate = lineParts[2];
-
             qDebug()<<"Phone::getFileList() - plik: "<<name<< " - " <<lineParts.first();
 
             if (((QString)lineParts[0]).length() == 15){
                 tmpFile.fileName = tmpFile.fileName;
                 tmpFile.fileType = File::dir;
-            }
-            else if (((QString)(lineParts[0]))[2]=='0')
-                tmpFile.fileType = File::file;
-            else if (((QString)(lineParts[0]))[2]=='1')
+            } else if (((QString)(lineParts[0]))[2]=='1')
                 tmpFile.fileType = File::link;
-            else if (((QString)(lineParts[0]))[2]=='0') // TODO: FIX ME!!!
-                tmpFile.fileType = File::device;
-
+//            else if (((QString)(lineParts[0]))[2]=='0') // TODO: FIX ME!!!
+//                tmpFile.fileType = File::device;
+            else if (((QString)(lineParts[0]))[2]=='0') {
+                tmpFile.fileType = File::file;
+                if (tmpFile.filePermissions[0] == '0') //Not readable
+                {
+                    tmpFile.fileColor = QColor(Qt::darkRed);
+                }
+                else if (tmpFile.filePermissions[1] == '0')//Not writable
+                {
+                    tmpFile.fileColor = QColor(Qt::darkBlue);
+                }
+                else if (tmpFile.filePermissions[2] == '1')//Executable
+                {
+                    tmpFile.fileColor = QColor(Qt::darkGreen);
+                }
+            }
             name = tmpFile.fileName;
 
-//            name.remove(QString("%1[0m").arg( QChar( 0x1b )));
-//            name.remove(QChar( 0x1b ), Qt::CaseInsensitive);
-//            name.remove(QRegExp("\\[\\d;\\d+m"));
             if (tmpFile.fileType == File::file || tmpFile.fileType == File::device)
             {
                 plik.setFileName(QDir::currentPath()+"/tmp/"+name);
@@ -372,136 +282,9 @@ QList<File> *Phone::getFileList()
             else
                 fileList->append(tmpFile);
         }
-
-        /*
-        else
-            if ((1)&&(lineParts.length()>5)) // Variant of ls used 1
-            {
-            if (lineParts[4].contains("-"))
-            {
-                tmpFile.fileSize = lineParts.at(3);
-                lineParts.removeAt(3);
-            }
-
-            tmpFile.fileDate = lineParts[3]+" "+lineParts[4];
-
-            for (int i=5;i<lineParts.length();i++)
-                name.append(lineParts.at(i)+" ");
-            name.chop(1);
-            name.remove(QString("%1[0m").arg( QChar( 0x1b )));
-            name.remove(QChar( 0x1b ), Qt::CaseInsensitive);
-            if (name.contains("0;30"))//black
-            {
-                tmpFile.fileColor = QColor(Qt::black);
-            }
-            else if (name.contains("0;34"))//blue
-            {
-                tmpFile.fileColor = QColor(Qt::blue);
-            }
-            else if (name.contains("0;32"))//green
-            {
-                tmpFile.fileColor = QColor(Qt::green);
-            }
-            else if (name.contains("0;36"))//cyan
-            {
-                tmpFile.fileColor = QColor(Qt::cyan);
-            }
-            else if (name.contains("0;31"))//red
-            {
-                tmpFile.fileColor = QColor(Qt::red);
-            }
-            else if (name.contains("0;35"))//purple
-            {
-                tmpFile.fileColor = QColor(0, 0, 0);
-            }
-            else if (name.contains("0;33"))//brown
-            {
-                tmpFile.fileColor = QColor(0, 0, 0);
-            }
-            else if (name.contains("0;37"))//light gray
-            {
-                tmpFile.fileColor = QColor(Qt::lightGray);
-            }
-            else if (name.contains("1;30"))//dark gray
-            {
-                tmpFile.fileColor = QColor(Qt::darkGray);
-            }
-            else if (name.contains("1;34"))//dark gray
-            {
-                tmpFile.fileColor = QColor(Qt::blue);
-            }
-            else if (name.contains("1;32"))//light green
-            {
-                tmpFile.fileColor = QColor(Qt::green);
-            }
-            else if (name.contains("1;36"))//light cyan
-            {
-                tmpFile.fileColor = QColor(Qt::cyan);
-            }
-            else if (name.contains("1;31"))//light red
-            {
-                tmpFile.fileColor = QColor(Qt::red);
-            }
-            else if (name.contains("1;35"))//light purple
-            {
-                tmpFile.fileColor = QColor(0, 0, 0);
-            }
-            else if (name.contains("1;33"))//yellow
-            {
-                tmpFile.fileColor = QColor(Qt::yellow);
-            }
-            else if (name.contains("1;37"))//white
-            {
-                tmpFile.fileColor = QColor(Qt::white);
-            }
-            else
-                tmpFile.fileColor = QColor(Qt::black);
-            name.remove(QRegExp("\\[\\d;\\d+m"));
-
-            tmpFile.fileName = QString::fromUtf8(name.toAscii());
-            tmpFile.filePath = this->getPath() + tmpFile.fileName;
-
-            qDebug()<<"Phone::getFileList() - plik: "<<name<< " - " <<lineParts.first();
-
-            if (lineParts.first()[0]=='d')
-                tmpFile.fileType = "dir";
-            else if (lineParts.first()[0]=='-'||lineParts.first()[0]=='s')
-                tmpFile.fileType = "file";
-            else if (lineParts.first()[0]=='l')
-                tmpFile.fileType = "link";
-            else if (lineParts.first()[0]=='c'||lineParts.first()[0]=='b'||lineParts.first()[0]=='p')
-                tmpFile.fileType = "device";
-
-            name = tmpFile.fileName;
-            name.remove(QString("%1[0m").arg( QChar( 0x1b )));
-            name.remove(QChar( 0x1b ), Qt::CaseInsensitive);
-            name.remove(QRegExp("\\[\\d;\\d+m"));
-            if (tmpFile.fileType == "file" || tmpFile.fileType == "device")
-            {
-                plik.setFileName(QDir::currentPath()+"/tmp/"+name);
-                plik.open(QFile::WriteOnly);
-                tmpFile.fileIcon = provider->icon(QFileInfo(plik));
-                plik.remove();
-            }
-            else if (tmpFile.fileType == "link")
-            {
-                tmpFile.fileIcon = QApplication::style()->standardIcon(QStyle::SP_FileLinkIcon);
-            }
-            else
-                tmpFile.fileIcon = QApplication::style()->standardIcon(QStyle::SP_DirIcon);
-
-            if (tmpFile.fileName == "." || tmpFile.fileName == "..")
-                continue;
-            else
-                fileList->append(tmpFile);
-        }
-        */
-
     }
-//    adbProces->close();
     qDebug()<<"Phone::getFileList() - skonczylem analizowac pliki";
 
-//    adbProces->terminate();
     delete provider;
     return fileList;
 }
