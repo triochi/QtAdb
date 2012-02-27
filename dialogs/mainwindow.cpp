@@ -1081,3 +1081,41 @@ void MainWindow::on_actionEnter_register_key_triggered()
     RegisterDialog *registerDialog = new RegisterDialog(this,Phone::getGoogleAccounts());
     registerDialog->exec();
 }
+
+void MainWindow::on_actionRemount_triggered()
+{
+    QSettings settings;
+    QProcess *remount = new QProcess;
+    remount->setProcessChannelMode(QProcess::MergedChannels);
+    remount->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList() << " remount");
+    remount->waitForFinished(2000);
+    remount->terminate();
+    QMessageBox::information(0,"Warning" , "Mounted with write permissions");
+    delete remount;
+}
+
+void MainWindow::on_actionRemount_root_triggered()
+{
+    QSettings settings;
+    QProcess *remount = new QProcess;
+    remount->setProcessChannelMode(QProcess::MergedChannels);
+    // Set root (try to...)
+    remount->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList() << " root");
+    remount->waitForFinished(2000);
+    remount->terminate();
+
+    remount->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList() << " remount");
+    remount->waitForFinished(2000);
+    remount->terminate();
+    //remount via shell
+    remount->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList() << " shell mount -o remount rw /");
+    remount->waitForFinished(2000);
+    QString returnMessage = QString(remount->readAll());
+    remount->terminate();
+    if (returnMessage.contains("not permitted")){
+        QMessageBox::information(0,"Error" , "Operation not permitted!");
+    } else {
+         QMessageBox::information(0,"Warning" , "Mounted with root write permissions");
+    }
+    delete remount;
+}

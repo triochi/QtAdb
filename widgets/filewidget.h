@@ -26,6 +26,7 @@
 #include "../dialogs/appinfo.h"
 #include "../dialogs/dialogkopiuj.h"
 #include "../dialogs/appdialog.h"
+#include "../dialogs/permissions.h"
 #include "../classes/models/filetablemodel.h"
 #include "../classes/mytableview.h"
 #include "settingswidget.h"

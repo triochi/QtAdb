@@ -114,7 +114,7 @@
     <item row="1" column="2" colspan="6">
      <widget class="QLabel" name="label_4">
       <property name="text">
-       <string>Created by 7ymekk &amp; mozarcik</string>
+       <string>Created by 7ymekk &amp; mozarcik &amp; triochi</string>
       </property>
      </widget>
     </item>
@@ -131,7 +131,7 @@
        <enum>Qt::LeftToRight</enum>
       </property>
       <property name="text">
-       <string notr="true">2010-07-07</string>
+       <string notr="true">2012-27-02</string>
       </property>
      </widget>
     </item>

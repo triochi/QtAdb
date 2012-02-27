@@ -142,6 +142,8 @@ public slots:
 
 private slots:
 
+    void on_actionRemount_root_triggered();
+    void on_actionRemount_triggered();
     void phoneConnectionChanged(int);
     //apps
 

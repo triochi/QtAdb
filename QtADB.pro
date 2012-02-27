@@ -70,7 +70,8 @@ SOURCES += main.cpp \
     classes/ecwin7.cpp \
     classes/mytableview.cpp \
     dialogs/registerdialog.cpp \
-    classes/sockets.cpp
+    classes/sockets.cpp \
+    dialogs/permissions.cpp
 HEADERS += ./dialogs/mainwindow.h \
     ./dialogs/dialogkopiuj.h \
     ./classes/phone.h \
@@ -104,7 +105,8 @@ HEADERS += ./dialogs/mainwindow.h \
     classes/ecwin7.h \
     classes/mytableview.h \
     dialogs/registerdialog.h \
-    classes/sockets.h
+    classes/sockets.h \
+    dialogs/permissions.h
 FORMS += ./dialogs/mainwindow.ui \
     ./dialogs/dialogkopiuj.ui \
     ./dialogs/connectWifi.ui \
@@ -122,7 +124,8 @@ FORMS += ./dialogs/mainwindow.ui \
     widgets/messagewidget.ui \
     widgets/contactwidget.ui \
     dialogs/logcatdialog.ui \
-    dialogs/registerdialog.ui
+    dialogs/registerdialog.ui \
+    dialogs/permissions.ui
 RC_FILE = ikonka.rc
 RESOURCES += zasoby.qrc
 OTHER_FILES += otherFiles/changes.txt

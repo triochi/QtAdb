@@ -2258,6 +2258,15 @@ void FileWidget::permissions()
         fileName=file.fileName;
         if (file.fileType == File::file)
             fileName = fileName.left(fileName.lastIndexOf("/"));
+
+        PermissionsDialog *permissionsDialog = new PermissionsDialog(this);
+        permissionsDialog->exec();
+
+        if (permissionsDialog->result() == 1){
+
+        }
+
+
         QMessageBox::about(0,"Permissions", "File Permissions for file: " + fileName + " are :" +file.filePermissions);
     }
 }
