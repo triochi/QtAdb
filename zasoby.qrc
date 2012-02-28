@@ -53,6 +53,7 @@
         <file alias="qtadb_ru.qm">languages/qtadb_ru.qm</file>
         <file alias="qtadb_pt.qm">languages/qtadb_pt.qm</file>
         <file alias="qtadb_sr.qm">languages/qtadb_sr.qm</file>
+        <file alias="qtadb_zh.qm">languages/qtadb_zh.qm</file>
     </qresource>
     <qresource prefix="/qml">
         <file>qml/messageView.qml</file>
