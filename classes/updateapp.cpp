@@ -73,5 +73,5 @@ void UpdateApp::gotWWW(QNetworkReply * pReply)
 
 void UpdateApp::checkUpdates()
 {
-    this->reply = this->updateMan->get(QNetworkRequest(QUrl("http://qtadb.com/wordpress/download")));
+    this->reply = this->updateMan->get(QNetworkRequest(QUrl("http://qtadb.wordpress.com/download/")));
 }

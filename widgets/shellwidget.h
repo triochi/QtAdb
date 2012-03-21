@@ -22,6 +22,7 @@
 #define SHELLWIDGET_H
 
 #include <QtGui>
+//#include <QMenu>
 
 class ShellWidget : public QTextEdit
 {
@@ -34,6 +35,7 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent *e);
+    //void mousePressEvent(QMouseEvent *event);
 
 private:
     int insertedChars;
@@ -49,6 +51,7 @@ private:
     QStringList commandHistory;
     QStringList commands;
     int commandHistoryPosition;
+   // QMenu *customMenu;
 
 signals:
     void returnPressed(QString command);
@@ -56,6 +59,9 @@ signals:
 private slots:
     void readFromProcess();
     void executeCommand(QString command);
+   // void on_ShellWidget_customContextMenuRequested(const QPoint &pos);
+    void PasteText();
+   // void CopyText();
 };
 
 /*

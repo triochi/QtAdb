@@ -258,7 +258,7 @@ void MessageWidget::sendToClient(QString message)
         socket->disconnectFromHost();
     }
     else
-        QMessageBox::warning(this,"connection problem", "connection to client failed", QMessageBox::Close);
+        QMessageBox::warning(this,"Connection problem:", "Connection to client failed!", QMessageBox::Close);
     delete socket;
 }
 
@@ -268,7 +268,7 @@ void MessageWidget::connectToClient()
     socket->connectToHost(this->clientIP,4444,QTcpSocket::ReadWrite);
     if (!socket->waitForConnected(2000))
     {
-        QMessageBox::warning(this,"connection problem", "connection to client failed", QMessageBox::Close);
+        QMessageBox::warning(this,"Connection problem:", "Connection to client failed!", QMessageBox::Close);
     }
     delete socket;
 }

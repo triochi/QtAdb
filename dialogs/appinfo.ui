@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string extracomment="app info dialog title">App info</string>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <widget class="QWidget" name="gridLayoutWidget">
    <property name="geometry">
     <rect>

@@ -30,13 +30,47 @@ appInfo::appInfo(QWidget *parent, App *app) :
     this->setLayout(this->ui->gridLayout);
     this->resize(350, 280);
     this->setFixedHeight(280);
+    //this->setFixedSize(this->width(),this->height());
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     this->app = app;
     this->app->packageName.remove(QRegExp("\\s+$"));
 
     ui->labelAppsIcon->setPixmap(this->app->appIcon.pixmap(100,100));
     ui->editAppsAppName->setText(this->app->appName);
     ui->editAppsVersion->setText(this->app->appVersion);
-    ui->editAppsSize->setText(this->app->appSize);
+ //   ui->editAppsSize->setText(this->app->appSize);
+    QString strTmp = " KB";
+    long double sizeTmp = 0.0;
+    sizeTmp = this->app->appSize.toLongLong();
+    if (sizeTmp <= 1024)
+    {
+       strTmp.prepend(QString::number(sizeTmp, 'f', 0));
+       ui->editAppsSize->setText(strTmp);
+       strTmp = "";
+    }
+    if (sizeTmp > 1024)
+    {
+        sizeTmp = sizeTmp / 1024;
+        strTmp = " KB";
+    }
+    if (sizeTmp > 1024)
+    {
+        sizeTmp = sizeTmp / 1024;
+        strTmp = " MB";
+    }
+    if (sizeTmp > 1024)
+    {
+        sizeTmp = sizeTmp / 1024;
+        strTmp = " GB";
+    }
+    if (!strTmp.isEmpty())
+    {
+        strTmp.prepend(QString::number(sizeTmp, 'f', 3));
+        ui->editAppsSize->setText(strTmp);
+    }
+
+
+
     ui->editAppsFileName->setText(this->app->appFile);
     ui->editAppsPackageName->setText(this->app->packageName);
 
@@ -49,7 +83,7 @@ appInfo::appInfo(QWidget *parent, App *app) :
     QSettings settings;
     sdk = settings.value("sdkPath").toString();
     QProcess proc;
-    proc.start("\"" + sdk + "\"adb shell busybox ls /data/app/"
+    proc.start("\"" + sdk + "\"adb shell ls /data/app/"
                + this->app->packageName + "*");
     proc.waitForFinished(-1);
     QString output = proc.readAll();
@@ -81,7 +115,38 @@ appInfo::appInfo(App *app) :
     ui->labelAppsIcon->setPixmap(this->app->appIcon.pixmap(100,100));
     ui->editAppsAppName->setText(this->app->appName);
     ui->editAppsVersion->setText(this->app->appVersion);
-    ui->editAppsSize->setText(this->app->appSize);
+   // ui->editAppsSize->setText(this->app->appSize);
+    QString strTmp = " KB";
+    long double sizeTmp = 0.0;
+    sizeTmp = this->app->appSize.toLongLong();
+    if (sizeTmp <= 1024)
+    {
+       strTmp.prepend(QString::number(sizeTmp, 'f', 0));
+       ui->editAppsSize->setText(strTmp);
+       strTmp = "";
+    }
+    if (sizeTmp > 1024)
+    {
+        sizeTmp = sizeTmp / 1024;
+        strTmp = " KB";
+    }
+    if (sizeTmp > 1024)
+    {
+        sizeTmp = sizeTmp / 1024;
+        strTmp = " MB";
+    }
+    if (sizeTmp > 1024)
+    {
+        sizeTmp = sizeTmp / 1024;
+        strTmp = " GB";
+    }
+    if (!strTmp.isEmpty())
+    {
+        strTmp.prepend(QString::number(sizeTmp, 'f', 3));
+        ui->editAppsSize->setText(strTmp);
+    }
+
+
     ui->editAppsFileName->setText(this->app->appFile);
     ui->editAppsPackageName->setText(this->app->packageName);
 
@@ -94,7 +159,7 @@ appInfo::appInfo(App *app) :
     QSettings settings;
     sdk = settings.value("sdkPath").toString();
     QProcess proc;
-    proc.start("\"" + sdk + "\"adb shell busybox ls /data/app/"
+    proc.start("\"" + sdk + "\"adb shell ls /data/app/"
                + this->app->packageName + "*");
     proc.waitForFinished(-1);
     QString output = proc.readAll();
@@ -107,6 +172,7 @@ appInfo::appInfo(App *app) :
 
     connect(this->ui->pushButton, SIGNAL(clicked()), this, SLOT(install()));
     connect(this->ui->pushButton_2, SIGNAL(clicked()), this, SLOT(openMarket()));
+    connect(this->ui->pushButton_3, SIGNAL(clicked()), this, SLOT(openMarketPC()));
     connect(this->updateMan, SIGNAL(finished(QNetworkReply*)), this, SLOT(gotWWW(QNetworkReply*)));
     this->getQR();
 
@@ -119,6 +185,7 @@ appInfo::~appInfo()
         delete this->appsDialog;
     delete this->app;
     delete this->reply;
+
     delete ui;
 }
 
@@ -128,7 +195,7 @@ void appInfo::install()
     appList.append(*this->app);
 //    selected.package.append(this->app->appFile);
 
-    if (QMessageBox::question(this,this->reinstall ? tr("reinstall") : tr("install"),tr("are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,this->reinstall ? tr("Reinstall:") : tr("Install:"),tr("Are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
         return;
 
     if (this->appsDialog != NULL)
@@ -158,14 +225,22 @@ void appInfo::openMarket()
     sdk = settings.value("sdkPath").toString();
     QProcess proc;
     proc.start("\"" + sdk + "\"adb shell am start -a android.intent.action.VIEW -d market://details?id="
-               + this->app->packageName + " -n com.android.vending/.AssetInfoActivity");
+               + this->ui->editAppsPackageName->text() + " -n com.android.vending/.AssetBrowserActivity");
     proc.waitForFinished(-1);
+    QString out = proc.readAll();
+    if (out.contains("Error"))
+    {
+        proc.start("\"" + sdk + "\"adb shell am start -a android.intent.action.VIEW -d market://details?id="
+                   + this->ui->editAppsPackageName->text() + " -n com.android.vending/com.google.android.finsky.activities.PlayLauncherActivity");
+        proc.waitForFinished(-1);
+    }
+    qDebug()<<"adb shell am start -a android.intent.action.VIEW -d market://details?id="<<this->app->packageName<<" -n com.android.vending/.AssetBrowserActivity";
 }
 
 QPixmap appInfo::getQR(QString packageName)
 {
     QNetworkAccessManager *nac = new QNetworkAccessManager;
-    QNetworkReply *rep = nac->get(QNetworkRequest(QUrl("http://qrcode.kaywa.com/img.php?s=2&d=market://details?id=" + packageName)));
+    QNetworkReply *rep = nac->get(QNetworkRequest(QUrl("https://qrcode.kaywa.com/img.php?s=2&d=market://details?id=" + packageName)));
     while (true)
     {
         qApp->processEvents();
@@ -183,34 +258,48 @@ QPixmap appInfo::getQR(QString packageName)
 }
 
 QString appInfo::getCyrketVer(QString packageName)
+
 {
     QNetworkAccessManager *nac = new QNetworkAccessManager;
-    QNetworkReply *rep = nac->get(QNetworkRequest(QUrl("http://market.android.com/details?id=" + packageName)));
-    while (true)
-    {
-        qApp->processEvents();
-        if (rep->isFinished())
-            break;
-    }
+    QNetworkReply *rep = nac->get(QNetworkRequest(QUrl("https://play.google.com/store/apps/details?id=" + packageName)));
+   // qDebug()<<"packageName = "<<packageName;
+   // qDebug()<<"QUrl http://market.android.com/details?id="<<packageName;
 
-//    Current Version:</div>2.0<div
+        QEventLoop loop;
+        connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
+        loop.exec();
+
+//   old: Current Version:</div>2.0<div
+//   new: Current Version:</dt><dd itemprop="softwareVersion">1.0</dd><dt
     QByteArray ba = rep->readAll();
+   // qDebug()<<"ba = "<<ba;
     QString str = "";
-    int start = ba.indexOf("Current Version:</div>");
+    int start = ba.indexOf("Current Version:</dt>");
 //    start = ba.indexOf("<div>", start);
 //    start+=5;
     if (start != -1)
     {
-        start+=22;
-        int end = ba.indexOf("<div", start);
+        start+=52;
+        int end = ba.indexOf("</dd><dt", start);
         str = ba.mid(start, end-start);
+       // qDebug()<<"Apps Version (found) str = "<<str;
     }
     delete rep;
     delete nac;
+  //  qDebug()<<"Apps Version  (not found) str (version) = "<<str;
+    if (str.isEmpty())
+    {
+       return "app not found on Android Market";
+    }
+    else if (str == "Varies with device")
+    {
+        return str + ", Open in Market";
+    }
+    else
     return str;
 }
 
 void appInfo::openMarketPC()
 {
-    QDesktopServices::openUrl(QUrl("http://market.android.com/details?id=" + this->app->packageName));
+    QDesktopServices::openUrl(QUrl("http://market.android.com/details?id=" + this->ui->editAppsPackageName->text()));
 }

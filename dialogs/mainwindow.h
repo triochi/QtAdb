@@ -46,7 +46,8 @@
 #include "../widgets/phoneinfowidget.h"
 #include "../widgets/messagewidget.h"
 #include "../widgets/appwidget.h"
-#include "../widgets/recoverywidget.h"
+//#include "../widgets/recoverywidget.h"
+#include "../widgets/cwmwidget.h"
 #include "../classes/animation.h"
 #include "../widgets/fastbootwidget.h"
 #include "registerdialog.h"
@@ -85,9 +86,9 @@ protected:
     void changeEvent(QEvent *e);
     void resizeEvent(QResizeEvent *e);
     bool eventFilter(QObject *object, QEvent *event);
-    virtual void keyPressEvent( QKeyEvent *e );
+    //virtual void keyPressEvent( QKeyEvent *e );
 
-    void mousePressEvent(QMouseEvent*);
+    //void mousePressEvent(QMouseEvent*);
 #ifdef WIN7PROGRESS
     virtual bool winEvent(MSG *message, long *result);
 #endif
@@ -109,7 +110,8 @@ private:
     PhoneInfoWidget *phoneInfoWidget;
     MessageWidget *messageWidget;
     AppWidget *appWidget;
-    RecoveryWidget *recoveryWidget;
+   // RecoveryWidget *recoveryWidget;
+    CwmWidget *cwmWidget;
     FastbootWidget *fastbootWidget;
 
     QWidget *currentWidget;
@@ -121,7 +123,7 @@ private:
 
     bool showNoUpdates;
 
-    QString ipAddress, portNumber;
+    QString ipAddress, portNumber, lastWidget;
 
     QTextCodec *codec;
 
@@ -151,6 +153,7 @@ private slots:
     void showPageApps();
     void showPageFiles();
     void showPageRecovery();
+    void showPageCwm();
     void showPageFastboot();
     void showPagePhoneInfo();
     void showPageScreenshot();

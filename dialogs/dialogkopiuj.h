@@ -29,7 +29,6 @@
 #include <QThread>
 #include <QMessageBox>
 #include <QCloseEvent>
-
 #include "../classes/models/filetablemodel.h"
 #include "../classes/models/apptablemodel.h"
 #include "../classes/phone.h"
@@ -54,6 +53,7 @@ public:
 
 signals:
     void copied();
+    void isRunning();
     void nextFile(QString fileName, QString pathFrom, QString pathTo, int fileSize, int counter);
 };
 
@@ -66,6 +66,7 @@ public:
     QString filePath;
     int mode;
     int maxSize;
+    static void sleep(unsigned long secs){QThread::msleep(secs);}
 
 signals:
     void progressValue(int fileSize);
@@ -109,10 +110,11 @@ private:
 public slots:
     void closeAfterFinished();
     void copied();
+    void running();
     void nextFile(QString fileName, QString pathFrom, QString pathTo, int fileSize, int counter);
     void setProgressValue(int value);
 signals:
     void progressValue(int value, int max);
+    void copyCanceled();
 };
-
 #endif // DIALOGKOPIUJ_H

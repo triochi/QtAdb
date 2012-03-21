@@ -330,7 +330,8 @@ FileWidget::FileWidget(QWidget *parent, SettingsWidget *settings) :
 FileWidget::~FileWidget()
 {
     this->settings->phonePath = this->phone->getPath();
-    this->settings->computerPath = this->computer->getPath();
+    if (this->leftMode=="computer")
+        this->settings->computerPath = this->computer->getPath();
 
     delete this->phone;
     delete this->phoneLeft;
@@ -478,8 +479,8 @@ void FileWidget::resizeEvent(QResizeEvent *e)
 
 void FileWidget::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::RightButton)
-        emit customContextMenuRequested(event->pos());
+   if (event->button() == Qt::RightButton)
+      emit customContextMenuRequested(event->pos());
 }
 
 void FileWidget::connectionChanged()
@@ -583,14 +584,14 @@ void FileWidget::computerCopy()
 {
     if (this->leftTableView->selectionModel()->selection().isEmpty())
     {
-        QMessageBox::information(this,"",tr("select some files first"),QMessageBox::Ok);
+        QMessageBox::information(this,"",tr("Select some items first!"),QMessageBox::Ok);
         return;
     }
 
     QSettings settings;
     if (settings.value("showCopyConfirmation", true).toBool())
     {
-	if (QMessageBox::question(this,tr("copying"),tr("are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,tr("Copying:"),tr("Are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
 	    return;
     }
 
@@ -605,7 +606,7 @@ void FileWidget::computerCopy()
     filesToCopy = this->computerFilesToCopy(filesToCopy);
     if (filesToCopy->isEmpty())
     {
-        QMessageBox::information(this,"",tr("theres nothing to copy. Maybe selected dirs are empty"),QMessageBox::Ok);
+        QMessageBox::information(this,"",tr("There's nothing to copy. Maybe selected directories are empty?!"),QMessageBox::Ok);
         return;
     }
 
@@ -629,11 +630,11 @@ void FileWidget::computerDelete()
 {
     if (this->leftTableView->selectionModel()->selection().isEmpty())
     {
-        QMessageBox::information(this,"",tr("select some files first"),QMessageBox::Ok);
+        QMessageBox::information(this,"",tr("Select some items first!"),QMessageBox::Ok);
         return;
     }
 
-    if (QMessageBox::question(this, tr("deleting"), tr("are you sure???"),
+    if (QMessageBox::question(this, tr("Deleting:"), tr("Are you sure???"),
                               QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
         return;
 
@@ -650,6 +651,7 @@ void FileWidget::computerDelete()
 void FileWidget::computerDisplay(QTableWidget *tableWidget)
 {
     QSettings settings;
+    QString packageName;
     this->computerModel->clear();
     this->ui->leftLabelSelectedCount->setText(tr("getting files..."));
     this->leftTableView->setDisabled(true);
@@ -662,28 +664,68 @@ void FileWidget::computerDisplay(QTableWidget *tableWidget)
     {
 //        qApp->processEvents();
         tmpFile = fileList->takeFirst();
+        qDebug()<<"tmpFile.fileName =" <<tmpFile.fileName;
         if (tmpFile.fileName.contains(QRegExp(".apk$")))
         {
             if (this->settings->showAppName || this->settings->showAppIcon)
             {
-                app = this->getAppInfo(tmpFile.filePath);
-                if (this->settings->showAppIcon)
-                    tmpFile.fileIcon = app->appIcon;
-                QString appName = this->settings->showAppNameConfig;
-                appName.replace("<appName>", app->appName);
-                QString tmp=app->appVersion;
-                if (tmp.length()>15)
-                    tmp=tmp.left(15)+"...";
+                packageName = settings.value(("apps/" + tmpFile.fileName), "").toString();
+                settings.beginGroup("apps");
+                QStringList settingsList=settings.childKeys();
+                settings.endGroup();
+                qDebug()<<"settingsList=settings.childKeys =" <<settingsList;
+                qDebug()<<"tmpFile.fileName =" <<tmpFile.fileName;
 
-                appName.replace("<appVersion>", tmp);
-                appName.replace("<packageName>", app->packageName);
-                if (this->settings->showAppName)
-                    tmpFile.fileName = appName;
-                delete app;
-                app = NULL;
-            }
+                if (!settingsList.contains(tmpFile.fileName))
+                 {
+                    app = this->getAppInfo(tmpFile.filePath);
+                    if (this->settings->showAppIcon)
+                    tmpFile.fileIcon = app->appIcon;
+                    QString appName = this->settings->showAppNameConfig;
+                    appName.replace("<appName>", app->appName);
+                    QString tmp=app->appVersion;
+                    if (tmp.length()>15)
+                       tmp=tmp.left(15)+"...";
+
+                   appName.replace("<appVersion>", tmp);
+                   appName.replace("<packageName>", app->packageName);
+                   if (this->settings->showAppName)
+                      tmpFile.fileName = appName;
+                   delete app;
+                   app = NULL;
+                 }
+                else
+                 {
+
+                    QString appNameset = settings.value("apps/" + packageName + "/appName").toString();
+                    QString appVersion = settings.value("apps/" + packageName + "/version").toString();
+                    if (this->settings->showAppIcon)
+                      {
+                        QByteArray ba;
+                        QPixmap pix;
+                        ba = settings.value("apps/" + packageName + "/icon").toByteArray();
+                        pix.loadFromData(ba);
+                        QIcon icon(pix);
+                        tmpFile.fileIcon = icon;
+                      }
+                    QString appName = this->settings->showAppNameConfig;
+                    appName.replace("<appName>", appNameset);
+                    QString tmp=appVersion;
+                    if (tmp.length()>15)
+                       tmp=tmp.left(15)+"...";
+
+                   appName.replace("<appVersion>", tmp);
+                   appName.replace("<packageName>", packageName);
+                   if (this->settings->showAppName)
+                      tmpFile.fileName = appName;
+                   delete app;
+                   app = NULL;
+                 }
+
+           }
         }
         this->computerModel->insertFile(0, tmpFile);
+    // }
     }
     delete fileList;
     this->leftTableView->resizeColumnsToContents();
@@ -747,8 +789,8 @@ void FileWidget::computerNewDir()
 {
     if (!computer->makeDir("new dir"))
     {
-        QMessageBox::information(this,tr("error"),
-                                 tr("dir was not created.\nMake sure that you are allowed to do this"),
+        QMessageBox::information(this,tr("Error:"),
+                                 tr("Directory was not created.\nMake sure that you are allowed to do this"),
                                  QMessageBox::Ok);
         return;
     }
@@ -857,6 +899,7 @@ void FileWidget::leftContextMenu(const QPoint &pos)
 
 void FileWidget::leftDisplay()
 {
+  //  this->leftTableView->verticalScrollBar()->adjustSize();
     if (this->leftMode=="computer")
     {
         ui->leftFileNameFilter->clear();
@@ -886,6 +929,8 @@ void FileWidget::leftDisplay()
     this->leftTableView->resizeColumnsToContents();
     colSize = this->leftTableView->columnWidth(2);
     colDate = this->leftTableView->columnWidth(3);
+    if (this->leftTableView->verticalScrollBar()->width() > 17)
+        this->leftTableView->verticalScrollBar()->adjustSize();
     if (this->leftTableView->verticalScrollBar() == NULL)
         colName = widthTab - colIcon - colSize - colDate;
     else
@@ -895,7 +940,7 @@ void FileWidget::leftDisplay()
     this->leftTableView->setColumnWidth(0, colIcon);
     this->leftTableView->setColumnWidth(1, colName - 2);
     this->leftTableView->setColumnWidth(2, colSize);
-    this->leftTableView->setColumnWidth(3, colDate);
+    this->leftTableView->setColumnWidth(3, colDate + this->leftTableView->verticalScrollBar()->width());
 }
 
 void FileWidget::leftDoubleClick()
@@ -933,11 +978,70 @@ void FileWidget::leftDoubleClick()
         {
             QModelIndex index = this->leftTableView->selectionModel()->selection().indexes().takeFirst();
             index = this->phoneLeftSortModel->mapToSource(index);
-            QString fileName = this->phoneLeftModel->getFile(index.row()).fileName;
+            QString fileName, filePath, fileType;
+            fileName = this->phoneLeftModel->getFile(index.row()).fileName;
+            filePath = this->phoneLeftModel->getFile(index.row()).filePath;
+            fileType = this->phoneLeftModel->getFile(index.row()).fileType;
 
             if (this->phoneLeft->cd(fileName))
             {
                 this->leftDisplay();
+            }
+            else if (fileType == "file")
+            {
+                QDir dir;
+                QProcess *edit = new QProcess;
+                QMessageBox *msg = new QMessageBox(this);
+                msg->setText("Loading file... Please, wait...");
+                msg->setIcon(QMessageBox::Information);
+                msg->setWindowTitle("Open file:");
+                msg->setStandardButtons(QMessageBox::Ok);
+                connect(edit, SIGNAL(started()), msg, SLOT(exec()));
+                connect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
+                edit->start("\""+sdk+"\""+"adb pull \""+filePath+"\" \""+QDir::currentPath()+"/tmp\"");
+                edit->waitForFinished(-1);
+                disconnect(edit, SIGNAL(started()), msg, SLOT(exec()));
+                disconnect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
+                QDesktopServices::openUrl(QUrl("file:///" + QDir::currentPath()+"/tmp/" + fileName, QUrl::TolerantMode));
+                if (QMessageBox::information(this,"Open file:","File is opened and ready for editing...\nMake your changes and save it to disk.\n\nWhen done press [Save] to save changes to Phone, or [Discard] to keep the original file.",QMessageBox::Save | QMessageBox::Discard) == QMessageBox::Save)
+                {
+                    edit->start("\""+sdk+"\""+"adb shell stat \"" + filePath + "\"");
+                    edit->waitForFinished(-1);
+                    QString output = edit->readAll();
+                    int start = output.indexOf("Access:",Qt::CaseSensitive);
+                    start+=7;
+                    int end = output.indexOf("Uid:",start,Qt::CaseSensitive);
+                    QString fPerm = output.mid(start, end-start);
+                    fPerm = fPerm.trimmed(); //(0777/lrwxrwxrwx)
+                    QStringList permList = fPerm.split("/");
+                    QString chmod = permList[0].right(3);
+                    QString folder = filePath.left(filePath.lastIndexOf("/"));
+                    if (folder.startsWith("/system"))
+                    {
+                        edit->start("\""+sdk+"\""+"adb shell mount -o remount,rw /system");
+                        edit->waitForFinished(-1);
+                    }
+                    msg->setText("Saving file to Phone... Please, wait...");
+                    connect(edit, SIGNAL(started()), msg, SLOT(exec()));
+                    connect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
+                    edit->start("\""+sdk+"\""+"adb push \""+QDir::currentPath()+"/tmp/" + fileName + "\" \"" + folder + "\"");
+                    edit->waitForFinished(-1);
+                    disconnect(edit, SIGNAL(started()), msg, SLOT(exec()));
+                    disconnect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
+                    edit->start("\""+sdk+"\""+"adb shell chmod " + chmod.append(" \"") + filePath + "\"");
+                    edit->waitForFinished(-1);
+                    if (folder.startsWith("/system"))
+                    {
+                        edit->start("\""+sdk+"\""+"adb shell mount -o remount,ro,noatime /system");
+                        edit->waitForFinished(-1);
+                    }
+                    leftDisplay();
+                }
+                else
+                {
+                    dir.remove(QDir::currentPath()+"/tmp/" + fileName);
+                    return;
+                }
             }
         }
     }
@@ -962,7 +1066,7 @@ void FileWidget::leftSelectedCount()
 {
     QModelIndexList indexList = this->leftTableView->selectionModel()->selectedRows(1);
     QString word(QString::number(indexList.size()) + "/" +
-                 QString::number(this->computerModel->rowCount())+ " " + tr("selected", "selected label below table"));
+                 QString::number(this->computerModel->rowCount())+ " " + tr("selected           (double click file to open it)", "selected label below table"));
     this->ui->leftLabelSelectedCount->setText(word);
 }
 
@@ -1022,18 +1126,74 @@ void FileWidget::on_leftPushButtonPhoneComputerSwitch_pressed()
 {
     if ((this->phoneLeft->getConnectionState() == RECOVERY) || (this->phoneLeft->getConnectionState() == DEVICE))
     {
+        QString oldPath;
         if (this->leftMode=="computer")
         {
+            oldPath = this->computer->getPath();
+            QStringList phonePaths;
+            phonePaths << "/sdcard/" << "/data/" << "/data/app/" << "/sd-ext/" << "/system/" << "/system/app/";
+            ui->leftComboBox->clear();
+            ui->leftComboBox->addItems(phonePaths);
+
             this->leftMode="phone";
             ui->leftPushButtonPhoneComputerSwitch->setIcon(QIcon(":/icons/computer.png"));
             this->leftTableView->setModel(this->phoneLeftSortModel);
-            this->leftDisplay();
+           // this->leftDisplay();
+
+
+            disconnect(ui->leftComboBox->lineEdit(),SIGNAL(returnPressed()),this,SLOT(leftComboBox()));
+            disconnect(ui->leftComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(leftComboBoxScroll()));
+            connect(ui->leftComboBox->lineEdit(),SIGNAL(returnPressed()),this,SLOT(leftComboBoxPhone()));
+            connect(ui->leftComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(leftComboBoxPhone()));
         }
         else
         {
+            oldPath = this->phoneLeft->getPath();
+            ui->leftComboBox->clear();
+            QPair<QIcon, QString> para;
+            QFileIconProvider *provider = new QFileIconProvider;
+            para.second = QDesktopServices::storageLocation(QDesktopServices::DesktopLocation);
+            para.first = provider->icon(QFileInfo(para.second));
+            this->ui->leftComboBox->addItem(para.first, para.second);
+
+            para.second = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+            para.first = provider->icon(QFileInfo(para.second));
+            this->ui->leftComboBox->addItem(para.first, para.second);
+
+            para.second = QDesktopServices::storageLocation(QDesktopServices::HomeLocation);
+            para.first = provider->icon(QFileInfo(para.second));
+            this->ui->leftComboBox->addItem(para.first, para.second);
+
+            QFileInfoList lista = QDir::drives();
+            while(!lista.isEmpty())
+            {
+                para.second = lista.takeFirst().filePath();
+                para.first = provider->icon(QFileInfo(para.second));
+                this->ui->leftComboBox->addItem(para.first, para.second);
+            }
+            delete provider;
+
+
             this->leftMode="computer";
             ui->leftPushButtonPhoneComputerSwitch->setIcon(QIcon(":/icons/phone.png"));
             this->leftTableView->setModel(this->computerSortModel);
+
+
+            disconnect(ui->leftComboBox->lineEdit(),SIGNAL(returnPressed()),this,SLOT(leftComboBoxPhone()));
+            disconnect(ui->leftComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(leftComboBoxPhone()));
+            connect(ui->leftComboBox->lineEdit(),SIGNAL(returnPressed()),this,SLOT(leftComboBox()));
+            connect(ui->leftComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(leftComboBoxScroll()));
+        }
+        if (this->leftMode=="computer")
+        {
+            this->ui->leftComboBox->setEditText(oldPath);
+            this->phoneLeft->cd(oldPath);
+            leftComboBoxPhone();
+        }
+        else
+        {
+            this->ui->leftComboBox->setEditText(oldPath);
+            this->computer->cd(oldPath);
             this->leftDisplay();
         }
     }
@@ -1142,7 +1302,8 @@ void FileWidget::phoneContextMenu(const QPoint &pos,QTableView *tableView)
             this->phoneLeftMenu->setLayoutDirection(Qt::LeftToRight);
         if (layoutDirection == 1)
             this->phoneLeftMenu->setLayoutDirection(Qt::RightToLeft);
-        QAction *usun,*selectAll,*selectNone,*odswiez,*nowyFolder,*zmienNazwe,*ukryte, *copy/*, *install*/;
+        QAction *usun,*selectAll,*selectNone,*odswiez,*nowyFolder,*zmienNazwe,*ukryte, *copy, *props, *sep;
+
         zmienNazwe = this->phoneLeftMenu->addAction(QIcon(":icons/rename.png"),tr("rename", "phone right click menu"),this,SLOT(phoneRename()));
         zmienNazwe->setData(QString("rename"));
         selectAll = this->phoneLeftMenu->addAction(QIcon(":icons/selectAll.png"),tr("select all", "phone right click menu"),this,SLOT(leftSelectAll()));
@@ -1159,6 +1320,9 @@ void FileWidget::phoneContextMenu(const QPoint &pos,QTableView *tableView)
         usun->setData(QString("delete"));
         ukryte = this->phoneLeftMenu->addAction(QIcon(":icons/hidden.png"),tr("hidden files", "phone right click menu"),this,SLOT(phoneHiddenFiles()));
         ukryte->setData(QString("hidden files"));
+        sep = this->phoneLeftMenu->addSeparator();
+        props = this->phoneLeftMenu->addAction(QIcon(":icons/info.png"),tr("Properties", "phone right click menu"),this,SLOT(propsDialog()));
+        props->setData(QString("properties"));
 
         //    install = menu->addAction(QIcon(":icons/install.png"),tr("install"),this,SLOT(installAppFromPhone()));
     }
@@ -1173,7 +1337,7 @@ void FileWidget::phoneContextMenu(const QPoint &pos,QTableView *tableView)
             this->phoneRightMenu->setLayoutDirection(Qt::LeftToRight);
         if (layoutDirection == 1)
             this->phoneRightMenu->setLayoutDirection(Qt::RightToLeft);
-        QAction *usun,*selectAll,*selectNone,*odswiez,*nowyFolder,*zmienNazwe,*ukryte, *copy, *openInNewTab/*, *install*/;
+        QAction *usun,*selectAll,*selectNone,*odswiez,*nowyFolder,*zmienNazwe,*ukryte, *copy, *openInNewTab, *props, *sep;
 
         zmienNazwe = this->phoneRightMenu->addAction(QIcon(":icons/rename.png"),tr("rename", "phone right click menu"),this,SLOT(phoneRename()));
         zmienNazwe->setData(QString("rename"));
@@ -1193,6 +1357,9 @@ void FileWidget::phoneContextMenu(const QPoint &pos,QTableView *tableView)
         ukryte->setData(QString("hidden files"));
         openInNewTab = this->phoneRightMenu->addAction(QApplication::style()->standardIcon(QStyle::SP_DirIcon),tr("open in new tab", "phone right click menu"),this,SLOT(phoneOpenInNewTab()));
         openInNewTab->setData(QString("open in new tab"));
+        sep = this->phoneRightMenu->addSeparator();
+        props = this->phoneRightMenu->addAction(QIcon(":icons/info.png"),tr("Properties", "phone right click menu"),this,SLOT(propsDialog()));
+        props->setData(QString("properties"));
     }
     if (rightTableView->model() == this->findModel)
     {
@@ -1205,6 +1372,8 @@ void FileWidget::phoneContextMenu(const QPoint &pos,QTableView *tableView)
 
         this->phoneRightMenu->actions().at(3)->setVisible(false);//copy
         this->phoneRightMenu->actions().at(6)->setVisible(false);//delete
+        this->phoneRightMenu->actions().at(9)->setVisible(false);
+        this->phoneRightMenu->actions().at(10)->setVisible(false);
 
     }
     else if (rightTableView->model() == this->phoneSortModel)
@@ -1218,6 +1387,8 @@ void FileWidget::phoneContextMenu(const QPoint &pos,QTableView *tableView)
 
         this->phoneRightMenu->actions().at(3)->setVisible(true);//copy
         this->phoneRightMenu->actions().at(6)->setVisible(true);//delete
+        this->phoneRightMenu->actions().at(9)->setVisible(true);
+        this->phoneRightMenu->actions().at(10)->setVisible(true);
     }
 
     QPoint pos2;
@@ -1255,13 +1426,13 @@ void FileWidget::phoneCopy()
 
     if (tableView->selectionModel()->selection().isEmpty())
     {
-        QMessageBox::information(this,"",tr("select some files first"),QMessageBox::Ok);
+        QMessageBox::information(this,"",tr("Select some items first!"),QMessageBox::Ok);
         return;
     }
     QSettings settings;
     if (settings.value("showCopyConfirmation", true).toBool())
     {
-	if (QMessageBox::question(this,tr("copying"),tr("are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,tr("Copying:"),tr("Are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
 	    return;
     }
 
@@ -1276,7 +1447,7 @@ void FileWidget::phoneCopy()
     filesToCopy = this->phoneFilesToCopy(filesToCopy, phoneTmp);
     if (filesToCopy->isEmpty())
     {
-        QMessageBox::information(this,"",tr("theres nothing to copy. Maybe selected dirs are empty"),QMessageBox::Ok);
+        QMessageBox::information(this,"Copying:",tr("There's nothing to copy. Maybe selected directories are empty?!"),QMessageBox::Ok);
         return;
     }
 
@@ -1325,11 +1496,11 @@ void FileWidget::phoneDelete()
 
     if (tableView->selectionModel()->selection().isEmpty())
     {
-        QMessageBox::information(this,"",tr("select some files first"),QMessageBox::Ok);
+        QMessageBox::information(this,"",tr("Select some items first!"),QMessageBox::Ok);
         return;
     }
 
-    if (QMessageBox::question(this, tr("deleting"), tr("are you sure???"),
+    if (QMessageBox::question(this, tr("Deleting:"), tr("Are you sure???"),
                               QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
         return;
 
@@ -1495,7 +1666,7 @@ void FileWidget::phoneNewDir()
 
     if (!phoneTmp->makeDir("new dir"))
     {
-        QMessageBox::information(this,tr("error"),tr("dir was not created.\nMake sure that you are allowed to do this"),QMessageBox::Ok);
+        QMessageBox::information(this,tr("Error:"),tr("Directory was not created.\nMake sure directory doesn't exist and that you are allowed to do this!"),QMessageBox::Ok);
         return;
     }
     if (rightTableView->hasFocus())
@@ -1642,8 +1813,27 @@ void FileWidget::rightContextMenu(const QPoint &pos)
 
 void FileWidget::rightComboBox()
 {
-    if (phone->cd(ui->rightComboBox->lineEdit()->text()))
+    QString cboxdir = ui->rightComboBox->lineEdit()->text();
+    if (cboxdir == "/sd-ext/")
+    {
+        QSettings settings;
+        cboxdir = settings.value("sdFolder").toString();
+        if (cboxdir == "empty" || cboxdir.isEmpty())
+        {
+            QMessageBox::information(this,"sd-ext:","Detect /sd-ext/ partition in Settings!");
+        }
+        if (cboxdir == "<Not Found>")
+        {
+            QMessageBox::critical(this,"sd-ext:","Cannot detect /sd-ext/ partition!\nEnter path in Settings manualy.");
+            ui->rightComboBox->lineEdit()->setText("<Not Found>");
+        }
+    }
+    qDebug()<<"phonePath ="<<cboxdir;
+    if (phone->cd(cboxdir))
+    {
+        this->phone->setPath(cboxdir);
         this->rightDisplay();
+    }
 //    QString path=this->phone->getPath();
 //    this->phone->setPath(ui->rightComboBox->lineEdit()->text().toUtf8());
 //    if (this->phone->cd("."))
@@ -1669,6 +1859,8 @@ void FileWidget::rightDisplay()
     this->rightTableView->resizeColumnsToContents();
     colSize = this->rightTableView->columnWidth(2);
     colDate = this->rightTableView->columnWidth(3);
+    if (this->rightTableView->verticalScrollBar()->width() > 17)
+        this->rightTableView->verticalScrollBar()->adjustSize();
     if (this->rightTableView->verticalScrollBar() == NULL)
         colName = widthTab - colIcon - colSize - colDate;
     else
@@ -1678,7 +1870,7 @@ void FileWidget::rightDisplay()
     this->rightTableView->setColumnWidth(0, colIcon);
     this->rightTableView->setColumnWidth(1, colName - 2);
     this->rightTableView->setColumnWidth(2, colSize);
-    this->rightTableView->setColumnWidth(3, colDate);
+    this->rightTableView->setColumnWidth(3, colDate + this->rightTableView->verticalScrollBar()->width());
 
     if (this->rightTabBar->count()>0)
     {
@@ -1693,21 +1885,27 @@ void FileWidget::rightDoubleClick()
     if (!this->rightTableView->selectionModel()->selection().isEmpty())
     {
         QModelIndex index;
-        QString fileName;
+        QString fileName, filePath, fileType;;
+        File file;
         if (rightTableView->model()==this->findModel)
         {
-            File file;
             index = this->rightTableView->selectionModel()->selection().indexes().takeFirst();
             file = this->findModel->getFile(index.row());
             fileName=file.fileName;
             if (file.fileType == "file")
+            {
                 fileName = fileName.left(fileName.lastIndexOf("/"));
+                filePath = this->phoneModel->getFile(index.row()).filePath;
+                fileType = this->phoneModel->getFile(index.row()).fileType;
+            }
         }
         else
         {
             index = this->rightTableView->selectionModel()->selection().indexes().takeFirst();
             index = this->phoneSortModel->mapToSource(index);
             fileName = this->phoneModel->getFile(index.row()).fileName;
+            filePath = this->phoneModel->getFile(index.row()).filePath;
+            fileType = this->phoneModel->getFile(index.row()).fileType;
         }
 
         if (fileName.contains(" -> "))
@@ -1717,6 +1915,62 @@ void FileWidget::rightDoubleClick()
         if (this->phone->cd(fileName))
         {
             this->rightDisplay();
+        }
+        else if (fileType == "file")
+        {
+            QDir dir;
+            QProcess *edit = new QProcess;
+            QMessageBox *msg = new QMessageBox(this);
+            msg->setText("Loading file... Please, wait...");
+            msg->setIcon(QMessageBox::Information);
+            msg->setWindowTitle("Open file:");
+            msg->setStandardButtons(QMessageBox::Ok);
+            connect(edit, SIGNAL(started()), msg, SLOT(exec()));
+            connect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
+            edit->start("\""+sdk+"\""+"adb pull \""+filePath+"\" \""+QDir::currentPath()+"/tmp\"");
+            edit->waitForFinished(-1);
+            disconnect(edit, SIGNAL(started()), msg, SLOT(exec()));
+            disconnect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
+            QDesktopServices::openUrl(QUrl("file:///" + QDir::currentPath()+"/tmp/" + fileName, QUrl::TolerantMode));
+            if (QMessageBox::information(this,"Open file:","File is opened and ready for editing...\nMake your changes and save it to disk.\n\nWhen done press [Save] to save changes to Phone, or [Discard] to keep the original file.",QMessageBox::Save | QMessageBox::Discard) == QMessageBox::Save)
+            {
+                edit->start("\""+sdk+"\""+"adb shell stat \"" + filePath + "\"");
+                edit->waitForFinished(-1);
+                QString output = edit->readAll();
+                int start = output.indexOf("Access:",Qt::CaseSensitive);
+                start+=7;
+                int end = output.indexOf("Uid:",start,Qt::CaseSensitive);
+                QString fPerm = output.mid(start, end-start);
+                fPerm = fPerm.trimmed(); //(0777/lrwxrwxrwx)
+                QStringList permList = fPerm.split("/");
+                QString chmod = permList[0].right(3);
+                QString folder = filePath.left(filePath.lastIndexOf("/"));
+                if (folder.startsWith("/system"))
+                {
+                    edit->start("\""+sdk+"\""+"adb shell mount -o remount,rw /system");
+                    edit->waitForFinished(-1);
+                }
+                msg->setText("Saving file to Phone... Please, wait...");
+                connect(edit, SIGNAL(started()), msg, SLOT(exec()));
+                connect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
+                edit->start("\""+sdk+"\""+"adb push \""+QDir::currentPath()+"/tmp/" + fileName + "\" \"" + folder + "\"");
+                edit->waitForFinished(-1);
+                disconnect(edit, SIGNAL(started()), msg, SLOT(exec()));
+                disconnect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
+                edit->start("\""+sdk+"\""+"adb shell chmod " + chmod.append(" \"") + filePath + "\"");
+                edit->waitForFinished(-1);
+                if (folder.startsWith("/system"))
+                {
+                    edit->start("\""+sdk+"\""+"adb shell mount -o remount,ro,noatime /system");
+                    edit->waitForFinished(-1);
+                }
+                rightDisplay();
+            }
+            else
+            {
+                dir.remove(QDir::currentPath()+"/tmp/" + fileName);
+                return;
+            }
         }
     }
 }
@@ -1739,7 +1993,7 @@ void FileWidget::rightSelectedCount()
 {
     QModelIndexList indexList = this->rightTableView->selectionModel()->selectedRows(1);
     QString word(QString::number(indexList.size()) + "/" +
-                 QString::number(this->rightTableView->model()->rowCount(QModelIndex()))+ " " + tr("selected"));
+                 QString::number(this->rightTableView->model()->rowCount(QModelIndex()))+ " " + tr("selected           (double click file to open it)"));
     this->ui->rightLabelSelectedCount->setText(word);
 }
 
@@ -1796,7 +2050,7 @@ void FileWidget::showAppInfo()
         }
         else
         {
-            QMessageBox::information(this, tr("information"), tr("It's not an application"), QMessageBox::Ok);
+            QMessageBox::information(this, tr("Information:"), tr("It's not an application!"), QMessageBox::Ok);
         }
     }
 }
@@ -1809,7 +2063,7 @@ void ThreadFind::run()
     QString output;
     QString path, file;
     QStringList strList;
-    proces->start("\""+this->sdk+"\"adb shell busybox find "+this->path+" -iname \'*"+this->fileName+"*\'");
+    proces->start("\""+this->sdk+"\"adb shell find "+this->path+" -iname \'*"+this->fileName+"*\'");
 
     Phone phone(this->sdk,false);
     phone.setConnectionState(DEVICE);
@@ -1911,7 +2165,7 @@ void FileWidget::installAppFromComputer()
 
     if (this->leftTableView->selectionModel()->selection().isEmpty())
     {
-        QMessageBox::information(this, "install", "there is no files to install", QMessageBox::Ok);
+        QMessageBox::information(this, "Install:", "There is no files to install!", QMessageBox::Ok);
         return;
     }
 
@@ -1933,7 +2187,7 @@ void FileWidget::installAppFromComputer()
 
 //    selected.package.append(this->app->appFile);
 
-    if (QMessageBox::question(this,tr("install"),tr("are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,tr("Install:"),tr("Are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
         return;
 
 //    int i=0;
@@ -2008,9 +2262,14 @@ App * FileWidget::getAppInfo(QString filePath)
         }
         aaptLines.removeFirst();
     }
-
-    if (!settings.contains(app->packageName))
+    qDebug()<<"filePath = "<<filePath;
+    int x = app->appFile.lastIndexOf("/");
+    qDebug()<<"x = "<<x;
+    QString apkFilename = app->appFile.right(app->appFile.length()- x-1);
+    qDebug()<<"apkFilename = "<<apkFilename;
+    if (!settings.contains(app->packageName));
     {
+        settings.setValue(apkFilename, app->packageName);
         settings.setValue(app->packageName+"/icoName", app->icoName);
         settings.setValue(app->packageName+"/appName", QString::fromUtf8(app->appName.toAscii()));
         settings.setValue(app->packageName+"/version", app->appVersion);
@@ -2020,13 +2279,15 @@ App * FileWidget::getAppInfo(QString filePath)
     temp.append(".png");
     if (!settings.contains(app->packageName+"/icon"))
     {
-        unpack(app->appFile, QDir::currentPath()+"/icons/", app->icoName, temp);
+        unpack(app->appFile, QDir::currentPath()+"/tmp/", app->icoName, temp);
 
-        QFile icon(QDir::currentPath()+"/icons/"+app->packageName.toLatin1()+".png");
+        QFile icon(QDir::currentPath()+"/tmp/"+app->packageName.toLatin1()+".png");
         icon.open(QIODevice::ReadWrite);
         ba = icon.readAll();
         settings.setValue(app->packageName+"/icon", ba); //- zapisanie pixmap w QSettings
         icon.remove();
+        QDir dir;
+        dir.rmdir (QDir::currentPath()+"/icons");
     }
     ba = settings.value(app->packageName+"/icon").toByteArray();
     pix.loadFromData(ba);
@@ -2079,7 +2340,7 @@ void FileWidget::copySlotToComputer(QStringList list)
     QSettings settings;
     if (settings.value("showCopyConfirmation", true).toBool())
     {
-	if (QMessageBox::question(this,tr("copying"),tr("are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,tr("Copying:"),tr("Are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
 	    return;
     }
 
@@ -2094,7 +2355,7 @@ void FileWidget::copySlotToComputer(QStringList list)
     filesToCopy = this->phoneFilesToCopy(filesToCopy, this->phone);
     if (filesToCopy->isEmpty())
     {
-        QMessageBox::information(this,"",tr("theres nothing to copy. Maybe selected dirs are empty"),QMessageBox::Ok);
+        QMessageBox::information(this,"Copying:",tr("There's nothing to copy. Maybe selected directories are empty?!"),QMessageBox::Ok);
         return;
     }
 
@@ -2127,7 +2388,7 @@ void FileWidget::copySlotToPhone(QStringList list)
     QSettings settings;
     if (settings.value("showCopyConfirmation", true).toBool())
     {
-	if (QMessageBox::question(this,tr("copying"),tr("are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,tr("Copying:"),tr("Are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
 	    return;
     }
 
@@ -2146,7 +2407,7 @@ void FileWidget::copySlotToPhone(QStringList list)
 
     if (filesToCopy->isEmpty())
     {
-        QMessageBox::information(this,"",tr("theres nothing to copy. Maybe selected dirs are empty"),QMessageBox::Ok);
+        QMessageBox::information(this,"Copying:",tr("There's nothing to copy. Maybe selected directories are empty?!"),QMessageBox::Ok);
         return;
     }
 
@@ -2181,7 +2442,7 @@ void FileWidget::copySlotToPhoneLeft(QStringList list)
     QSettings settings;
     if (settings.value("showCopyConfirmation", true).toBool())
     {
-	if (QMessageBox::question(this,tr("copying"),tr("are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,tr("Copying:"),tr("Are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
 	    return;
     }
 
@@ -2198,7 +2459,7 @@ void FileWidget::copySlotToPhoneLeft(QStringList list)
 
     if (filesToCopy->isEmpty())
     {
-        QMessageBox::information(this,"",tr("theres nothing to copy. Maybe selected dirs are empty"),QMessageBox::Ok);
+        QMessageBox::information(this,"Copying:",tr("There's nothing to copy. Maybe selected directories are empty?!"),QMessageBox::Ok);
         return;
     }
 
@@ -2219,4 +2480,72 @@ void FileWidget::copySlotToPhoneLeft(QStringList list)
 
     connect(this->dialog,SIGNAL(finished(int)),this,SLOT(leftRefresh()));
     connect(this->dialog,SIGNAL(finished(int)),this,SLOT(rightRefresh()));
+}
+
+void FileWidget::propsDialog()
+{
+    QTableView * tableView;
+    Phone * phoneTmp;
+    FileSortModel * sortModel;
+    FileTableModel * fileModel;
+    if (this->leftTableView->hasFocus())
+    {
+        phoneTmp = this->phoneLeft;
+        tableView = this->leftTableView;
+        sortModel = this->phoneLeftSortModel;
+        fileModel = this->phoneLeftModel;
+    }
+    else
+    {
+        phoneTmp = this->phone;
+        tableView = this->rightTableView;
+        sortModel = this->phoneSortModel;
+        fileModel = this->phoneModel;
+    }
+
+    QModelIndexList indexList = tableView->selectionModel()->selectedRows(1);
+    if (indexList.isEmpty())
+    {
+        QMessageBox::information(this,"",tr("Select some item first!"),QMessageBox::Ok);
+        return;
+    }
+    if (indexList.size() == 1)
+    {
+        fipDialog *d = new fipDialog(this);
+        QModelIndex index = sortModel->mapToSource(indexList.takeFirst());
+        File tmpFile = fileModel->getFile(index.row());
+        QString file = tmpFile.filePath;
+        d->setData(file);
+        d->show();
+    }
+    if (indexList.size() > 1)
+    {
+        QMessageBox::information(this,"",tr("Single item selection only!"),QMessageBox::Ok);
+        return;
+    }
+}
+
+void FileWidget::leftComboBoxPhone()
+{
+    QString cboxdir = ui->leftComboBox->lineEdit()->text();
+    if (cboxdir == "/sd-ext/")
+    {
+        QSettings settings;
+        cboxdir = settings.value("sdFolder").toString();
+        if (cboxdir == "empty" || cboxdir.isEmpty())
+        {
+            QMessageBox::information(this,"sd-ext:","Detect /sd-ext/ partition in Settings!");
+        }
+        if (cboxdir == "<Not Found>")
+        {
+            QMessageBox::critical(this,"sd-ext:","Cannot detect /sd-ext/ partition!\nEnter path in Settings manualy.");
+            ui->leftComboBox->lineEdit()->setText("<Not Found>");
+        }
+    }
+    qDebug()<<"phonePath ="<<cboxdir;
+    if (phoneLeft->cd(cboxdir))
+    {
+        this->phoneLeft->setPath(cboxdir);
+        this->leftDisplay();
+    }
 }

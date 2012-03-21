@@ -38,6 +38,12 @@ AppWidget::AppWidget(QWidget *parent) :
     this->backupModel = new BackupTableModel;
     this->backupSortModel = new BackupSortModel;
 
+    this->ui->tableView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    this->ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+    this->ui->tableView->resizeColumnsToContents();
+    this->ui->tableView->horizontalHeader()->setStretchLastSection(true);
+
+
     this->appSortModel->setSourceModel(this->appModel);
     this->systemAppSortModel->setSourceModel(this->systemAppModel);
     this->backupSortModel->setSourceModel(this->backupModel);
@@ -51,8 +57,8 @@ AppWidget::AppWidget(QWidget *parent) :
     this->ui->stackedAppsPageApps->setLayout(this->ui->horizontalLayoutStackedApps);
     this->ui->stackedAppsPageBackups->setLayout(this->ui->horizontalLayoutBackup);
 
-    this->appMenu = NULL;
-    this->backupMenu = NULL;
+    //this->appMenu = NULL;
+   // this->backupMenu = NULL;
 
     QSettings settings;
     this->phone = new Phone(settings.value("sdkPath").toString(),false);
@@ -115,6 +121,10 @@ AppWidget::AppWidget(QWidget *parent) :
     this->ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     this->setLayout(ui->layoutApps);
     this->comboBoxAppsChanged();
+
+    this->codec = QTextCodec::codecForLocale();
+    threadApps.codec = this->codec;
+    threadBackups.codec = this->codec;
 }
 
 AppWidget::~AppWidget()
@@ -123,22 +133,29 @@ AppWidget::~AppWidget()
     delete this->phone;
 }
 
+//void AppWidget::mousePressEvent(QMouseEvent *event)
+//{
+ //  if (event->button() == Qt::RightButton)
+  //    emit this->myContextMenuRequested(event->pos());
+  // qDebug()<<"context menu requested"<<event<<pos();
+//}
+
 void AppWidget::changeEvent(QEvent *e)
 {
     QWidget::changeEvent(e);
     switch (e->type()) {
     case QEvent::LanguageChange:
         ui->retranslateUi(this);
-        if (this->appMenu != NULL)
+        if (this->customMenu != NULL)
         {
-            foreach(QAction *action, this->appMenu->actions())
+            foreach(QAction *action, this->customMenu->actions())
                 action->setText(tr(action->data().toString().toAscii()));
         }
-        if (this->backupMenu != NULL)
-        {
-            foreach(QAction *action, this->backupMenu->actions())
-                action->setText(tr(action->data().toString().toAscii()));
-        }
+       // if (this->backupMenu != NULL)
+       // {
+        //    foreach(QAction *action, this->backupMenu->actions())
+          //      action->setText(tr(action->data().toString().toAscii()));
+       // }
         foreach(QAction *action, this->ui->toolButtonBackup->menu()->actions())
             action->setText(tr(action->data().toString().toAscii()));
         foreach(QAction *action, this->ui->toolButtonRestore->menu()->actions())
@@ -171,6 +188,8 @@ void AppWidget::copyAppToPC()
                                                      tr("Choose where You want to save selected apps"),
                                                      "", QFileDialog::ShowDirsOnly);
 
+    qDebug()<<"Choose where You want to save selected apps"<<path;
+
     if (this->dialog != NULL)
         delete this->dialog;
     this->dialog = new dialogKopiuj(this, tmpList, this->sdk, dialogKopiuj::AppsToComputer, path);
@@ -180,7 +199,7 @@ void AppWidget::copyAppToPC()
         this->dialog->setModal(true);
     this->dialog->show();
 }
-
+/*
 void AppWidget::appsContextMenu(const QPoint &pos)
 {
     if (this->appMenu == NULL)
@@ -200,8 +219,49 @@ void AppWidget::appsContextMenu(const QPoint &pos)
 
 
     this->appMenu->exec(ui->tableView->mapToGlobal(pos2));
+    qDebug()<<"context menu requested"<<pos2;
+}
+*/
+
+
+
+void AppWidget::on_tableView_customContextMenuRequested(const QPoint &pos)
+{
+    if (ui->comboBoxApps->currentIndex()==1)//backups
+    {
+      this->customMenu = new QMenu;
+      this->customMenu->addMenu(this->ui->toolButtonRestore->menu())->setData(QString("restore"));
+      if (addToBackup() == "noData")
+          this->customMenu->addAction(QIcon(":/icons/backup.png"),tr("Add data to Backup", "right click backups menu"),this,SLOT(toolButtonBackupData()))->setData(QString("Add data to Backup"));
+      if (addToBackup() == "noApk")
+          this->customMenu->addAction(QIcon(":/icons/backup.png"),tr("Add app to Backup", "right click backups menu"),this,SLOT(toolButtonBackupApp()))->setData(QString("Add app to Backup"));
+      this->customMenu->addAction(QIcon(":icons/remove.png"),tr("remove", "right click backups menu"),this,SLOT(on_toolButtonRemoveBackup_pressed()))->setData(QString("remove"));
+    }
+    else
+    {
+      this->customMenu = new QMenu; //system apps
+      QAction *backup;
+      backup = this->customMenu->addMenu(this->ui->toolButtonBackup->menu());
+      backup->setData(QString("backup"));
+      this->customMenu->addAction(QIcon(":icons/uninstall.png"),tr("uninstall", "right click apps menu"),this,SLOT(on_toolButtonUninstall_pressed()))->setData(QString("uninstall"));
+      this->customMenu->addAction(QIcon(":icons/save.png"),tr("copy to PC", "right click apps menu"), this, SLOT(copyAppToPC()))->setData(QString("copy to PC"));
+      this->customMenu->addAction(QIcon(":/icons/info.png"), tr("Get app info", "right click apps menu"), this, SLOT(getAppInfo()))->setData(QString("Get app info"));
+      if (ui->comboBoxApps->currentIndex()==0)//apps
+        {
+          this->customMenu->addAction(QIcon(":/icons/market.png"),tr("Get apps version from internet", "right click apps menu"), this, SLOT(getCyrketVersions()))->setData(QString("Get apps version from internet"));
+        }
+    }
+    QPoint pos2;
+    pos2.setX(pos.x());
+    pos2.setY(pos.y()+20);
+    this->customMenu->exec(ui->tableView->mapToGlobal(pos2));
+    qDebug()<<"Apps context menu requested"<<pos2;
+    //this->maximumWidthHint();
+    //qDebug()<<"length = "<<view;
 }
 
+
+/*
 void AppWidget::backupsContextMenu(const QPoint &pos)
 {
     if (this->backupMenu == NULL)
@@ -215,10 +275,11 @@ void AppWidget::backupsContextMenu(const QPoint &pos)
     pos2.setY(pos.y()+20);
     this->backupMenu->exec(ui->tableView->mapToGlobal(pos2));
 }
-
+*/
 void AppWidget::appsSelectedCount()
 {
     this->ui->buttonOpenMarket->setDisabled(true);
+    this->ui->buttonRefreshApps->setDisabled(true);
     this->ui->toolButtonBackup->setDisabled(true);
     this->ui->toolButtonRemoveBackup->setDisabled(true);
     this->ui->toolButtonRestore->setDisabled(true);
@@ -255,6 +316,7 @@ void AppWidget::appsSelectedCount()
             }
 
             this->ui->buttonOpenMarket->setDisabled(false);
+            this->ui->buttonRefreshApps->setDisabled(false);
             this->ui->buttonAppBrain->setDisabled(false);
             this->ui->toolButtonBackup->setDisabled(false);
             this->ui->toolButtonRemoveBackup->setDisabled(true);
@@ -284,6 +346,7 @@ void AppWidget::appsSelectedCount()
             this->ui->editAppsSize->setEnabled(true);
             this->ui->editAppsPackageName->setEnabled(true);
             this->ui->buttonOpenMarket->setDisabled(false);
+            this->ui->buttonRefreshApps->setDisabled(false);
             this->ui->buttonAppBrain->setDisabled(false);
             this->ui->toolButtonBackup->setDisabled(true);
             this->ui->toolButtonRemoveBackup->setDisabled(false);
@@ -309,6 +372,7 @@ void AppWidget::appsSelectedCount()
             this->ui->editAppsPackageName->setEnabled(true);
             this->ui->editCyrketVersion->setDisabled(true);
             this->ui->buttonOpenMarket->setDisabled(true);
+            this->ui->buttonRefreshApps->setDisabled(false);
             this->ui->buttonAppBrain->setDisabled(true);
             this->ui->toolButtonBackup->setDisabled(false);
             this->ui->toolButtonRemoveBackup->setDisabled(true);
@@ -334,6 +398,7 @@ void AppWidget::comboBoxAppsChanged()
     this->ui->toolButtonRemoveBackup->setDisabled(true);
     this->ui->toolButtonRestore->setDisabled(true);
     this->ui->toolButtonUninstall->setDisabled(true);
+    this->ui->buttonRefreshApps->setDisabled(true);
     this->ui->labelQRcode->clear();
     this->ui->editCyrketVersion->clear();
     this->ui->editCyrketVersion->setDisabled(true);
@@ -375,8 +440,8 @@ void AppWidget::comboBoxAppsChanged()
         this->ui->comboFilter->addItem(tr("File path", "combo apps filter"), 5);
         this->ui->comboFilter->addItem(tr("Location", "combo apps filter"), 6);
 
-        disconnect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(backupsContextMenu(const QPoint &)));
-        connect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(appsContextMenu(const QPoint &)));
+      // disconnect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(backupsContextMenu(const QPoint &)));
+      // connect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(appsContextMenu(const QPoint &)));
 
 
         ui->stackedWidgetApps->setCurrentIndex(0);
@@ -412,8 +477,8 @@ void AppWidget::comboBoxAppsChanged()
         this->ui->comboFilter->addItem(tr("App name", "combo backups filter"), 1);
         this->ui->comboFilter->addItem(tr("Package name", "combo backups filter"), 4);
 
-        disconnect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(appsContextMenu(const QPoint &)));
-        connect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(backupsContextMenu(const QPoint &)));
+      //  disconnect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(appsContextMenu(const QPoint &)));
+      //  connect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(backupsContextMenu(const QPoint &)));
 
         ui->stackedWidgetApps->setCurrentIndex(1);
         if (settings.value("getBackupInfo", 0) == 0 && !this->backupModel->isEmpty())
@@ -428,6 +493,12 @@ void AppWidget::comboBoxAppsChanged()
         {
             this->backupModel->clear();
             this->ui->tableView->setModel(this->backupSortModel);
+            QString appsBackupFolder = settings.value("appsBackupFolder").toString();
+            if (appsBackupFolder.isEmpty())
+             {
+                QMessageBox::information(this,"Backups:","Did you set the Apps Backup Folder in settings?");
+                return;
+             }
             this->threadBackups.sdk = this->sdk;
             this->threadBackups.start();
         }
@@ -448,8 +519,8 @@ void AppWidget::comboBoxAppsChanged()
         this->ui->comboFilter->addItem(tr("File path", "combo apps filter"), 5);
         this->ui->comboFilter->addItem(tr("Location", "combo apps filter"), 6);
 
-        disconnect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(backupsContextMenu(const QPoint &)));
-        connect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(appsContextMenu(const QPoint &)));
+     //   disconnect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(backupsContextMenu(const QPoint &)));
+     //   connect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(appsContextMenu(const QPoint &)));
 
         ui->stackedWidgetApps->setCurrentIndex(0);
 
@@ -532,6 +603,7 @@ void AppWidget::gotAllApps(QThread * thread)
     }
     this->ui->tableView->resizeColumnsToContents();
     this->ui->tableView->resizeRowsToContents();
+    this->ui->tableView->horizontalHeader()->setStretchLastSection(true);
     this->ui->comboBoxApps->setEnabled(true);
     this->ui->tableView->setEnabled(true);
     this->ui->editFilter->setEnabled(true);
@@ -594,7 +666,7 @@ void AppWidget::insertApp(App app)
     pix.loadFromData(ba);
     QIcon icon(pix);
     app.appIcon = icon;
-    settings.endGroup();
+   // settings.endGroup();
 
     if (this->ui->comboBoxApps->currentIndex() == 0)
     {
@@ -607,12 +679,13 @@ void AppWidget::insertApp(App app)
 
     this->ui->tableView->resizeColumnsToContents();
     this->ui->tableView->resizeRowsToContents();
+    this->ui->tableView->horizontalHeader()->setStretchLastSection(true);
     qDebug()<<"Apps insertApp - END";
 }
 
 void AppWidget::missingAapt()
 {
-    QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, tr("Missing aapt"), tr("QtADB did not found aapt.\nDownload it and place in one directory with adb.\nAfter You place it in correct directory click Refresh button"));
+    QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, tr("Missing aapt:"), tr("QtADB did not found aapt.\nDownload it and place in one directory with adb.\nAfter you place it in correct directory click Refresh button"));
     QPushButton *download = msgBox->addButton(tr("Download", "missing aapt message button"), QMessageBox::AcceptRole);
     QPushButton *closeMsg = msgBox->addButton(tr("Cancel", "missing aapt message button"), QMessageBox::RejectRole);
 
@@ -634,58 +707,58 @@ void AppWidget::on_toolButtonBackup_pressed()
     QList<App> appList;
     AppTableModel *tmpModel;
     AppSortModel *sortModel;
+    BackupTableModel *btmpModel;
+    BackupSortModel *bsortModel;
+    App app;
+    QSettings settings;
+    QString appsBackupFolder = settings.value("appsBackupFolder").toString();
+    if (appsBackupFolder.isEmpty())
+     {
+        QMessageBox::information(this,"Apps Backup:","Did you set the Apps Backup Folder in settings?");
+        return;
+     }
     if (this->ui->comboBoxApps->currentIndex() == 0)
     {
         tmpModel = this->appModel;
         sortModel = this->appSortModel;
+        while (!indexList.isEmpty())
+        {
+            appList.append(tmpModel->getApp(sortModel->mapToSource(indexList.takeFirst()).row()));
+        }
     }
     else if (this->ui->comboBoxApps->currentIndex() == 2)
     {
         tmpModel = this->systemAppModel;
         sortModel = this->systemAppSortModel;
+        while (!indexList.isEmpty())
+        {
+            appList.append(tmpModel->getApp(sortModel->mapToSource(indexList.takeFirst()).row()));
+        }
+    }
+    else if (this->ui->comboBoxApps->currentIndex() == 1)
+    {
+        btmpModel = this->backupModel;
+        bsortModel = this->backupSortModel;
+        if (indexList.size() == 1)
+        {
+            Backup backup = btmpModel->getBackup(bsortModel->mapToSource(indexList.takeFirst()).row());
+            app.packageName = backup.packageName;
+            app.appName = backup.appName;
+            app.appFileName = settings.value("apps/" + backup.packageName, "").toString();
+            app.appFile = settings.value("apps/" + backup.packageName.append("/") + "filePath", "").toString();
+            app.appSize = settings.value("apps/" + backup.packageName + "size", "").toString();
+            app.appVersion = settings.value("apps/" + backup.packageName + "version", "").toString();
+            appList.append(app);
+            qDebug()<<"Add backup List ="<<app.appFile;
+        }
     }
     else
     {
         this->withData=false;
         return;
     }
-
-    while (!indexList.isEmpty())
-    {
-        appList.append(tmpModel->getApp(sortModel->mapToSource(indexList.takeFirst()).row()));
-    }
-//    QString tmp=this->phone->getPath();
-//    this->phone->setPath("/");
-//    this->phone->makeDir("sdcard/QtADB/backup");
-//    this->phone->setPath(tmp);
-//    AppList selected;
-//    for (int i=0;i<ui->tableWidgetApps->selectedItems().count();i++)
-//    {
-//        if (ui->tableWidgetApps->selectedItems().at(i)->column()==1)
-//            selected.name.append(ui->tableWidgetApps->selectedItems().at(i)->text());
-//        if (ui->tableWidgetApps->selectedItems().at(i)->column()==2)
-//            selected.version.append(ui->tableWidgetApps->selectedItems().at(i)->text());
-//        if (ui->tableWidgetApps->selectedItems().at(i)->column()==3)
-//            selected.size.append(ui->tableWidgetApps->selectedItems().at(i)->text());
-//        if (ui->tableWidgetApps->selectedItems().at(i)->column()==5)
-//            selected.filename.append(ui->tableWidgetApps->selectedItems().at(i)->text());
-//        if (ui->tableWidgetApps->selectedItems().at(i)->column()==4)
-//            selected.package.append(ui->tableWidgetApps->selectedItems().at(i)->text());
-//    }
-//    if (selected.name.length()==0)
-//    {
-//        this->withData=false;
-//        return;
-//    }
-
-    if (QMessageBox::question(this,tr("backup"),
-                              tr("are you sure???"),QMessageBox::Ok | QMessageBox::No)== QMessageBox::No)
-        return;
-
-
     if (!this->withApk && !this->withData)
     {
-        QSettings settings;
         int mode;
         mode = settings.value("BackupDefaultAction", appDialog::AppAndData).toInt();
         if (mode == appDialog::Application)
@@ -710,23 +783,26 @@ void AppWidget::on_toolButtonBackup_pressed()
     {
         if (this->withData)
         {
-            this->appsDialog=new appDialog(this,appList,appDialog::Backup,appDialog::AppAndData);
+                this->appsDialog=new appDialog(this,appList,appDialog::Backup,appDialog::AppAndData);
         }
         else
         {
-            this->appsDialog=new appDialog(this,appList,appDialog::Backup,appDialog::Application);
+                this->appsDialog=new appDialog(this,appList,appDialog::Backup,appDialog::Application);
         }
     }
     else if (this->withData)
     {
-        this->appsDialog=new appDialog(this,appList,appDialog::Backup,appDialog::Data);
+            this->appsDialog=new appDialog(this,appList,appDialog::Backup,appDialog::Data);
     }
     this->withData=false;
     this->withApk = false;
     this->appsDialog->show();
     connect(this->appsDialog, SIGNAL(progressValue(int,int)), this, SIGNAL(progressValue(int,int)));
     connect(this->appsDialog, SIGNAL(closed()), this, SIGNAL(progressFinished()));
-    connect(this->appsDialog,SIGNAL(closed()),this,SLOT(refreshApps()));
+    if (this->ui->comboBoxApps->currentIndex() == 1)
+        connect(this->appsDialog,SIGNAL(closed()),this,SLOT(refreshApps()));
+    else
+        connect(this->appsDialog,SIGNAL(closed()),this,SLOT(refreshBackups()));
 }
 
 void AppWidget::on_toolButtonInstall_pressed()
@@ -795,7 +871,7 @@ void AppWidget::on_toolButtonUninstall_pressed()
 //    if (selected.name.length()==0)
 //        return;
 
-    if (QMessageBox::question(this,tr("uninstall"),tr("are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,tr("Uninstall App:"),tr("Are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
         return;
 
     if (this->appsDialog != NULL)
@@ -813,42 +889,60 @@ void AppWidget::on_toolButtonUninstall_pressed()
 
 void AppWidget::on_toolButtonRemoveBackup_pressed()
 {
+    QSettings settings;
     QModelIndexList indexList = this->ui->tableView->selectionModel()->selectedRows(1);
     QList<Backup> backupList;
-
     while (!indexList.isEmpty())
     {
         backupList.append(this->backupModel->getBackup(this->backupSortModel->mapToSource(indexList.takeFirst()).row()));
     }
-//    QStringList selected;
-//    for (int i=0;i<ui->tableWidgetApps->selectedItems().count();i++)
-//    {
-//        if (ui->tableWidgetApps->selectedItems().at(i)->column()==4)
-//            selected.append(ui->tableWidgetApps->selectedItems().at(i)->text());
-//    }
-
-    if (QMessageBox::question(this,tr("remove backup"),tr("are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,tr("Remove Backup"),tr("Are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+            return;
+    appsBackupFolder = settings.value("appsBackupFolder").toString();
+    if (appsBackupFolder.isEmpty())
+     {
+        QMessageBox::information(this,"Remove Backup:","Did you set the Apps Backup Folder in settings?");
         return;
-
+     }
+    if  (appsBackupFolder.contains("/sdcard/"))
+    {
     QString oldPath=this->phone->getPath();
-    this->phone->setPath("/sdcard/QtADB/backup/");
+    this->phone->setPath(appsBackupFolder);
     while (backupList.length()>0)
     {
-        this->phone->remove(backupList.first().packageName+".png");
-        this->phone->remove(backupList.first().packageName+".txt");
-        this->phone->remove(backupList.first().packageName+".apk");
-        this->phone->remove(backupList.first().packageName+".DATA.tar.gz");
+        this->phone->remove(backupList.first().appName);
         backupList.removeFirst();
     }
     this->phone->setPath(oldPath);
+    }
+    else
+    {
+        while (backupList.length()>0)
+        {
+            this->computer->deleteDir(appsBackupFolder.append("/")+backupList.first().appName);
+            backupList.removeFirst();
+        }
+    }
     refreshApps();
 }
+
+
+
+
 
 void AppWidget::on_toolButtonRestore_pressed()
 {
     QModelIndexList indexList = this->ui->tableView->selectionModel()->selectedRows(1);
     QList<Backup> backupList;
-
+    QSettings settings;
+    QString appsBackupFolder = settings.value("appsBackupFolder").toString();
+    if (appsBackupFolder.isEmpty())
+     {
+        QMessageBox::information(this,"Restore Backup:","Did you set the Apps Backup Folder in settings?");
+        return;
+     }
+    if (QMessageBox::question(this,tr("Restore Backup:"),tr("Are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+            return;
     while (!indexList.isEmpty())
     {
         backupList.append(this->backupModel->getBackup(this->backupSortModel->mapToSource(indexList.takeFirst()).row()));
@@ -876,13 +970,8 @@ void AppWidget::on_toolButtonRestore_pressed()
 //    }
 //    if (selected.package.length()==0)
 //        return;
-
-    if (QMessageBox::question(this,tr("restore"),tr("are you sure???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
-        return;
-
     if (!this->withApk && !this->withData)
     {
-        QSettings settings;
         int mode;
         mode = settings.value("RestoreDefaultAction", appDialog::AppAndData).toInt();
         if (mode == appDialog::Application)
@@ -967,6 +1056,7 @@ void AppWidget::insertBackup(Backup backup)
     this->backupModel->insertBackup(0, backup);
     this->ui->tableView->resizeColumnsToContents();
     this->ui->tableView->resizeRowsToContents();
+    this->ui->tableView->horizontalHeader()->setStretchLastSection(true);
 }
 
 
@@ -975,19 +1065,36 @@ void ThreadBackups::run()
 {
     QProcess *proces = new QProcess;
     QSettings settings;
-    QString output, tmp;
-    QStringList outputLines, txtLines;
+    QString backuponpc, output, tmp,namedir;
+    QString appsBackupFolder = settings.value("appsBackupFolder").toString();
+    bool onsdcard;
+    QStringList outputLines, txtLines, tmpLines;
     Backup backupFound;
     int i;
 
-    proces->start("\"" + this->sdk + "\"adb shell busybox ls /sdcard/QtADB/backup/*.txt");
+    if (!appsBackupFolder.contains("/sdcard/"))
+    {
+        backuponpc = appsBackupFolder.append("/");
+       // appsBackupFolder = "/sdcard/tmpAppsBackup/";
+        onsdcard = false;
+    }
+    else
+       onsdcard = true;
 
+    if (onsdcard == false)
+    {
+        proces->start("findstr /S -M app.name= \"" + codec->toUnicode(backuponpc.toUtf8()) + "*\"");
+        proces->waitForFinished(-1);
+        output = proces->readAll();
+    }
+    else
+    {
+    proces->start("\"" + this->sdk + "\"adb shell find \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + "\" -name *.txt");
     proces->waitForFinished(-1);
     output = proces->readAll();
-    output.remove(QString("%1[0m").arg( QChar( 0x1b )));
-    output.remove(QChar( 0x1b ), Qt::CaseInsensitive);
-    output.remove(QRegExp("\\[\\d;\\d+m"));
+    }
     outputLines = output.split("\n", QString::SkipEmptyParts);
+    qDebug()<<"Backup outputList = "<<outputLines;
     emit this->maximum(outputLines.size());
     int max = outputLines.size();
     i = 0;
@@ -996,33 +1103,65 @@ void ThreadBackups::run()
         i++;
         emit this->value(i);
         emit this->progressValue(i, max);
-        backupFound.packageName = outputLines.takeFirst();
-        backupFound.packageName.remove(QRegExp("^.+/"));
-        backupFound.packageName.remove(QRegExp("\\.txt\\s+$"));
-        proces->start("\"" + this->sdk + "\"adb shell cat /sdcard/QtADB/backup/"+backupFound.packageName+".txt");
-        proces->waitForFinished(-1);
-        output = proces->readAll();
+        tmp = outputLines.takeFirst();
+        if (onsdcard == false)
+        {
+            tmpLines = tmp.split("/", QString::SkipEmptyParts);
+            tmp = tmpLines.at(1);
+            tmp.replace("\\","/");
+        }
+        else
+            tmp.remove(appsBackupFolder,Qt::CaseInsensitive);
+        qDebug()<<"tmp str = "<<tmp;
+        tmp.remove(QRegExp("\\.txt\\s+$"));
+        tmpLines = tmp.split("/", QString::SkipEmptyParts);
+        backupFound.packageName = tmpLines.at(1);
+        namedir = tmpLines.at(0);
+        qDebug()<<"backupFound.packageName ---- backupFound.appName"<<backupFound.packageName<<" ---- "<<namedir;
+        namedir.append("/");
+        if (onsdcard == false)
+        {
+            QFile file(codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8())+codec->toUnicode(backupFound.packageName.toUtf8())+".txt");
+            if (!file.open (QIODevice::ReadOnly))
+                 break;
+            QTextStream stream ( &file );
+            QString line;
+            while( !stream.atEnd() )
+            {
+                 line = stream.readLine();
+                 txtLines << line;
+            }
+            file.close();
+        }
+        else
+        {
+            proces->start("\"" + this->sdk + "\"adb shell cat \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+ codec->toUnicode(backupFound.packageName.toUtf8())+".txt\"");
+            proces->waitForFinished(-1);
+            output = proces->readAll();
+            txtLines = output.split("\n", QString::SkipEmptyParts);
+            if (output.contains("No such file or directory"))
+                break;
+        }
         if (!settings.contains("apps/"+backupFound.packageName+"/icon"))
         {
-            proces->start("\"" + this->sdk + "\"adb pull /sdcard/QtADB/backup/"+backupFound.packageName+".png "+QDir::currentPath()+"/icons/"+backupFound.packageName+".png");
-            proces->waitForFinished(-1);
-
-            QFile icon(QDir::currentPath()+"/icons/"+backupFound.packageName+".png");
+            QString iconfile;
+            if (onsdcard == false)
+                iconfile = codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8())+codec->toUnicode(backupFound.packageName.toUtf8())+".png";
+            else
+            {
+                iconfile = QDir::currentPath()+"/tmp/"+codec->toUnicode(backupFound.packageName.toUtf8())+".png";
+                proces->start("\"" + this->sdk + "\"adb pull \""+codec->toUnicode(appsBackupFolder.toUtf8())+ codec->toUnicode(namedir.toUtf8())+codec->toUnicode(backupFound.packageName.toUtf8())+".png\" "+codec->toUnicode(iconfile.toUtf8()));
+                proces->waitForFinished(-1);
+            }
+            QFile icon(iconfile);
             icon.open(QIODevice::ReadOnly);
             QByteArray ba;
             ba = icon.readAll();
             settings.setValue("apps/"+backupFound.packageName+"/icon", ba); //- zapisanie pixmap w QSettings
-            QFile::remove(QDir::currentPath()+"/icons/"+backupFound.packageName+".png");
+            if (onsdcard == true)
+                QFile::remove(iconfile);
         }
-//        QByteArray ba;
-//        ba = settings.value("apps/"+backupFound.packageName+"/icon").toByteArray();
-//        QPixmap pix;
-//        pix.loadFromData(ba);
-//        backupFound.appIcon = QIcon(pix);
-
-        if (output.contains("No such file or directory"))
-            break;
-        txtLines = output.split("\n", QString::SkipEmptyParts);
+        qDebug()<<"text table"<<txtLines;
         while (txtLines.size() > 0)
         {
             tmp = txtLines.takeFirst();
@@ -1032,40 +1171,53 @@ void ThreadBackups::run()
                 tmp.remove(QRegExp("\\s+$"));
                 backupFound.appName = QString::fromUtf8(tmp.toAscii());
             }
-            else if (tmp.contains("app.size"))
+            else if (tmp.contains("app.size="))
             {
                 tmp.remove("app.size=");
                 tmp.remove(QRegExp("\\s+$"));
                 backupFound.appSize = tmp;
             }
-            else if (tmp.contains("app.version"))
+            else if (tmp.contains("app.version="))
             {
                 tmp.remove("app.version=");
                 tmp.remove(QRegExp("\\s+$"));
                 backupFound.appVersion = tmp;
             }
         }
-        proces->start("\"" + this->sdk + "\"adb shell ls  /sdcard/QtADB/backup/"+backupFound.packageName+".apk");
-        proces->waitForFinished(-1);
-        output = proces->readAll();
-        output.remove(QString("%1[0m").arg( QChar( 0x1b )));
-        output.remove(QChar( 0x1b ), Qt::CaseInsensitive);
-        output.remove(QRegExp("\\[\\d;\\d+m"));
-        if (output.contains("No such file or directory"))
-            backupFound.withApk = false;
+        if (onsdcard == false)
+        {
+           if (!QFile::exists(codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8())+codec->toUnicode(backupFound.packageName.toUtf8())+".apk"))
+               backupFound.withApk = false;
+           else
+               backupFound.withApk = true;
+        }
         else
-            backupFound.withApk = true;
-        proces->start("\"" + this->sdk + "\"adb shell ls /sdcard/QtADB/backup/"+backupFound.packageName+".DATA.tar.gz");
-        proces->waitForFinished(-1);
-        output = proces->readAll();
-        output.remove(QString("%1[0m").arg( QChar( 0x1b )));
-        output.remove(QChar( 0x1b ), Qt::CaseInsensitive);
-        output.remove(QRegExp("\\[\\d;\\d+m"));
-        if (output.contains("No such file or directory"))
-            backupFound.withData = false;
+        {
+            proces->start("\"" + this->sdk + "\"adb shell ls \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+ codec->toUnicode(backupFound.packageName.toUtf8())+".apk\"");
+            proces->waitForFinished(-1);
+            output = proces->readAll();
+            if (output.contains("No such file or directory"))
+                backupFound.withApk = false;
+            else
+                backupFound.withApk = true;
+        }
+        if (onsdcard == false)
+        {
+            if (!QFile::exists(codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8())+codec->toUnicode(backupFound.packageName.toUtf8())+".DATA.tar.gz"))
+                backupFound.withData = false;
+            else
+                backupFound.withData = true;
+        }
         else
-            backupFound.withData = true;
-        backupFound.appSize.remove(QRegExp("\\s+$"));
+        {
+            proces->start("\"" + this->sdk + "\"adb shell ls \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+ codec->toUnicode(backupFound.packageName.toUtf8())+".DATA.tar.gz\"");
+            proces->waitForFinished(-1);
+            output = proces->readAll();
+            if (output.contains("No such file or directory"))
+                backupFound.withData = false;
+            else
+                backupFound.withData = true;
+        }
         emit this->gotBackup(backupFound);
     }
     delete proces;
@@ -1092,7 +1244,7 @@ void ThreadApps::run()
     delete aapt;
     if (this->systemApps)
     {
-        proces.start("\"" + this->sdk + "\"adb shell busybox ls -l /system/app/*.apk");
+        proces.start("\"" + this->sdk + "\"adb shell ls -l /system/app/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps system - "<<output;
@@ -1123,7 +1275,7 @@ void ThreadApps::run()
     }
     else
     {
-        proces.start("\"" + this->sdk + "\"adb shell busybox ls -l /data/app/*.apk");
+        proces.start("\"" + this->sdk + "\"adb shell ls -l /data/app/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps data - "<<output;
@@ -1132,7 +1284,7 @@ void ThreadApps::run()
         {
             tmp = lines.takeFirst();
             split = tmp.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-            if (split.size() > 7)
+            if ((split.size() > 7) && (tmp.startsWith("-rw-r--r--")))
             {
                 app.appSize = split.at(4);
                 tmp = split.at(8);
@@ -1151,7 +1303,7 @@ void ThreadApps::run()
                 appList.append(app);
             }
         }
-        proces.start("\"" + this->sdk + "\"adb shell busybox ls -l /data/app-private/*.apk");
+        proces.start("\"" + this->sdk + "\"adb shell ls -l /data/app-private/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps data - "<<output;
@@ -1160,7 +1312,7 @@ void ThreadApps::run()
         {
             tmp = lines.takeFirst();
             split = tmp.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-            if (split.size() > 7)
+            if ((split.size() > 7) && (tmp.startsWith("-rw-r--r--")))
             {
                 app.appSize = split.at(4);
                 tmp = split.at(8);
@@ -1179,7 +1331,7 @@ void ThreadApps::run()
                 appList.append(app);
             }
         }
-        proces.start("\"" + this->sdk + "\"adb shell busybox ls -l /mnt/asec/*/*.apk");
+        proces.start("\"" + this->sdk + "\"adb shell ls -l /mnt/asec/*/*.apk");
         proces.waitForFinished(-1);
         output = proces.readAll();
         qDebug()<<"Get apps sd - "<<output;
@@ -1208,7 +1360,7 @@ void ThreadApps::run()
                 appList.append(app);
             }
         }
-//        proces.start("\"" + this->sdk + "\"adb shell busybox mount");
+//        proces.start("\"" + this->sdk + "\"adb shell mount");
 //        proces.waitForFinished(-1);
 //        tmp = proces.readAll();
 //        qDebug()<<"Get apps mount - "<<tmp;
@@ -1229,7 +1381,7 @@ void ThreadApps::run()
         {
             if (!sdFolder.endsWith("/",Qt::CaseInsensitive))
                 sdFolder.append("/");
-            proces.start("\"" + this->sdk + "\"adb shell busybox ls -l "+ sdFolder + "/*/*.apk");
+            proces.start("\"" + this->sdk + "\"adb shell ls -l "+ codec->toUnicode(sdFolder.toUtf8()) + "/*.apk");
             proces.waitForFinished(-1);
             output.append(proces.readAll());
             qDebug()<<"Get apps sd - "<<output;
@@ -1246,6 +1398,7 @@ void ThreadApps::run()
                     tmp.remove(QChar( 0x1b ), Qt::CaseInsensitive);
                     tmp.remove(QRegExp("\\[\\d;\\d+m"));
                     tmp.remove(sdFolder);
+                    tmp.remove(0,1);
                     app.appFileName = tmp;
                     app.appFile = sdFolder + tmp;
                     app.location = "sd-ext";
@@ -1267,15 +1420,16 @@ void ThreadApps::run()
     QProcess zip;
     QString temp;
     zip.setProcessChannelMode(QProcess::MergedChannels);
-    zip.start("\""+sdk+"\""+"adb shell mkdir /sdcard/QtADB");
-    zip.waitForFinished(-1);
-    zip.start("\""+sdk+"\""+"adb shell mkdir /sdcard/QtADB/tmp");
-    zip.waitForFinished(-1);
+//    zip.start("\""+sdk+"\""+"adb shell mkdir /sdcard/QtADB");
+//    zip.waitForFinished(-1);
+//    zip.start("\""+sdk+"\""+"adb shell mkdir /sdcard/QtADB/tmp");
+//    zip.waitForFinished(-1);
     settings.beginGroup("apps");
     QStringList settingsList=settings.childKeys();
+    qDebug()<<"Apps childKeys List"<<settingsList;
     settings.endGroup();
     QStringList aaptLines,aaptLineParts;
-    QDir dir(QDir::currentPath()+"/icons/");
+    QDir dir(QDir::currentPath()+"/tmp/");
     QFileInfoList fileInfoList=dir.entryInfoList();
     QStringList fileNameList,fileTmpList;
     while (fileInfoList.length()>0)
@@ -1291,7 +1445,7 @@ void ThreadApps::run()
         if ((!settingsList.contains(app.appFileName)) ||
             (settings.value("apps/" + app.packageName + "/date", "").toString() != app.date))
         {
-            qDebug()<<"Apps needs to pull apk";
+            qDebug()<<"Apps needs to pull apk ="<<app.appFileName;
             zip.start("\""+sdk+"\""+"adb pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
             zip.waitForFinished(-1);
             temp = zip.readAll();
@@ -1340,6 +1494,7 @@ void ThreadApps::run()
                 aaptLines.removeFirst();
             }
             qDebug()<<"Apps aapt decoded";
+            settings.setValue("apps/"+app.appFileName, app.packageName);
             settings.setValue("apps/"+app.packageName+"/icoName", app.icoName);
             settings.setValue("apps/"+app.packageName+"/appName", QString::fromUtf8(app.appName.toAscii()));
             settings.setValue("apps/"+app.packageName+"/version", app.appVersion);
@@ -1357,6 +1512,8 @@ void ThreadApps::run()
         {
             qDebug()<<"Apps getting info from Cyrket";
             app.cyrketVer = appInfo::getCyrketVer(app.packageName);
+            //this->ui->editCyrketVersion->setEnabled(true);
+            //this->ui->editCyrketVersion->setText(app.cyrketVer);
             qDebug()<<"Apps got info from cyrket";
         }
 
@@ -1379,14 +1536,16 @@ void ThreadApps::run()
                 QString out;
                 out = zip.readAll();
             }
-            FileWidget::unpack(QDir::currentPath()+"/tmp/"+app.appFileName,QDir::currentPath()+"/icons/",app.icoName,temp);
+            FileWidget::unpack(QDir::currentPath()+"/tmp/"+app.appFileName,QDir::currentPath()+"/tmp/",app.icoName,temp);
 
             QByteArray ba;
-            QFile icon(QDir::currentPath()+"/icons/"+temp);
+            QFile icon(QDir::currentPath()+"/tmp/"+temp);
             icon.open(QIODevice::ReadWrite);
             ba = icon.readAll();
             settings.setValue("apps/"+app.packageName+"/icon", ba); //- zapisanie pixmap w QSettings
             icon.remove();
+         //   QDir dir;
+          //  dir.rmdir (QDir::currentPath()+"/icons");
             qDebug()<<"Apps got icon now";
         }
 //        QByteArray ba;
@@ -1532,13 +1691,15 @@ App * AppWidget::getAppInfo(QString filePath)
     temp.append(".png");
     if (!settings.contains(app->packageName+"/icon"))
     {
-        unpack(app->appFile, QDir::currentPath()+"/icons/", app->icoName, temp);
+        unpack(app->appFile, QDir::currentPath()+"/tmp/", app->icoName, temp);
 
-        QFile icon(QDir::currentPath()+"/icons/"+app->packageName.toLatin1()+".png");
+        QFile icon(QDir::currentPath()+"/tmp/"+app->packageName.toLatin1()+".png");
         icon.open(QIODevice::ReadWrite);
         ba = icon.readAll();
         settings.setValue(app->packageName+"/icon", ba); //- zapisanie pixmap w QSettings
         icon.remove();
+       // QDir dir;
+      //  dir.rmdir (QDir::currentPath()+"/icons");
     }
     ba = settings.value(app->packageName+"/icon").toByteArray();
     pix.loadFromData(ba);
@@ -1699,8 +1860,16 @@ void AppWidget::openMarket()
     sdk = settings.value("sdkPath").toString();
     QProcess proc;
     proc.start("\"" + sdk + "\"adb shell am start -a android.intent.action.VIEW -d market://details?id="
-               + this->ui->editAppsPackageName->text() + " -n com.android.vending/.AssetInfoActivity");
+               + this->ui->editAppsPackageName->text() + " -n com.android.vending/.AssetBrowserActivity");
     proc.waitForFinished(-1);
+    QString out = proc.readAll();
+    if (out.contains("Error"))
+    {
+        proc.start("\"" + sdk + "\"adb shell am start -a android.intent.action.VIEW -d market://details?id="
+                   + this->ui->editAppsPackageName->text() + " -n com.android.vending/com.google.android.finsky.activities.PlayLauncherActivity");
+        proc.waitForFinished(-1);
+    }
+    qDebug()<<"adb shell am start -a android.intent.action.VIEW -d market://details?id=" << this->ui->editAppsPackageName->text() << " -n com.android.vending/.AssetBrowserActivity";
 }
 
 void AppWidget::openAppBrain()
@@ -1710,7 +1879,7 @@ void AppWidget::openAppBrain()
 
 void AppWidget::getCyrketVersions()
 {
-    QModelIndexList indexList = this->ui->tableView->selectionModel()->selectedRows(1);
+    QModelIndexList indexList = this->ui->tableView->selectionModel()->selectedRows();
 
     int i;
     this->ui->progressApps->setMaximum(indexList.size());
@@ -1720,17 +1889,21 @@ void AppWidget::getCyrketVersions()
     {
         i = 1;
         while (!indexList.isEmpty())
-        {
+          {
             this->ui->progressApps->setValue(i);
             i++;
             int row = this->appSortModel->mapToSource(indexList.takeFirst()).row();
             App app = this->appModel->getApp(row);
             app.cyrketVer = appInfo::getCyrketVer(app.packageName);
             this->appModel->setCyrketVer(row, app.cyrketVer);
-        }
+            this->ui->editCyrketVersion->setEnabled(true);
+            this->ui->editCyrketVersion->setText(app.cyrketVer);
+          }
+
         this->ui->progressApps->setMaximum(0);
         this->ui->progressApps->setValue(0);
         this->ui->progressApps->hide();
+/*
         QList<App> appList = this->appModel->getList();
         this->appModel->clear();
         this->appModel->insertApps(0, appList);
@@ -1745,8 +1918,11 @@ void AppWidget::getCyrketVersions()
         for (i = 0; i < rows; i++)
             this->ui->tableView->setRowHeight(i, 40);
         appsSelectedCount();
+ */
     }
 }
+
+
 
 void AppWidget::filter()
 {
@@ -1770,5 +1946,27 @@ void AppWidget::filter()
     }
     this->ui->tableView->resizeColumnsToContents();
     this->ui->tableView->resizeRowsToContents();
+    this->ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
+}
+
+void AppWidget::refreshBackups() //in background
+{
+    this->backupModel->clear();
+    this->threadBackups.sdk = this->sdk;
+    this->threadBackups.start();
+}
+
+QString AppWidget::addToBackup()
+{
+    QModelIndexList indexList = this->ui->tableView->selectionModel()->selectedRows(1);
+    if (indexList.size() == 1)
+    {
+       Backup backup = this->backupModel->getBackup(this->backupSortModel->mapToSource(indexList.takeFirst()).row());
+       if (backup.withApk == false)
+           return "noApk";
+       else if (backup.withData == false)
+           return "noData";
+    }
+    return 0;
 }

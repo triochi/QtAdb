@@ -28,6 +28,8 @@ dialogKopiuj::dialogKopiuj(QWidget *parent, QList<File> *fileList, QString sdk, 
         ui(new Ui::dialogKopiuj)
 {
     ui->setupUi(this);
+    this->setFixedSize(this->width(),this->height());
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     this->sourcePath = sourcePath;
     this->targetPath = targetPath;
     this->mode = mode;
@@ -63,7 +65,10 @@ dialogKopiuj::dialogKopiuj(QWidget *parent, QList<File> *fileList, QString sdk, 
 
     connect(this->threadCopy, SIGNAL(nextFile(QString, QString, QString, int, int)), this, SLOT(nextFile(QString, QString, QString, int, int)));
     connect(this->threadCopy, SIGNAL(copied()), this, SLOT(copied()));
+    connect(this->threadCopy, SIGNAL(isRunning()), this, SLOT(running()));
     connect(this->ui->buttonCancel, SIGNAL(clicked()), this, SLOT(close()));
+    //my new OK button
+    connect(this->ui->buttonCopyOK, SIGNAL(clicked()), this, SLOT(close()));
 //    connect(this->threadProgress, SIGNAL(progressValue(int)), this->ui->progressFile, SLOT(setValue(int)));
     connect(this->threadProgress, SIGNAL(progressValue(int)), this, SLOT(setProgressValue(int)));
 
@@ -105,7 +110,10 @@ dialogKopiuj::dialogKopiuj(QWidget *parent, QList<App> *appList, QString sdk, in
 
     connect(this->threadCopy, SIGNAL(nextFile(QString, QString, QString, int, int)), this, SLOT(nextFile(QString, QString, QString, int, int)));
     connect(this->threadCopy, SIGNAL(copied()), this, SLOT(copied()));
+    connect(this->threadCopy, SIGNAL(isRunning()), this, SLOT(running()));
     connect(this->ui->buttonCancel, SIGNAL(clicked()), this, SLOT(close()));
+    //my new OK button
+    connect(this->ui->buttonCopyOK, SIGNAL(clicked()), this, SLOT(close()));
 //    connect(this->threadProgress, SIGNAL(progressValue(int)), this->ui->progressFile, SLOT(setValue(int)));
     connect(this->threadProgress, SIGNAL(progressValue(int)), this, SLOT(setProgressValue(int)));
 
@@ -124,27 +132,30 @@ dialogKopiuj::~dialogKopiuj()
 
 void dialogKopiuj::closeEvent(QCloseEvent *event)
 {
-    if (!this->opFinished)
+    if (!this->opFinished) //copy in progress
     {
-        if (QMessageBox::question(this, tr("Close??"), tr("Are you sure??"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
+        if (QMessageBox::question(this, tr("Close?"), tr("Are you sure??"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) // No pressed
         {
-            event->ignore();
+            event->ignore(); //copy continues
         }
-        else
+        else // Yes pressed
         {
+            // Abort copy, dialog closed
+            this->setProgressValue(NULL);
             this->threadCopy->proces->kill();
             this->threadCopy->terminate();
-            this->threadProgress->terminate();
-            delete this->threadCopy;
             this->threadCopy = NULL;
-            delete this->threadProgress;
+            delete this->threadCopy;
+            this->threadProgress->terminate();
             this->threadProgress = NULL;
+            delete this->threadProgress;
             event->accept();
+            emit copyCanceled();
         }
     }
-    else
+    else // copy finished
     {
-        this->accept();
+        this->accept(); // dialog closed
     }
 }
 
@@ -155,9 +166,17 @@ void dialogKopiuj::closeAfterFinished()
 
 void dialogKopiuj::copied()
 {
+    this->ui->buttonCancel->setDisabled(true);
+    this->ui->buttonCopyOK->setDisabled(false);
     this->opFinished = true;
     if (this->ui->checkBox->isChecked())
         this->close();
+}
+
+void dialogKopiuj::running()
+{
+    //this->ui->buttonCancel->setDisabled(false);
+    this->ui->buttonCopyOK->setDisabled(true);
 }
 
 void dialogKopiuj::nextFile(QString fileName, QString sourcePath, QString targetPath, int fileSize, int counter)
@@ -210,6 +229,9 @@ void ThreadCopy::run()
     int fileSize, counter = 0;
     File file;
     App app;
+    emit this->isRunning();
+    // Ui::dialogKopiuj ui;
+  //  Ui::dialogKopiuj()->buttonCopyOK->setDisabled(true);
 //    QProcess *proces;
 
     QTextCodec *codec = QTextCodec::codecForLocale();
@@ -233,8 +255,7 @@ void ThreadCopy::run()
             tmp.remove(sourceDir);
             emit this->nextFile(tmp, sourceDir, targetDir, fileSize, counter);
             dialogKopiuj::fileRemove(this->targetPath+fileName, this->mode);
-            command = "\""+sdk+"\""+"adb pull \""+codec->toUnicode(file.filePath.toUtf8())+"\" "+"\""+
-                      this->targetPath+fileName+"\"";
+            command = "\""+sdk+"\""+"adb pull \""+codec->toUnicode(file.filePath.toUtf8())+"\" \""+codec->toUnicode(this->targetPath.toUtf8())+codec->toUnicode(fileName.toUtf8())+"\"";
             qDebug()<<"Copy - "<<command;
             proces->start(command);
             proces->waitForFinished(-1);
@@ -274,9 +295,7 @@ void ThreadCopy::run()
             emit this->nextFile(fileName, sourceDir, targetDir, fileSize, counter);
             dialogKopiuj::fileRemove(codec->toUnicode(this->targetPath.toUtf8())+
                                      codec->toUnicode(fileName.toUtf8()), this->mode);
-            command = "\""+sdk+"\""+"adb push \""+file.filePath+"\" "+"\""+
-                               codec->toUnicode(this->targetPath.toUtf8())+
-                               codec->toUnicode(fileName.toUtf8())+"\"";
+            command = "\""+sdk+"\""+"adb push \""+codec->toUnicode(file.filePath.toUtf8())+"\" \""+codec->toUnicode(this->targetPath.toUtf8())+ codec->toUnicode(fileName.toUtf8())+"\"";
             qDebug()<<"Copy - "<<command;
             proces->kill();
             qDebug()<<"Copy - process killed";
@@ -310,14 +329,14 @@ void ThreadCopy::run()
             emit this->nextFile(file.fileName, sourceDir, targetDir, fileSize, counter);
             if (fileName.contains("/"))
             {
-                proces->start("\""+sdk+"\""+"adb shell busybox mkdir \""+ codec->toUnicode(this->targetPath.toUtf8())
+                proces->start("\""+sdk+"\""+"adb shell mkdir \""+ codec->toUnicode(this->targetPath.toUtf8())
                              +codec->toUnicode(fileName.left(fileName.lastIndexOf("/")).toUtf8())+"\"");
                 proces->waitForFinished(-1);
                 output = proces->readAll();
                 qDebug()<<"Copy - "<<output;
             }
             dialogKopiuj::fileRemove(codec->toUnicode(this->targetPath.toUtf8())+codec->toUnicode(fileName.toUtf8()), this->mode);
-            command = "\""+sdk+"\""+"adb shell cp \""+codec->toUnicode(file.filePath.toUtf8())+"\" "+"\""+
+            command = "\""+sdk+"\""+"adb shell cp \""+codec->toUnicode(file.filePath.toUtf8())+"\" \""+
                                codec->toUnicode(this->targetPath.toUtf8())+codec->toUnicode(fileName.toUtf8())+"\"";
             qDebug()<<"Copy - "<<command;
             proces->start(command);
@@ -352,8 +371,8 @@ void ThreadCopy::run()
             targetDir = targetDir.left(targetDir.lastIndexOf("/") + 1);
             emit this->nextFile(app.appFileName, sourceDir, targetDir, app.appSize.toInt(), counter);
             dialogKopiuj::fileRemove(this->targetPath+fileName, this->mode);
-            command = "\""+sdk+"\""+"adb pull \""+codec->toUnicode(app.appFile.toUtf8())+"\" "+"\""+
-                      this->targetPath+fileName+"\"";
+            command = "\""+sdk+"\""+"adb pull \""+codec->toUnicode(app.appFile.toUtf8())+"\" \""+
+                      codec->toUnicode(this->targetPath.toUtf8())+codec->toUnicode(fileName.toUtf8())+"\"";
             qDebug()<<"Copy - "<<command;
             proces->start(command);
             proces->waitForFinished(-1);
@@ -375,7 +394,7 @@ void ThreadProgress::run()
     QProcess *proces = new QProcess;
     QFile plik;
     proces->setProcessChannelMode(QProcess::MergedChannels);
-    QTextCodec *codec = QTextCodec::codecForLocale();
+//    QTextCodec *codec = QTextCodec::codecForLocale();
 
     if (this->mode == dialogKopiuj::PhoneToComputer || this->mode == dialogKopiuj::AppsToComputer)
     {
@@ -389,21 +408,22 @@ void ThreadProgress::run()
     }
     else if ((this->mode == dialogKopiuj::ComputerToPhone) || (this->mode == dialogKopiuj::PhoneToPhone))
     {
-        while (this->maxSize > fileSize)
-        {
-            command = "\""+sdk+"\""+"adb shell busybox ls -l \""+codec->toUnicode(this->filePath.toUtf8())+"\"";
-            qDebug()<<"Copy, ThreadProgress.run() - startProces: "<<command;
-            proces->start(command);
-            proces->waitForFinished(1000);
-            proces->kill();
-            output = proces->readAll();
-            outputParts = output.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-            if (outputParts.size() >= 5)
-            {
-                fileSize = outputParts.at(4).toInt();
-                emit this->progressValue(fileSize);
-            }
-        }
+//        while (this->maxSize > fileSize)
+//        {
+//            command = "\""+sdk+"\""+"adb shell ls -l \""+codec->toUnicode(this->filePath.toUtf8())+"\"";
+//            qDebug()<<"Copy, ThreadProgress.run() - startProces: "<<command;
+//            proces->start(command);
+//            proces->waitForFinished(1000);
+//            proces->terminate();
+//            output = proces->readAll();
+//            outputParts = output.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+//            if (outputParts.size() >= 5)
+//            {
+//                fileSize = outputParts.at(4).toInt();
+//                emit this->progressValue(fileSize);
+//            }
+//            msleep(500);
+//        }
     }
     qDebug()<<"Copy progress.run() - END";
     delete proces;
@@ -440,6 +460,7 @@ QString dialogKopiuj::humanReadableSize(QString size)
 
 void dialogKopiuj::fileRemove(QString filePath, int mode)
 {
+    QTextCodec *codec = QTextCodec::codecForLocale();
     if (mode == PhoneToComputer || mode == AppsToComputer)
     {
         QFileInfo fInfo;
@@ -452,7 +473,7 @@ void dialogKopiuj::fileRemove(QString filePath, int mode)
         QSettings settings;
         QProcess *proces = new QProcess;
         QString sdk = settings.value("sdkPath").toString();
-        QString command = "\""+sdk+"\""+"adb shell busybox rm -f \""+filePath+"\"";
+        QString command = "\""+sdk+"\""+"adb shell rm -f \""+codec->toUnicode(filePath.toUtf8())+"\"";
         proces->start(command);
         proces->waitForFinished(-1);
     }

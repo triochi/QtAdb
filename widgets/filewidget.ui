@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>759</width>
-    <height>233</height>
+    <height>839</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
      <x>10</x>
      <y>10</y>
      <width>737</width>
-     <height>160</height>
+     <height>751</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,1,0">
@@ -186,6 +186,11 @@
         <item>
          <property name="text">
           <string notr="true">/data/app/</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string notr="true">/sd-ext/</string>
          </property>
         </item>
         <item>

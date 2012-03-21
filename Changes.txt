@@ -1,0 +1,38 @@
+What is different from current official build 0.8.1:
+
+Files Page:
+  -double click on phone file (both panes) opens file in PC with the associated program for that extension with option to edit the file and save it back to phone;
+  -added "Properties" in phone files/folders right click context menu with permissions changing capabilities;
+  -switching left pane between PC/phone files now remembers last folder view for both;
+  -left paths combo box now works for phone files too when switching left pane to phone files;
+  -some bugs fixes;
+
+Apps Page:
+  -major speedup displaying apps after the initial first run when apps info is collected;
+  -fixed all functions, now all buttons and actions works as they should;
+  -now you can backup and restore apps and data to any folder on /sdcard or PC, set backup folder location in Settings first;
+  -option added to Backups context menu to add app/data if missing from existing previous backup;
+  
+Recovery Page replaced with new Advanced Menu Page that works with CWM Recovery. What can be done:
+  -run fix_permissions in Android OS mode, not in recovery mode. As you may know fix_permissions in CWM recovery is broken;
+  -Fix/Undo Fix Market Cache Download;
+  -Flash new Recovery;
+  -Mount/Unmount any partition in recovery mode, Remount /system with read-write/read-only access in Android OS mode;
+  -Repartitioning SD Card with /sd-ext partition (your choice of size and type) with option to backup /sdcard content before, and restoring it after the operation;
+  -Wipe data/factory reset, cache, dalvik-cache, battery stats (your choice) in recovery mode;
+  -Install zip of your choice from /sdcard;
+  -Backup ROM to any folder on /sdcard or to default CWM location with option for Backup md5 sum validation after phone reboots back to Android OS, ensures proper backup is done;
+  -Restore nandroid Backup with option to choose which partitions to restore(select all for full restore) and preliminary md5 sum validation for double safety;
+  -One click Update ROM function which wipes cache and dalvik-cache before flashing. If Link2SD is detected on your phone you have an option to automatically copy its sd-ext mount script from current ROM to the new updated ROM saving you one reboot. Link2SD will not even know you updated the ROM;
+  -One click ROM Flash with full wipe and options to install zips before/after(or both) the flash - this procedure reboots phone to Recovery, wipes dalvik-cache, formats /boot, /system, /data and /cache partitions, installs zip before(if selected),  installs the new ROM, installs zip after(if selected) and reboots back to Android OS.
+  
+  Detailed information in Status Window is displayed for all operations taking place in real time. After phone reboots back to Android OS, the last CWM recovery log is displayed so you can spot any errors occurred during the last operation.
+  
+  -Shell Page is replaced with Command Prompt "adb shell" window;
+  -And probably something else I forgot about;
+  
+  All bugs fixed(I believe).
+  
+   I want to thank and give credits to the guys (couldn't find their names) created some of the tools I'm using to make the new features works.
+  
+  

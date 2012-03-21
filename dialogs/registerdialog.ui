@@ -31,6 +31,9 @@
   <property name="windowTitle">
    <string>Register</string>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <widget class="QWidget" name="gridLayoutWidget">
    <property name="geometry">
     <rect>
@@ -134,7 +137,7 @@
       <item>
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>don't have a key? consider donation:  </string>
+         <string>Don't have a key? Consider donation:  </string>
         </property>
        </widget>
       </item>
@@ -184,7 +187,7 @@ p, li { white-space: pre-wrap; }
       <item>
        <widget class="QPushButton" name="pushButton">
         <property name="text">
-         <string>cancel</string>
+         <string>Cancel</string>
         </property>
        </widget>
       </item>
