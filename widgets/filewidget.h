@@ -110,8 +110,10 @@ private:
 
     QMenu *computerMenu, *phoneLeftMenu, *phoneRightMenu;
 
-
-    QString oldComputerPath;
+    QFileSystemWatcher *pulled;
+    QProcess *edit;
+    QString oldComputerPath, fileName, filePath;
+    QMessageBox *msg;
 
 public slots:
     void rightDisplay();
@@ -194,6 +196,9 @@ private slots:
     void copySlotToComputer(QStringList list);
     void copySlotToPhone(QStringList list);
     void copySlotToPhoneLeft(QStringList list);
+    void saveFile();
+    void removeFile();
+
 signals:
     void phoneConnectionChanged(int);
     void progressValue(int value, int max);

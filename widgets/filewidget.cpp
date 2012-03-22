@@ -322,6 +322,8 @@ FileWidget::FileWidget(QWidget *parent, SettingsWidget *settings) :
     connect(this->phoneModel, SIGNAL(copy(QStringList)), this, SLOT(copySlotToPhone(QStringList)), Qt::QueuedConnection);
     connect(this->phoneLeftModel, SIGNAL(copy(QStringList)), this, SLOT(copySlotToPhoneLeft(QStringList)), Qt::QueuedConnection);
 
+    pulled = new QFileSystemWatcher;
+
     this->leftMode="computer";
     this->leftDisplay();
     this->settings->changeFont();
@@ -329,6 +331,7 @@ FileWidget::FileWidget(QWidget *parent, SettingsWidget *settings) :
 
 FileWidget::~FileWidget()
 {
+    this->computer->deleteDir(QDir::currentPath()+"/tmp/phone");
     this->settings->phonePath = this->phone->getPath();
     if (this->leftMode=="computer")
         this->settings->computerPath = this->computer->getPath();
@@ -978,7 +981,7 @@ void FileWidget::leftDoubleClick()
         {
             QModelIndex index = this->leftTableView->selectionModel()->selection().indexes().takeFirst();
             index = this->phoneLeftSortModel->mapToSource(index);
-            QString fileName, filePath, fileType;
+            QString fileType;
             fileName = this->phoneLeftModel->getFile(index.row()).fileName;
             filePath = this->phoneLeftModel->getFile(index.row()).filePath;
             fileType = this->phoneLeftModel->getFile(index.row()).fileType;
@@ -989,59 +992,23 @@ void FileWidget::leftDoubleClick()
             }
             else if (fileType == "file")
             {
-                QDir dir;
-                QProcess *edit = new QProcess;
-                QMessageBox *msg = new QMessageBox(this);
+                pulled->removePath(QDir::currentPath()+"/tmp/phone/" + fileName);
+                removeFile();
+                msg = new QMessageBox(this);
                 msg->setText("Loading file... Please, wait...");
                 msg->setIcon(QMessageBox::Information);
                 msg->setWindowTitle("Open file:");
                 msg->setStandardButtons(QMessageBox::Ok);
+                edit = new QProcess;
                 connect(edit, SIGNAL(started()), msg, SLOT(exec()));
                 connect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
-                edit->start("\""+sdk+"\""+"adb pull \""+filePath+"\" \""+QDir::currentPath()+"/tmp\"");
+                edit->start("\""+sdk+"\""+"adb pull \""+filePath+"\" \""+QDir::currentPath()+"/tmp/phone/" + fileName+ "\"");
                 edit->waitForFinished(-1);
                 disconnect(edit, SIGNAL(started()), msg, SLOT(exec()));
                 disconnect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
-                QDesktopServices::openUrl(QUrl("file:///" + QDir::currentPath()+"/tmp/" + fileName, QUrl::TolerantMode));
-                if (QMessageBox::information(this,"Open file:","File is opened and ready for editing...\nMake your changes and save it to disk.\n\nWhen done press [Save] to save changes to Phone, or [Discard] to keep the original file.",QMessageBox::Save | QMessageBox::Discard) == QMessageBox::Save)
-                {
-                    edit->start("\""+sdk+"\""+"adb shell stat \"" + filePath + "\"");
-                    edit->waitForFinished(-1);
-                    QString output = edit->readAll();
-                    int start = output.indexOf("Access:",Qt::CaseSensitive);
-                    start+=7;
-                    int end = output.indexOf("Uid:",start,Qt::CaseSensitive);
-                    QString fPerm = output.mid(start, end-start);
-                    fPerm = fPerm.trimmed(); //(0777/lrwxrwxrwx)
-                    QStringList permList = fPerm.split("/");
-                    QString chmod = permList[0].right(3);
-                    QString folder = filePath.left(filePath.lastIndexOf("/"));
-                    if (folder.startsWith("/system"))
-                    {
-                        edit->start("\""+sdk+"\""+"adb shell mount -o remount,rw /system");
-                        edit->waitForFinished(-1);
-                    }
-                    msg->setText("Saving file to Phone... Please, wait...");
-                    connect(edit, SIGNAL(started()), msg, SLOT(exec()));
-                    connect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
-                    edit->start("\""+sdk+"\""+"adb push \""+QDir::currentPath()+"/tmp/" + fileName + "\" \"" + folder + "\"");
-                    edit->waitForFinished(-1);
-                    disconnect(edit, SIGNAL(started()), msg, SLOT(exec()));
-                    disconnect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
-                    edit->start("\""+sdk+"\""+"adb shell chmod " + chmod.append(" \"") + filePath + "\"");
-                    edit->waitForFinished(-1);
-                    if (folder.startsWith("/system"))
-                    {
-                        edit->start("\""+sdk+"\""+"adb shell mount -o remount,ro,noatime /system");
-                        edit->waitForFinished(-1);
-                    }
-                    leftDisplay();
-                }
-                else
-                {
-                    dir.remove(QDir::currentPath()+"/tmp/" + fileName);
-                    return;
-                }
+                QDesktopServices::openUrl(QUrl("file:///" + QDir::currentPath()+"/tmp/phone/" + fileName, QUrl::TolerantMode));
+                pulled->addPath(QDir::currentPath()+"/tmp/phone/" + fileName);
+                connect(pulled, SIGNAL(fileChanged(QString)), this, SLOT(saveFile()));
             }
         }
     }
@@ -1885,7 +1852,7 @@ void FileWidget::rightDoubleClick()
     if (!this->rightTableView->selectionModel()->selection().isEmpty())
     {
         QModelIndex index;
-        QString fileName, filePath, fileType;;
+        QString fileType;
         File file;
         if (rightTableView->model()==this->findModel)
         {
@@ -1918,59 +1885,23 @@ void FileWidget::rightDoubleClick()
         }
         else if (fileType == "file")
         {
-            QDir dir;
-            QProcess *edit = new QProcess;
-            QMessageBox *msg = new QMessageBox(this);
+            pulled->removePath(QDir::currentPath()+"/tmp/phone/" + fileName);
+            removeFile();
+            msg = new QMessageBox(this);
             msg->setText("Loading file... Please, wait...");
             msg->setIcon(QMessageBox::Information);
             msg->setWindowTitle("Open file:");
             msg->setStandardButtons(QMessageBox::Ok);
+            edit = new QProcess;
             connect(edit, SIGNAL(started()), msg, SLOT(exec()));
             connect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
-            edit->start("\""+sdk+"\""+"adb pull \""+filePath+"\" \""+QDir::currentPath()+"/tmp\"");
+            edit->start("\""+sdk+"\""+"adb pull \""+filePath+"\" \""+QDir::currentPath()+"/tmp/phone/" + fileName+ "\"");
             edit->waitForFinished(-1);
             disconnect(edit, SIGNAL(started()), msg, SLOT(exec()));
             disconnect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
-            QDesktopServices::openUrl(QUrl("file:///" + QDir::currentPath()+"/tmp/" + fileName, QUrl::TolerantMode));
-            if (QMessageBox::information(this,"Open file:","File is opened and ready for editing...\nMake your changes and save it to disk.\n\nWhen done press [Save] to save changes to Phone, or [Discard] to keep the original file.",QMessageBox::Save | QMessageBox::Discard) == QMessageBox::Save)
-            {
-                edit->start("\""+sdk+"\""+"adb shell stat \"" + filePath + "\"");
-                edit->waitForFinished(-1);
-                QString output = edit->readAll();
-                int start = output.indexOf("Access:",Qt::CaseSensitive);
-                start+=7;
-                int end = output.indexOf("Uid:",start,Qt::CaseSensitive);
-                QString fPerm = output.mid(start, end-start);
-                fPerm = fPerm.trimmed(); //(0777/lrwxrwxrwx)
-                QStringList permList = fPerm.split("/");
-                QString chmod = permList[0].right(3);
-                QString folder = filePath.left(filePath.lastIndexOf("/"));
-                if (folder.startsWith("/system"))
-                {
-                    edit->start("\""+sdk+"\""+"adb shell mount -o remount,rw /system");
-                    edit->waitForFinished(-1);
-                }
-                msg->setText("Saving file to Phone... Please, wait...");
-                connect(edit, SIGNAL(started()), msg, SLOT(exec()));
-                connect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
-                edit->start("\""+sdk+"\""+"adb push \""+QDir::currentPath()+"/tmp/" + fileName + "\" \"" + folder + "\"");
-                edit->waitForFinished(-1);
-                disconnect(edit, SIGNAL(started()), msg, SLOT(exec()));
-                disconnect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
-                edit->start("\""+sdk+"\""+"adb shell chmod " + chmod.append(" \"") + filePath + "\"");
-                edit->waitForFinished(-1);
-                if (folder.startsWith("/system"))
-                {
-                    edit->start("\""+sdk+"\""+"adb shell mount -o remount,ro,noatime /system");
-                    edit->waitForFinished(-1);
-                }
-                rightDisplay();
-            }
-            else
-            {
-                dir.remove(QDir::currentPath()+"/tmp/" + fileName);
-                return;
-            }
+            QDesktopServices::openUrl(QUrl("file:///" + QDir::currentPath()+"/tmp/phone/" + fileName, QUrl::TolerantMode));
+            pulled->addPath(QDir::currentPath()+"/tmp/phone/" + fileName);
+            connect(pulled, SIGNAL(fileChanged(QString)), this, SLOT(saveFile()));
         }
     }
 }
@@ -2548,4 +2479,58 @@ void FileWidget::leftComboBoxPhone()
         this->phoneLeft->setPath(cboxdir);
         this->leftDisplay();
     }
+}
+
+void FileWidget::saveFile()
+{
+    disconnect(pulled, SIGNAL(fileChanged(QString)), this, SLOT(saveFile()));
+    pulled->removePath(QDir::currentPath()+"/tmp/phone/" + fileName);
+    if (QMessageBox::information(this,"Open file:","File was changed!\n\nSave changes to Phone?",QMessageBox::Save | QMessageBox::Discard) == QMessageBox::Save)
+    {
+        edit->start("\""+sdk+"\""+"adb shell stat \"" + filePath + "\"");
+        edit->waitForFinished(-1);
+        QString output = edit->readAll();
+        int start = output.indexOf("Access:",Qt::CaseSensitive);
+        start+=7;
+        int end = output.indexOf("Uid:",start,Qt::CaseSensitive);
+        QString fPerm = output.mid(start, end-start);
+        fPerm = fPerm.trimmed(); //(0777/lrwxrwxrwx)
+        QStringList permList = fPerm.split("/");
+        QString chmod = permList[0].right(3);
+        QString folder = filePath.left(filePath.lastIndexOf("/"));
+        if (folder.startsWith("/system"))
+        {
+            edit->start("\""+sdk+"\""+"adb shell mount -o remount,rw /system");
+            edit->waitForFinished(-1);
+        }
+        msg->setText("Saving file to Phone... Please, wait...");
+        connect(edit, SIGNAL(started()), msg, SLOT(exec()));
+        connect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
+        edit->start("\""+sdk+"\""+"adb push \""+QDir::currentPath()+"/tmp/phone/" + fileName + "\" \"" + folder + "\"");
+        edit->waitForFinished(-1);
+        disconnect(edit, SIGNAL(started()), msg, SLOT(exec()));
+        disconnect(edit, SIGNAL(finished(int)), msg, SLOT(accept()));
+        edit->start("\""+sdk+"\""+"adb shell chmod " + chmod.append(" \"") + filePath + "\"");
+        edit->waitForFinished(-1);
+        if (folder.startsWith("/system"))
+        {
+            edit->start("\""+sdk+"\""+"adb shell mount -o remount,ro,noatime /system");
+            edit->waitForFinished(-1);
+        }
+        removeFile();
+        rightDisplay();
+        if (this->leftMode=="phone")
+            leftDisplay();
+    }
+    else
+    {
+        removeFile();
+        return;
+    }
+}
+
+void FileWidget::removeFile()
+{
+    QDir dir;
+    dir.remove(QDir::currentPath()+"/tmp/phone/" + fileName);
 }
