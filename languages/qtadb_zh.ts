@@ -13,7 +13,7 @@
     <message>
         <location filename="../dialogs/aboutdialog.ui" line="117"/>
         <source>Created by 7ymekk &amp; mozarcik</source>
-        <translation>开发者：7ymekk&amp;mozarcik</translation>
+        <translation>创建者7ymekk&amp;mozarcik</translation>
     </message>
     <message>
         <location filename="../dialogs/aboutdialog.ui" line="124"/>
@@ -208,22 +208,22 @@
     <message>
         <location filename="../widgets/appwidget.ui" line="535"/>
         <source>Open in Market (Phone)</source>
-        <translation>使用手机中的电子市场查看</translation>
+        <translation>在电子市场查看(手机)</translation>
     </message>
     <message>
         <location filename="../widgets/appwidget.ui" line="561"/>
         <source>Open in Market (PC)</source>
-        <translation>使用电脑上的电子市场查看</translation>
+        <translation>在电子市场查看(电脑)</translation>
     </message>
     <message>
         <location filename="../widgets/appwidget.cpp" line="151"/>
         <source>Choose where You want to save selected apps</source>
-        <translation>选择您要保存的应用程序的路径</translation>
+        <translation>选择您要保存选定的应用程序</translation>
     </message>
     <message>
         <location filename="../widgets/appwidget.cpp" line="595"/>
         <source>Missing aapt</source>
-        <translation>没有找到aapt</translation>
+        <translation>缺少aapt</translation>
     </message>
     <message>
         <location filename="../widgets/appwidget.cpp" line="72"/>
@@ -320,8 +320,8 @@
         <location filename="../widgets/appwidget.cpp" line="216"/>
         <source>selected</source>
         <comment>selected label below table</comment>
-        <translatorcomment>从下表中选择标签</translatorcomment>
-        <translation>选中的</translation>
+        <translatorcomment>下表选定的标签</translatorcomment>
+        <translation>选择</translation>
     </message>
     <message>
         <location filename="../widgets/appwidget.cpp" line="353"/>
@@ -403,7 +403,7 @@ After You place it in correct directory click Refresh button</source>
     <message>
         <location filename="../widgets/appwidget.cpp" line="715"/>
         <source>select apps to install</source>
-        <translation>选择安装的应用程序</translation>
+        <translation>选择应用程序进行安装</translation>
     </message>
     <message>
         <location filename="../widgets/appwidget.cpp" line="810"/>
@@ -514,7 +514,7 @@ After You place it in correct directory click Refresh button</source>
     <message>
         <location filename="../widgets/fastbootwidget.ui" line="75"/>
         <source>Boot IMG</source>
-        <translation>Boot IMG</translation>
+        <translation>引导 IMG</translation>
     </message>
     <message>
         <location filename="../widgets/fastbootwidget.cpp" line="52"/>
@@ -556,7 +556,7 @@ After You place it in correct directory click Refresh button</source>
         <location filename="../widgets/fastbootwidget.cpp" line="130"/>
         <location filename="../widgets/fastbootwidget.cpp" line="165"/>
         <source>Operation cancelled!</source>
-        <translation>取消操作!</translation>
+        <translation>操作取消!</translation>
     </message>
     <message>
         <location filename="../widgets/fastbootwidget.cpp" line="117"/>
@@ -712,8 +712,8 @@ After You place it in correct directory click Refresh button</source>
         <location filename="../widgets/filewidget.cpp" line="2114"/>
         <location filename="../widgets/filewidget.cpp" line="2162"/>
         <source>theres nothing to copy. Maybe selected dirs are empty</source>
-        <translation>没有任何东西需要复制.
-可能你选择的是空目录</translation>
+        <translation>没有任何东西被复制.
+可能你选择的目录是空的</translation>
     </message>
     <message>
         <location filename="../widgets/filewidget.cpp" line="612"/>
@@ -739,8 +739,8 @@ After You place it in correct directory click Refresh button</source>
         <location filename="../widgets/filewidget.cpp" line="1471"/>
         <source>dir was not created.
 Make sure that you are allowed to do this</source>
-        <translation>目录建立失败.
-请确认你有响应的权限</translation>
+        <translation>目录未建立.
+请确认你有权限进行此项操作</translation>
     </message>
     <message>
         <location filename="../widgets/filewidget.cpp" line="1715"/>
@@ -922,7 +922,7 @@ Make sure that you are allowed to do this</source>
     <message>
         <location filename="../dialogs/logcatdialog.ui" line="14"/>
         <source>Logcat</source>
-        <translation>日志</translation>
+        <translation>日志工具</translation>
     </message>
     <message>
         <location filename="../dialogs/logcatdialog.ui" line="29"/>
@@ -957,7 +957,7 @@ Make sure that you are allowed to do this</source>
     <message>
         <location filename="../dialogs/logcatdialog.ui" line="131"/>
         <source>Sender</source>
-        <translation>发送者</translation>
+        <translation>发起者</translation>
     </message>
     <message>
         <location filename="../dialogs/logcatdialog.ui" line="136"/>
@@ -1023,13 +1023,13 @@ Make sure that you are allowed to do this</source>
         <location filename="../classes/models/logcatmodel.cpp" line="142"/>
         <source>Sender</source>
         <comment>logcat header</comment>
-        <translation>发送者</translation>
+        <translation>发起者</translation>
     </message>
     <message>
         <location filename="../classes/models/logcatmodel.cpp" line="144"/>
         <source>Pid</source>
         <comment>logcat header</comment>
-        <translation>PID</translation>
+        <translation>PID控制</translation>
     </message>
     <message>
         <location filename="../classes/models/logcatmodel.cpp" line="146"/>
@@ -1054,7 +1054,7 @@ Make sure that you are allowed to do this</source>
     <message>
         <location filename="../dialogs/mainwindow.ui" line="97"/>
         <source>CONNECT YOUR PHONE</source>
-        <translation>连接到手机</translation>
+        <translation>连接你的手机</translation>
     </message>
     <message>
         <location filename="../dialogs/mainwindow.ui" line="22"/>
@@ -1086,17 +1086,17 @@ Make sure that you are allowed to do this</source>
     <message>
         <location filename="../dialogs/mainwindow.ui" line="200"/>
         <source>Fastboot</source>
-        <translation>Fastboot</translation>
+        <translation>快速启动</translation>
     </message>
     <message>
         <location filename="../dialogs/mainwindow.ui" line="232"/>
         <source>usb</source>
-        <translation>usb</translation>
+        <translation>Usb</translation>
     </message>
     <message>
         <location filename="../dialogs/mainwindow.ui" line="237"/>
         <source>wifi</source>
-        <translation>wifi</translation>
+        <translation>Wifi</translation>
     </message>
     <message>
         <location filename="../dialogs/mainwindow.ui" line="242"/>
@@ -1175,7 +1175,7 @@ Make sure that you are allowed to do this</source>
         <source>Fastboot</source>
         <comment>fastbot button</comment>
         <translatorcomment>快速启动按钮</translatorcomment>
-        <translation>Fastboot</translation>
+        <translation>快速启动</translation>
     </message>
     <message>
         <location filename="../dialogs/mainwindow.cpp" line="75"/>
@@ -1231,7 +1231,7 @@ Make sure that you are allowed to do this</source>
         <source>Sms from </source>
         <comment>system tray bubble</comment>
         <translatorcomment>系统托盘气泡</translatorcomment>
-        <translation>短信来自</translation>
+        <translation>短信来源</translation>
     </message>
     <message>
         <location filename="../dialogs/mainwindow.cpp" line="812"/>
@@ -1294,7 +1294,7 @@ Latest version: </source>
         <location filename="../dialogs/mainwindow.cpp" line="889"/>
         <source>Your version is up to date
 </source>
-        <translation>当前版本是最新的
+        <translation>你的版本是最新的
 </translation>
     </message>
     <message>
@@ -1320,7 +1320,7 @@ Latest version: </source>
     <message>
         <location filename="../dialogs/mainwindow.cpp" line="1012"/>
         <source>Do not bother me again</source>
-        <translation>请不要再提醒了</translation>
+        <translation>请勿再次提醒</translation>
     </message>
 </context>
 <context>
@@ -1348,7 +1348,7 @@ Latest version: </source>
     <message>
         <location filename="../widgets/phoneinfowidget.ui" line="84"/>
         <source>Serial number</source>
-        <translation>序列号</translation>
+        <translation>编号</translation>
     </message>
     <message>
         <location filename="../widgets/phoneinfowidget.ui" line="101"/>
@@ -1412,12 +1412,12 @@ Latest version: </source>
     <message>
         <location filename="../main.cpp" line="118"/>
         <source>Choose path to dir with adb and aapt binaries</source>
-        <translation>选择adb和aapt目录</translation>
+        <translation>选择adb及aapt二进制文件目录</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="139"/>
         <source>there is no adb binary in here!</source>
-        <translation>没有找到adb!</translation>
+        <translation>这里没有adb可执行程序!</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="140"/>
@@ -1432,14 +1432,14 @@ Latest version: </source>
     <message>
         <location filename="../main.cpp" line="172"/>
         <source>It seems that adb is not working properly</source>
-        <translation>adb无法正常工作</translation>
+        <translation>看你的adb罢工了</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="187"/>
         <source>adbd cannot run as root in production builds so You can&apos;t do anything with /system partition. Run anyway?
 (press save to run QtADB and disable this message)</source>
-        <translation>adbd不能以root权限运行,因此无法对/system分区做任何操作。你确定要运行吗?
-(禁用此消息默认运行QtADB)</translation>
+        <translation>adbd不能运行在产品根目录,因此您不能更改系统分割区任何东西。运行吗?
+(按下保存运行QtADB和禁用此消息)</translation>
     </message>
 </context>
 <context>
@@ -1463,7 +1463,7 @@ Latest version: </source>
         <location filename="../widgets/recoverywidget.ui" line="84"/>
         <location filename="../widgets/recoverywidget.cpp" line="517"/>
         <source>Wipe data</source>
-        <translation>Wipe 数据</translation>
+        <translation>擦除数据</translation>
     </message>
     <message>
         <location filename="../widgets/recoverywidget.ui" line="97"/>
@@ -1513,7 +1513,7 @@ Latest version: </source>
     <message>
         <location filename="../widgets/recoverywidget.ui" line="839"/>
         <source>Choose one of options above</source>
-        <translation>请从以上选项中选择一个</translation>
+        <translation>请选择以上选项之一</translation>
     </message>
     <message>
         <location filename="../widgets/recoverywidget.cpp" line="135"/>
@@ -1561,17 +1561,17 @@ Latest version: </source>
     <message>
         <location filename="../widgets/recoverywidget.cpp" line="217"/>
         <source>USB mounted</source>
-        <translation>挂载USB</translation>
+        <translation>USB 安装</translation>
     </message>
     <message>
         <location filename="../widgets/recoverywidget.cpp" line="217"/>
         <source>SD card is mounted as usb drive</source>
-        <translation>SD卡已经通过USB挂载</translation>
+        <translation>SD卡的USB驱动已装入</translation>
     </message>
     <message>
         <location filename="../widgets/recoverywidget.cpp" line="221"/>
         <source>USB unmounted</source>
-        <translation>卸载USB</translation>
+        <translation>USB 卸载</translation>
     </message>
     <message>
         <location filename="../widgets/recoverywidget.cpp" line="221"/>
@@ -1613,7 +1613,7 @@ Latest version: </source>
         <source>Finished
 Choose one backup from combo above to restore it</source>
         <translation>完成
-选择要还原的备份</translation>
+从以上备份中选择一个进行还原</translation>
     </message>
     <message>
         <location filename="../widgets/recoverywidget.cpp" line="494"/>
@@ -1646,7 +1646,7 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../dialogs/registerdialog.ui" line="137"/>
         <source>don&apos;t have a key? consider donation:  </source>
-        <translation>如果没有注册码?请考虑通过捐赠来获得注册码:</translation>
+        <translation>如果没有注册码?请考虑捐赠:</translation>
     </message>
     <message>
         <location filename="../dialogs/registerdialog.ui" line="187"/>
@@ -1705,7 +1705,7 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="197"/>
         <source>Always close copy window after finished</source>
-        <translation>默认在复制完成后关闭窗口</translation>
+        <translation>复制完成后始终关闭窗口</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="204"/>
@@ -1777,12 +1777,12 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="437"/>
         <source>Text only</source>
-        <translation>仅文字</translation>
+        <translation>仅限文字</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="442"/>
         <source>Text beside icon</source>
-        <translation>文字在图标边上</translation>
+        <translation>文字边的图标</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="447"/>
@@ -1802,12 +1802,12 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="483"/>
         <source>Left</source>
-        <translation>左边</translation>
+        <translation>左</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="488"/>
         <source>Right</source>
-        <translation>右边</translation>
+        <translation>右</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="493"/>
@@ -1848,13 +1848,13 @@ Choose one backup from combo above to restore it</source>
         <location filename="../widgets/settingswidget.ui" line="575"/>
         <location filename="../widgets/settingswidget.ui" line="797"/>
         <source>Set path on start:</source>
-        <translation>设置启动路径:</translation>
+        <translation>启动时设置路径:</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="598"/>
         <location filename="../widgets/settingswidget.ui" line="820"/>
         <source>Remember path on exit</source>
-        <translation>退出时记住路径</translation>
+        <translation>记住退出时路径</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="611"/>
@@ -1871,12 +1871,12 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="688"/>
         <source>Show app icon instead default</source>
-        <translation>显示默认程序图标</translation>
+        <translation>显示应用程序图标代替默认</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="701"/>
         <source>Instead of file name show:</source>
-        <translation>替换显示文件名称:</translation>
+        <translation>代替文件名称显示:</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="714"/>
@@ -1884,10 +1884,10 @@ Choose one backup from combo above to restore it</source>
 &lt;appName&gt;
 &lt;appVersion&gt;
 &lt;packageName&gt;</source>
-        <translation>详细信息:
+        <translation>详细变量:
 &lt;应用名称&gt;
 &lt;应用版本&gt;
-<安装包名&gt;</translation>
+&lt;安装包名称&gt;</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="743"/>
@@ -1947,7 +1947,7 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1036"/>
         <source>Sort by column:</source>
-        <translation>以列排序:</translation>
+        <translation>以栏排序:</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1044"/>
@@ -1967,7 +1967,7 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1059"/>
         <source>App package name</source>
-        <translation>程序包名</translation>
+        <translation>应用程序包名称</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1067"/>
@@ -1979,7 +1979,7 @@ Choose one backup from combo above to restore it</source>
         <location filename="../widgets/settingswidget.ui" line="1089"/>
         <location filename="../widgets/settingswidget.ui" line="1181"/>
         <source>only on start</source>
-        <translation>仅在启动时</translation>
+        <translation>仅在启动</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1080"/>
@@ -1990,7 +1990,7 @@ Choose one backup from combo above to restore it</source>
         <location filename="../widgets/settingswidget.ui" line="1094"/>
         <location filename="../widgets/settingswidget.ui" line="1186"/>
         <source>every time on show</source>
-        <translation>始终显示</translation>
+        <translation>每一次都显示</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1166"/>
@@ -2005,7 +2005,7 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1207"/>
         <source>Check app version on internet</source>
-        <translation>检查网上应用程序版本</translation>
+        <translation>在互联网检查应用程序版本</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1227"/>
@@ -2020,7 +2020,7 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1243"/>
         <source>sd ext folder</source>
-        <translation>SD卡扩展目录</translation>
+        <translation>SD ext 目录</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1253"/>
@@ -2050,7 +2050,7 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1575"/>
         <source>Color files</source>
-        <translation>色彩文件</translation>
+        <translation>彩色文件</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="1315"/>
@@ -2100,7 +2100,7 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="125"/>
         <source>Remove settings from system</source>
-        <translation>从系统中删除设置</translation>
+        <translation>从系统中设置删除</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.ui" line="138"/>
@@ -2115,7 +2115,7 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.ui" line="167"/>
         <source>Associate apk files with QtADB</source>
-        <translation>使用QtADB关联apk文件</translation>
+        <translation>使用QtADB软件关联apk文件</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.cpp" line="152"/>
@@ -2163,7 +2163,7 @@ Choose one backup from combo above to restore it</source>
     <message>
         <location filename="../widgets/settingswidget.cpp" line="732"/>
         <source>Are you sure you want to associate *.apk files with QtADB???</source>
-        <translation>你确定使用QtADB关联*.apk文件吗???</translation>
+        <translation>你确定使用QtADB软件关联*.apk文件吗???</translation>
     </message>
     <message>
         <location filename="../widgets/settingswidget.cpp" line="744"/>
@@ -2189,22 +2189,22 @@ QtADB 命令行工具帮助</translation>
     <message>
         <location filename="../widgets/shellwidget.cpp" line="217"/>
         <source>CTRL+C                - interrupt executing command</source>
-        <translation>CTRL+C键                - 中断执行</translation>
+        <translation>CTRL+C键                - 中断执行命令</translation>
     </message>
     <message>
         <location filename="../widgets/shellwidget.cpp" line="218"/>
         <source>ESC                   - interrupt executing command</source>
-        <translation>ESC                   - 中断执行</translation>
+        <translation>ESC                   - 中断执行命令</translation>
     </message>
     <message>
         <location filename="../widgets/shellwidget.cpp" line="219"/>
         <source>Shift+CTRL+C          - copy selected text to clipboard</source>
-        <translation>Shift+CTRL+C          - 复制选中文本</translation>
+        <translation>Shift+CTRL+C          - 所选文本复制到剪贴板</translation>
     </message>
     <message>
         <location filename="../widgets/shellwidget.cpp" line="220"/>
         <source>Shift+CTRL+V          - paste text from clipboard</source>
-        <translation>Shift+CTRL+V          - 粘贴文本</translation>
+        <translation>Shift+CTRL+V          - 从剪贴板粘贴文本</translation>
     </message>
     <message>
         <location filename="../widgets/shellwidget.cpp" line="221"/>
@@ -2214,12 +2214,12 @@ QtADB 命令行工具帮助</translation>
     <message>
         <location filename="../widgets/shellwidget.cpp" line="222"/>
         <source>Up (arrow)            - display previous executed command</source>
-        <translation>向上(箭头)            - 显示上一条命令</translation>
+        <translation>向上(箭头)            - 显示以前执行的命令</translation>
     </message>
     <message>
         <location filename="../widgets/shellwidget.cpp" line="223"/>
         <source>Down (arrow)          - display next executed command</source>
-        <translation>向下(箭头)          - 显示下一个命令</translation>
+        <translation>向下(箭头)          - 显示下一个执行命令</translation>
     </message>
     <message>
         <location filename="../widgets/shellwidget.cpp" line="224"/>
@@ -2536,7 +2536,7 @@ QtADB 命令行工具帮助</translation>
     <message>
         <location filename="../dialogs/appinfo.ui" line="135"/>
         <source>Package name</source>
-        <translation>程序包名</translation>
+        <translation>程序包名称</translation>
     </message>
     <message>
         <location filename="../dialogs/appinfo.ui" line="159"/>
@@ -2551,12 +2551,12 @@ QtADB 命令行工具帮助</translation>
     <message>
         <location filename="../dialogs/appinfo.ui" line="263"/>
         <source>Open in Market (PC)</source>
-        <translation>在电脑上用电子市场查看</translation>
+        <translation>在电子市场查看(电脑)</translation>
     </message>
     <message>
         <location filename="../dialogs/appinfo.ui" line="274"/>
         <source>Open in Market (Phone)</source>
-        <translation>在手机上用电子市场查看</translation>
+        <translation>在电子市场查看(手机)</translation>
     </message>
     <message>
         <location filename="../dialogs/appinfo.ui" line="285"/>
@@ -2602,7 +2602,7 @@ QtADB 命令行工具帮助</translation>
     <message>
         <location filename="../dialogs/dialogkopiuj.ui" line="43"/>
         <source>from:</source>
-        <translation>从:</translation>
+        <translation>来源:</translation>
     </message>
     <message>
         <location filename="../dialogs/dialogkopiuj.ui" line="57"/>

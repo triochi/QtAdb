@@ -32,7 +32,7 @@ Q_OBJECT
 public:
         ConnectWifi( QWidget * parent = 0, Qt::WFlags f = 0 );
 };
-#endif
+#endif // POLACZ_H
 
 
 

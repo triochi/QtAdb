@@ -25,6 +25,8 @@ AboutDialog::AboutDialog(QWidget *parent) :
 {
     setupUi(this);
     this->setLayout(this->gridLayout);
+    this->setFixedSize(this->width(),this->height());
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     QString version = QCoreApplication::applicationVersion();
     this->versionLabel->setText(version);
 

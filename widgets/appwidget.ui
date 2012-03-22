@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>786</width>
-    <height>595</height>
+    <width>980</width>
+    <height>715</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -164,7 +164,7 @@
              </font>
             </property>
             <property name="text">
-             <string extracomment="app name label">App name</string>
+             <string extracomment="app name label">App name:</string>
             </property>
            </widget>
           </item>
@@ -178,7 +178,7 @@
              </font>
             </property>
             <property name="text">
-             <string extracomment="version label">App version</string>
+             <string extracomment="version label">App version:</string>
             </property>
            </widget>
           </item>
@@ -192,7 +192,7 @@
              </font>
             </property>
             <property name="text">
-             <string extracomment="file name label">File name</string>
+             <string extracomment="file name label">File name:</string>
             </property>
            </widget>
           </item>
@@ -206,7 +206,7 @@
              </font>
             </property>
             <property name="text">
-             <string extracomment="size label">File Size</string>
+             <string extracomment="size label">File Size (bytes):</string>
             </property>
            </widget>
           </item>
@@ -250,7 +250,7 @@
              </font>
             </property>
             <property name="text">
-             <string extracomment="package label">Package name</string>
+             <string extracomment="package label">Package name:</string>
             </property>
            </widget>
           </item>
@@ -284,7 +284,7 @@
              </font>
             </property>
             <property name="text">
-             <string extracomment="location label">Location</string>
+             <string extracomment="location label">Location:</string>
             </property>
            </widget>
           </item>
@@ -331,7 +331,7 @@
              </font>
             </property>
             <property name="text">
-             <string extracomment="latest version label">Latest version</string>
+             <string extracomment="latest version label">Latest version on Android Market:</string>
             </property>
            </widget>
           </item>

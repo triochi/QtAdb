@@ -29,6 +29,7 @@
 #include "../classes/models/filetablemodel.h"
 #include "../classes/mytableview.h"
 #include "settingswidget.h"
+#include "../dialogs/fipdialog.h"
 #include <QtGui>
 
 namespace Ui {
@@ -40,6 +41,7 @@ class ThreadFind : public QThread
     Q_OBJECT
 public:
     void run();
+    static void sleep(unsigned long secs){QThread::sleep(secs);}
     QString path;
     QString fileName;
     QString sdk;
@@ -72,6 +74,7 @@ public:
 
     MyTableView *rightTableView;
     MyTableView *leftTableView;
+
 protected:
     void changeEvent(QEvent *e);
     virtual void keyPressEvent( QKeyEvent *e );
@@ -107,8 +110,10 @@ private:
 
     QMenu *computerMenu, *phoneLeftMenu, *phoneRightMenu;
 
-
-    QString oldComputerPath;
+    QFileSystemWatcher *pulled;
+    QProcess *edit;
+    QString oldComputerPath, fileName, filePath;
+    QMessageBox *msg;
 
 public slots:
     void rightDisplay();
@@ -116,6 +121,8 @@ public slots:
     static App * getAppInfo(QString filePath);
 
 private slots:
+    void propsDialog();
+
     void on_pushButton_pressed();
     void foundFile(File);
     void findFinished();
@@ -130,6 +137,7 @@ private slots:
     void leftComboBoxScroll();
     void rightComboBox();
     void leftComboBox();
+    void leftComboBoxPhone();
     void leftTableWidgetActivated();
     void rightTableWidgetActivated();
 
@@ -188,6 +196,9 @@ private slots:
     void copySlotToComputer(QStringList list);
     void copySlotToPhone(QStringList list);
     void copySlotToPhoneLeft(QStringList list);
+    void saveFile();
+    void removeFile();
+
 signals:
     void phoneConnectionChanged(int);
     void progressValue(int value, int max);

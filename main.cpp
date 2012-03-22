@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
         if (!sdkOk)
         {
             sdk.clear();
-            QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("error"), QObject::tr("there is no adb binary in here!"));
+            QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("Error:"), QObject::tr("There is no adb binary in here!"));
             QPushButton *choosePathMsg = msgBox->addButton(QObject::tr("Choose path"), QMessageBox::AcceptRole);
             QPushButton *closeMsg = msgBox->addButton(QObject::tr("Close"), QMessageBox::RejectRole);
 
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
         if (proces.exitCode() != 0)
         {
             qDebug()<<"adb error - "<<proces.errorString();
-            QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("error"), QObject::tr("It seems that adb is not working properly"), QMessageBox::Ok);
+            QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("Error:"), QObject::tr("It seems that adb is not working properly!"), QMessageBox::Ok);
             msgBox->exec();
             delete msgBox;
             return 1;
@@ -202,8 +202,8 @@ int main(int argc, char *argv[])
 
         if (tmp.contains("adbd cannot run as root in production builds") && !settings.value("disableProductionBuildsMessage",false).toBool())
         {
-            QMessageBox *msgBox2 = new QMessageBox(QMessageBox::Critical, QObject::tr("error"),
-                                                   QObject::tr("adbd cannot run as root in production builds so You can't do anything with /system partition. Run anyway?\n(press save to run QtADB and disable this message)"),
+            QMessageBox *msgBox2 = new QMessageBox(QMessageBox::Critical, QObject::tr("Error:"),
+                                                   QObject::tr("adbd cannot run as root in production builds so you can't do anything with /system/ partition. Run anyway?\n(press save to run QtADB and disable this message.)"),
                                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Save);
             int button = msgBox2->exec();
             if ( button == QMessageBox::No)
@@ -220,11 +220,13 @@ int main(int argc, char *argv[])
         QStringList args = qApp->arguments();
         if (args.count() > 1)
         {
+            QDir dir;
             if (args.at(1).endsWith(".apk"))
             {
                 App *app = NULL;
                 app = FileWidget::getAppInfo(args.at(1));
                 appInfo *appInfoDialog = new appInfo(app);
+                dir.rmdir(QDir::currentPath()+"/tmp/");
                 return appInfoDialog->exec();
             }
             if (args.at(1) == "-install")
@@ -241,6 +243,7 @@ int main(int argc, char *argv[])
                             appList.append(*app);
                     }
                 }
+                dir.rmdir(QDir::currentPath()+"/tmp/");
                 appDialog *appDialogInstall = new appDialog(appList, appDialog::Install, appDialog::None);
                 return appDialogInstall->exec();
             }

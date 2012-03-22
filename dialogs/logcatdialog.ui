@@ -246,9 +246,25 @@
       </property>
      </widget>
     </item>
+    <item row="1" column="9">
+     <widget class="QPushButton" name="saveButton">
+      <property name="toolTip">
+       <string>Save</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset resource="../zasoby.qrc">
+        <normaloff>:/icons/save.png</normaloff>:/icons/save.png</iconset>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="../zasoby.qrc"/>
+ </resources>
  <connections/>
 </ui>

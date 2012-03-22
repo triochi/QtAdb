@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string extracomment="Copy dialog title">Copying</string>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <widget class="QWidget" name="gridLayoutWidget">
    <property name="geometry">
     <rect>
@@ -211,6 +214,13 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonCopyOK">
+        <property name="text">
+         <string>OK</string>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="buttonCancel">

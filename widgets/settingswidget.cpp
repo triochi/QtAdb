@@ -60,6 +60,10 @@ SettingsWidget::SettingsWidget(QWidget *parent) :
     connect(this->ui->listWidget, SIGNAL(currentRowChanged(int)), this, SLOT(changePage(int)));
     connect(&this->animation.animation, SIGNAL(finished()), this, SLOT(animationFinished()));
     connect(this->ui->buttonDetectSdExt, SIGNAL(clicked()), this, SLOT(detectSdExtFolder()));
+    connect(this->ui->buttonBrowseFolder, SIGNAL(clicked()), this, SLOT(on_buttonBrowseFolder_pressed()));
+
+    connect(this->ui->editBacFolder, SIGNAL(returnPressed()), this, SLOT(appsBackupFolderExists()));
+    connect(this->ui->buttonSaveSettings, SIGNAL(clicked()), this, SLOT(appsBackupFolderExists()));
 
     ui->listWidgetCurvePicker->setIconSize(QSize(64,64));
 
@@ -69,6 +73,7 @@ SettingsWidget::SettingsWidget(QWidget *parent) :
 
     this->getSettings();
     this->changeFont();
+
 }
 
 void SettingsWidget::animationFinished()
@@ -170,7 +175,7 @@ void SettingsWidget::changeEvent(QEvent *e)
 
 void SettingsWidget::setSettingsToDefaults()
 {
-    if (QMessageBox::question(this,tr("Reset settings??"),tr("Are you sure you want restore settings to defaults???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,tr("Reset settings?"),tr("Are you sure you want restore settings to defaults???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
         return;
     this->alwaysCloseCopy = true;
     this->phoneHiddenFiles = true;
@@ -182,13 +187,14 @@ void SettingsWidget::setSettingsToDefaults()
     this->showPhoneColumnsHeaders = true;
     this->dialogKopiujShowModal = true;
     this->killDemonOnExit = false;
-    this->checkForUpdatesOnStart = true;
+    this->checkForUpdatesOnStart = false;
     this->color = true;
     this->colorShellFiles = true;
     this->showAppIcon = false;
     this->showAppName = false;
     this->getQR = false;
     this->getCyrketVer = false;
+   // this->BackupAppsOnSdcard = false;
     this->showCopyConfirmation = true;
 
     this->phonePath = "/";
@@ -216,6 +222,8 @@ void SettingsWidget::setSettingsToDefaults()
     this->backupColumnList.clear();
     this->computerColumnList.clear();
     this->phoneColumnList.clear();
+    this->appsBackupFolder.clear();
+
 
     this->setSettings();
 }
@@ -236,6 +244,18 @@ void SettingsWidget::settingsSlotChanged()
         this->ui->editAppName->setEnabled(true);
     else
         this->ui->editAppName->setDisabled(true);
+/*
+    if (this->ui->checkBackOnSdcard->isChecked())
+       {
+        this->ui->editBacFolder->setDisabled(true);
+        this->ui->buttonBrowseFolder->setDisabled(true);
+       }
+    else
+       {
+        this->ui->editBacFolder->setEnabled(true);
+        this->ui->buttonBrowseFolder->setEnabled(true);
+       }
+ */
 }
 
 void SettingsWidget::on_buttonRemoveSettings_pressed()
@@ -266,6 +286,7 @@ void SettingsWidget::saveSettings()
     settings->setValue("rememberPhonePath", this->ui->radioPhoneRemPath->isChecked());
 //    settings->setValue("getQR", this->ui->checkGetQrcode->isChecked());
     settings->setValue("getCyrketVer", this->ui->checkCyrketVer->isChecked());
+  //  settings->setValue("BackupAppsOnSdcard", this->ui->checkBackOnSdcard->isChecked());
     settings->setValue("fontAppFamily", this->fontApp.family());
     settings->setValue("fontAppSize", this->fontApp.pointSize());
     settings->setValue("fontTablesFamily", this->fontTables.family());
@@ -300,6 +321,15 @@ void SettingsWidget::saveSettings()
     settings->setValue("shellBackgroundColor", this->ui->shellLabelCurrentBackground->palette().background().color());
     settings->setValue("shellFontColor", this->ui->shellLabelCurrentFont->palette().background().color());
     settings->setValue("sdFolder", this->ui->editSdExt->text());
+
+    //if (!this->ui->checkBackOnSdcard->isChecked())
+   // {
+     //   this->ui->editBacFolder->clear();
+       // settings->setValue("AppsBackupFolder", this->ui->editBacFolder->text());
+    //}
+   // else
+        settings->setValue("appsBackupFolder", this->ui->editBacFolder->text());
+
     settings->setValue("showCopyConfirmation",ui->checkBoxShowCopyConfirmation->isChecked());
     int columns = this->appsColumnModel->rowCount(QModelIndex());
     QStringList columnsList;
@@ -402,6 +432,7 @@ void SettingsWidget::getSettings()
     this->showAppName = settings->value("showAppName", false).toBool();
     this->getQR = settings->value("getQR", false).toBool();
     this->getCyrketVer = settings->value("getCyrketVer", false).toBool();
+   // this->BackupAppsOnSdcard = settings->value("BackupAppsOnSdcard", false).toBool();
     this->enableAnimations = settings->value("enableAnimations", true).toBool();
     this->animationCurve = settings->value("curve", int(QEasingCurve::OutBounce)).toInt();
     this->clearSettings = false;
@@ -441,6 +472,8 @@ void SettingsWidget::getSettings()
         this->detectSdExtFolder();
         settings->setValue("sdFolder", this->sdFolder);
     }
+
+    this->appsBackupFolder = settings->value("appsBackupFolder").toString();
 
     this->appColumnList = settings->value("appColumnList").toStringList();
     this->backupColumnList = settings->value("backupColumnList").toStringList();
@@ -526,6 +559,7 @@ void SettingsWidget::setSettings()
     this->ui->editAppName->setText(this->showAppNameConfig);
 //    this->ui->checkGetQrcode->setChecked(this->getQR);
     this->ui->checkCyrketVer->setChecked(this->getCyrketVer);
+   // this->ui->checkBackOnSdcard->setChecked(this->BackupAppsOnSdcard);
     this->ui->checkColorShellFiles->setChecked(this->colorShellFiles);
     ui->checkBoxShowCopyConfirmation->setChecked(this->showCopyConfirmation);
 
@@ -552,6 +586,7 @@ void SettingsWidget::setSettings()
     this->setBackgroundColor(ui->shellLabelCurrentBackground, this->shellBackgroundColor);
     this->setBackgroundColor(ui->shellLabelCurrentFont, this->shellFontColor);
     this->ui->editSdExt->setText(this->sdFolder);
+    this->ui->editBacFolder->setText(this->appsBackupFolder);
 
     this->ui->spinToolBarIconSize->setValue(this->toolBarIconSize.height());
     if (this->toolBarHideButton)
@@ -753,7 +788,7 @@ void SettingsWidget::changeFont()
 
 void SettingsWidget::on_buttonAssociate_clicked()
 {
-    if (QMessageBox::question(this,tr("Associate??"),tr("Are you sure you want to associate *.apk files with QtADB???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this,tr("Associate files:"),tr("Are you sure you want to associate *.apk files with QtADB???"),QMessageBox::Ok | QMessageBox::No) == QMessageBox::No)
         return;
 
     QSettings settings("HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\", QSettings::NativeFormat);
@@ -801,7 +836,7 @@ void SettingsWidget::detectSdExtFolder()
         QString output;
         this->sdFolder = "";
 
-        shell->start("\"" + this->sdkPath + "\"adb shell 'busybox stat /data/app |grep \"File\"'");
+        shell->start("\"" + this->sdkPath + "\"adb shell 'stat /data/app | grep \"File\"'");
         shell->waitForFinished();
         output = shell->readAll();
         if (output.contains("->"))
@@ -812,7 +847,7 @@ void SettingsWidget::detectSdExtFolder()
         }
         else
         {
-            shell->start("\"" + this->sdkPath + "\"adb shell busybox mount");
+            shell->start("\"" + this->sdkPath + "\"adb shell mount");
             shell->waitForFinished();
             output = shell->readAll();
             if (output.contains("ext"))
@@ -869,13 +904,80 @@ void SettingsWidget::on_pushButtonChangeSDKPath_pressed()
 
     if (!sdkOk)
     {
-	QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("error"), QObject::tr("there is no adb binary in here!"));
+    QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("Error:"), QObject::tr("There is no adb binary in this location!"));
 	msgBox->exec();
     }
     else
     {
 	QSettings settings;
 	settings.setValue("sdkPath",sdk);
-	this->sdkPath = sdk;
+    this->sdkPath = sdk;
+    }
+}
+
+void SettingsWidget::on_buttonBrowseFolder_pressed()
+{
+    QString appsBackFolder=QFileDialog::getExistingDirectory(NULL,QObject::tr("Choose Folder to Backup Selected Apps and/or Data..."),directory.path());
+
+    if (appsBackFolder.isNull())
+        return;
+    QSettings settings;
+    settings.setValue("appsBackupFolder",appsBackFolder);
+    this->appsBackupFolder = appsBackFolder;
+    this->ui->editBacFolder->setText(this->appsBackupFolder);
+    this->appsBackupFolderExists();
+}
+
+void SettingsWidget::appsBackupFolderExists()
+{
+    Computer *computer = new Computer;
+    QString newAppsBackupFolder = this->ui->editBacFolder->text();
+    if (newAppsBackupFolder.isEmpty())
+        return;
+    if (newAppsBackupFolder.contains("/sdcard/"))
+    {
+        QProcess *sdcard=new QProcess();
+        sdcard->setProcessChannelMode(QProcess::MergedChannels);
+        QString command;
+        QString outputLine;
+        if (!newAppsBackupFolder.endsWith("/"))
+        {
+           QSettings settings;
+           this->ui->editBacFolder->setText(newAppsBackupFolder.append("/"));
+           settings.setValue("appsBackupFolder",newAppsBackupFolder);
+        }
+        command = "\""+this->sdkPath+"\""+"adb shell ls \""+newAppsBackupFolder+"\"";
+        qDebug()<<command;
+        sdcard->start(command);
+        sdcard->waitForFinished(-1);
+        outputLine=sdcard->readLine();
+        qDebug()<<outputLine;
+        if (outputLine.contains(QRegExp("device not found")))
+        {
+            QMessageBox::critical(this,"Backup Apps on Phone:","Connect your phone to create ""\"" + newAppsBackupFolder + "\""  " folder!");
+            return;
+        }
+        if (outputLine.contains(QRegExp("No such file or directory")))
+        {
+            command="\""+this->sdkPath+"\""+"adb shell mkdir \""+newAppsBackupFolder+"\"";
+            qDebug()<<command;
+            sdcard->start(command);
+            sdcard->waitForFinished(-1);
+            outputLine=sdcard->readLine();
+            sdcard->terminate();
+            delete sdcard;
+            if (outputLine.contains(QRegExp("can't create directory")))
+                QMessageBox::critical(this,"Backup Apps on Phone:","Can't create "  "\"" + newAppsBackupFolder + "\""  "\nCheck path entered and make sure you are allowed to create folders!");
+        }
+    }
+    else
+    {
+        if (!QDir(newAppsBackupFolder).exists())
+        {
+            if (computer->makeDir(newAppsBackupFolder) == false)
+            {
+               QMessageBox::critical(this,"Backup Apps on PC:","Can't create "  "\"" + newAppsBackupFolder + "\""  "\nCheck path and make sure you are allowed to create folders!");
+            }
+        }
     }
 }

@@ -26,6 +26,8 @@ ConnectWifi::ConnectWifi( QWidget * parent, Qt::WFlags f)
         setupUi(this);
         this->setLayout(this->gridLayout);
         this->setBaseSize(220,100);
+        this->setFixedSize(this->width(),this->height());
+        setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
         this->polaczButton->setDefault(true);
         connect(polaczButton,SIGNAL(clicked()),this,SLOT(accept()));
         connect(zamknijButton,SIGNAL(clicked()),this,SLOT(reject()));

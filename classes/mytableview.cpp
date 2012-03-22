@@ -76,12 +76,22 @@ void MyTableView::mousePressEvent(QMouseEvent *event)
             this->selectRow(index.row());
         else
         {
-            for (int i=0; i< list.size(); i++)
-                this->selectionModel()->select(list.at(i), QItemSelectionModel::Select);
-            for (int i=0; i<this->fileModel.columnCount(QModelIndex()); i++)
-                this->selectionModel()->select(this->model()->index(index.row(),i, QModelIndex()), QItemSelectionModel::Select);
+            if (list.size() == 1)
+            {
+              for (int i=0; i< list.size(); i++)
+                  this->selectionModel()->select(list.at(i), QItemSelectionModel::Clear);
+              for (int i=0; i<this->fileModel.columnCount(QModelIndex()); i++)
+                  this->selectionModel()->select(this->model()->index(index.row(),i, QModelIndex()), QItemSelectionModel::Select);
+            }
+           else
+            {
+                for (int i=0; i< list.size(); i++)
+                    this->selectionModel()->select(list.at(i), QItemSelectionModel::Select);
+                for (int i=0; i<this->fileModel.columnCount(QModelIndex()); i++)
+                    this->selectionModel()->select(this->model()->index(index.row(),i, QModelIndex()), QItemSelectionModel::Select);
+            }
         }
-        emit customContextMenuRequested(event->pos());
+      //  emit customContextMenuRequested(event->pos());
     }
 }
 
