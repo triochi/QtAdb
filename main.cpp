@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName("Bracia");
     QCoreApplication::setApplicationName("QtADB");
-    QCoreApplication::setApplicationVersion("0.8.1 - CWM Edition");
+    QCoreApplication::setApplicationVersion("0.8.1");
     QCoreApplication::setOrganizationDomain("http://qtadb.com");
     Application a(argc, argv);
     qInstallMsgHandler(myMessageHandler);

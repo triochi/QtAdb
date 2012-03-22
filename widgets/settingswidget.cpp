@@ -50,7 +50,7 @@ SettingsWidget::SettingsWidget(QWidget *parent) :
     connect(this->ui->buttonSaveSettings, SIGNAL(clicked()), this, SLOT(saveSettings()));
     connect(this->ui->buttonFontApp, SIGNAL(clicked()), this, SLOT(chooseFontApp()));
     connect(this->ui->buttonFontTables, SIGNAL(clicked()), this, SLOT(chooseFontTables()));
-    //connect(this->ui->buttonFontShell, SIGNAL(clicked()), this, SLOT(chooseFontShell()));
+    connect(this->ui->buttonFontShell, SIGNAL(clicked()), this, SLOT(chooseFontShell()));
     connect(this->ui->buttonDefaults, SIGNAL(clicked()), this, SLOT(setSettingsToDefaults()));
     connect(this->ui->radioComputerPath, SIGNAL(toggled(bool)), this, SLOT(settingsSlotChanged()));
     connect(this->ui->radioPhonePath, SIGNAL(toggled(bool)), this, SLOT(settingsSlotChanged()));
@@ -74,8 +74,6 @@ SettingsWidget::SettingsWidget(QWidget *parent) :
     this->getSettings();
     this->changeFont();
 
-    ui->checkBoxUpdatesStart->setChecked(false);
-    ui->checkBoxUpdatesStart->setDisabled(true);
 }
 
 void SettingsWidget::animationFinished()
@@ -299,7 +297,7 @@ void SettingsWidget::saveSettings()
     settings->setValue("showPhoneColumnsHeaders", this->ui->checkShowPhoneHeaders->isChecked());
     settings->setValue("dialogKopiujShowModal",ui->checkBoxDialogKopiujShowModal->isChecked());
     settings->setValue("killDemonOnExit",ui->checkBoxKillDemonOnExit->isChecked());
-  //  settings->setValue("checkForUpdatesOnStart", ui->checkBoxUpdatesStart->isChecked());
+    settings->setValue("checkForUpdatesOnStart", ui->checkBoxUpdatesStart->isChecked());
     settings->setValue("sortByColumn", ui->comboSort->currentIndex() + 1);
     settings->setValue("color",ui->checkBoxColorNever->isChecked());
     settings->setValue("colorShellFiles",ui->checkColorShellFiles->isChecked());
@@ -548,7 +546,7 @@ void SettingsWidget::setSettings()
         this->ui->editPhonePath->setText(this->phonePath);
     this->ui->checkShowComputerHeaders->setChecked(this->showComputerColumnsHeaders);
     this->ui->checkShowPhoneHeaders->setChecked(this->showPhoneColumnsHeaders);
-   // this->ui->checkBoxUpdatesStart->setChecked(this->checkForUpdatesOnStart);
+    this->ui->checkBoxUpdatesStart->setChecked(this->checkForUpdatesOnStart);
     this->ui->comboSort->setCurrentIndex(this->sortByColumn - 1);
     this->ui->checkBoxColorNever->setChecked(this->color);
     this->ui->comboGetApps->setCurrentIndex(this->getAppInfo);
@@ -572,8 +570,8 @@ void SettingsWidget::setSettings()
 
     this->ui->editFontApp->setText(this->fontApp.family());
     this->ui->editFontApp->setFont(this->fontApp);
-    //this->ui->editFontShell->setText(this->fontShell.family());
-    //this->ui->editFontShell->setFont(this->fontShell);
+    this->ui->editFontShell->setText(this->fontShell.family());
+    this->ui->editFontShell->setFont(this->fontShell);
     this->ui->editFontTables->setText(this->fontTables.family());
     this->ui->editFontTables->setFont(this->fontTables);
 
@@ -722,15 +720,15 @@ void SettingsWidget::chooseFontApp()
 
 void SettingsWidget::chooseFontShell()
 {
-//    bool ok;
-//    QFont tmp;
-//    tmp = QFontDialog::getFont(&ok, QFont(this->fontShell), this);
-//    if (ok)
-//    {
-//        this->fontShell = tmp;
-//        this->ui->editFontShell->setText(this->fontShell.family());
-//        this->ui->editFontShell->setFont(this->fontShell);
-//    }
+    bool ok;
+    QFont tmp;
+    tmp = QFontDialog::getFont(&ok, QFont(this->fontShell), this);
+    if (ok)
+    {
+        this->fontShell = tmp;
+        this->ui->editFontShell->setText(this->fontShell.family());
+        this->ui->editFontShell->setFont(this->fontShell);
+    }
 }
 
 void SettingsWidget::chooseFontTables()
@@ -784,8 +782,8 @@ void SettingsWidget::changeFont()
 //    this->ui->textWipeData->setFont(this->fontShell);
     this->ui->editFontTables->setText(this->fontTables.family());
     this->ui->editFontTables->setFont(this->fontTables);
-    //this->ui->editFontShell->setText(this->fontShell.family());
-    //this->ui->editFontShell->setFont(this->fontShell);
+    this->ui->editFontShell->setText(this->fontShell.family());
+    this->ui->editFontShell->setFont(this->fontShell);
 }
 
 void SettingsWidget::on_buttonAssociate_clicked()
@@ -983,4 +981,3 @@ void SettingsWidget::appsBackupFolderExists()
         }
     }
 }
-

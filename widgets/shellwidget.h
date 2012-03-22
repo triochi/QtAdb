@@ -22,7 +22,6 @@
 #define SHELLWIDGET_H
 
 #include <QtGui>
-//#include <QMenu>
 
 class ShellWidget : public QTextEdit
 {
@@ -32,26 +31,24 @@ public:
     ~ShellWidget();
     void setProcessPath(QString processPath);
     QString getProcessPath();
+    void Refresh();
 
 protected:
     void keyPressEvent(QKeyEvent *e);
-    //void mousePressEvent(QMouseEvent *event);
 
 private:
     int insertedChars;
     int cursorPosition;
     QString command;
     QProcess process;
-    QString processPath;
+    QString processPath, sdk;
     QTextCursor cursor;
 
     QColor fontColor;
-    QString sdk;
 
     QStringList commandHistory;
     QStringList commands;
     int commandHistoryPosition;
-   // QMenu *customMenu;
 
 signals:
     void returnPressed(QString command);
@@ -59,9 +56,6 @@ signals:
 private slots:
     void readFromProcess();
     void executeCommand(QString command);
-   // void on_ShellWidget_customContextMenuRequested(const QPoint &pos);
-    void PasteText();
-   // void CopyText();
 };
 
 /*
@@ -86,7 +80,6 @@ private:
     Ui::ShellWidget *ui;
     QProcess *procesShell;
     bool processShellIsRunning;
-    QString sdk;
     QCompleter *completer;
     QStringList commandList;
     QStringListModel *commandModel;

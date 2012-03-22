@@ -21,6 +21,13 @@
 #include "logcatdialog.h"
 #include "ui_logcatdialog.h"
 
+//extern QString sdk;
+//extern QString adb;
+//extern QString aapt;
+//extern QProcess *adbProces;
+//extern QString busybox;
+//extern QString fastboot;
+
 LogcatDialog::LogcatDialog(QWidget *parent) :
     QDialog(parent)
 {
@@ -268,6 +275,30 @@ void LogcatDialog::exportSelectedToFile()
     {
         index = this->filterModel->mapToSource(indexList.takeFirst());
         list.append(this->logcatModel->getRow(index.row()));
+    }
+    QString output;
+    foreach (LogcatMessage item, list)
+    {
+        output.append(item.timestamp+" "+item.type+" "+item.sender+" "+item.pid+" "+item.message+"\n");
+    }
+
+    QFile file;
+    file.setFileName(QFileDialog::getSaveFileName(this, tr("Save File..."), "./logcat.txt", tr("txt file")+" (*.txt)"));
+    if (file.fileName().isEmpty())
+        return;
+    if (file.open(QFile::WriteOnly))
+    {
+        file.write(output.toLatin1());
+        file.close();
+    }
+}
+
+void LogcatDialog::on_saveButton_clicked()
+{
+    QList<LogcatMessage> list;
+    for (int i = 0 ; i<this->logcatModel->rowCount(); i++ )
+    {
+        list.append(this->logcatModel->getRow(i));
     }
     QString output;
     foreach (LogcatMessage item, list)

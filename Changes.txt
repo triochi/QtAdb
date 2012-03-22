@@ -5,7 +5,6 @@ Files Page:
   -added "Properties" in phone files/folders right click context menu with permissions changing capabilities;
   -switching left pane between PC/phone files now remembers last folder view for both;
   -left paths combo box now works for phone files too when switching left pane to phone files;
-  -some bugs fixes;
 
 Apps Page:
   -major speedup displaying apps after the initial first run when apps info is collected;
@@ -13,7 +12,7 @@ Apps Page:
   -now you can backup and restore apps and data to any folder on /sdcard or PC, set backup folder location in Settings first;
   -option added to Backups context menu to add app/data if missing from existing previous backup;
   
-Recovery Page replaced with new Advanced Menu Page that works with CWM Recovery. What can be done:
+New CWM Page replaces current Recovery Page if CWM Recovery is installed on phone and detected. If CWM Recovery is not detected, the current Recovery Page is used. What can be done in the New CWM Page:
   -run fix_permissions in Android OS mode, not in recovery mode. As you may know fix_permissions in CWM recovery is broken;
   -Fix/Undo Fix Market Cache Download;
   -Flash new Recovery;
@@ -28,11 +27,10 @@ Recovery Page replaced with new Advanced Menu Page that works with CWM Recovery.
   
   Detailed information in Status Window is displayed for all operations taking place in real time. After phone reboots back to Android OS, the last CWM recovery log is displayed so you can spot any errors occurred during the last operation.
   
-  -Shell Page is replaced with Command Prompt "adb shell" window;
-  -And probably something else I forgot about;
+And probably something else I forgot about;
   
-  All bugs fixed(I believe).
+All bugs fixed(I believe).
   
-   I want to thank and give credits to the guys (couldn't find their names) created some of the tools I'm using to make the new features works.
+I want to thank and give credits to the guys (couldn't find their names) created some of the tools I'm using to make the new features works.
   
   

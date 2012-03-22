@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWind
     this->phoneInfoWidget = NULL;
     this->messageWidget = NULL;
     this->appWidget = NULL;
-    //this->recoveryWidget = NULL;
+    this->recoveryWidget = NULL;
     this->cwmWidget = NULL;
     this->fastbootWidget = NULL;
     this->logcatDialog = NULL;
@@ -93,8 +93,24 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWind
 
     this->addButton(QIcon(":icons/files.png"), tr("Files", "files button"), "Files" , SLOT(showPageFiles()), Action::Device | Action::Recovery);
     this->addButton(QIcon(":icons/apps.png"), tr("Apps", "apps button"), "Apps", SLOT(showPageApps()), Action::Device | Action::Recovery);
-   // this->addButton(QIcon(":icons/recovery.png"), tr("Recovery", "recovery button"), "Recovery", SLOT(showPageRecovery()), Action::Recovery);
-    this->addButton(QIcon(":icons/recovery.png"), tr("Advanced", "advanced button"), "Advanced", SLOT(showPageCwm()), Action::Device | Action::Recovery);
+
+    QProcess detectRecovery;
+    QSettings settings;
+    QString sdk = settings.value("sdkPath").toString();
+    detectRecovery.start("\""+sdk+"\"" + "adb shell cat /cache/recovery/last_log");
+    detectRecovery.waitForFinished(-1);
+    QString outputLog = detectRecovery.readAll();
+    if (outputLog.contains("extendedcommand"))
+    {
+        this->recoveryCwm = true;
+        this->addButton(QIcon(":icons/recovery.png"), tr("CWM", "cwm button"), "CWM", SLOT(showPageCwm()), Action::Device | Action::Recovery);
+    }
+    else
+    {
+        this->recoveryCwm = false;
+        this->addButton(QIcon(":icons/recovery.png"), tr("Recovery", "recovery button"), "Recovery", SLOT(showPageRecovery()), Action::Recovery);
+    }
+
     this->addButton(QIcon(":icons/fastboot.png"), tr("Fastboot", "fastbot button"), "Fastboot", SLOT(showPageFastboot()), Action::Fastboot);
     this->addButton(QIcon(":icons/info.png"), tr("Phone info", "phone info button"), "Phone info", SLOT(showPagePhoneInfo()), Action::Device | Action::Recovery | Action::Disconnected | Action::Fastboot);
     this->addButton(QIcon(":icons/screenshot.png"), tr("Screenshot", "screenshot button"), "Screenshot", SLOT(showPageScreenshot()), Action::Device | Action::Recovery);
@@ -151,18 +167,10 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWind
     if (this->settingsWidget->checkForUpdatesOnStart)
         this->updateApp.checkUpdates();
 
+    this->lastCwm = false;
+
 //    this->setWindowTitle("QtADB " + QString::number(this->height()) + "x" + QString::number(this->width()));
-        QProcess rec;
-        QSettings settings;
-        QString sdk = settings.value("sdkPath").toString();
-        rec.start("\""+sdk+"\"" + "adb shell find /cache/recovery/");
-        rec.waitForFinished(-1);
-        QString outputFind = rec.readAll();
-        if (outputFind.contains("No such file"))
-        {
-            rec.start("\""+sdk+"\""+"adb shell mkdir -p /cache/recovery/");
-            rec.waitForFinished(-1);
-        }
+
 }
 #ifdef WIN7PROGRESS
 bool MainWindow::winEvent(MSG *message, long *result)
@@ -450,8 +458,13 @@ void MainWindow::phoneConnectionChanged(int state)
         this->ui->menuFastboot->setDisabled(true);
 
         this->disableActions(Action::Device);
-        if (lastWidget == "cwm")
-            this->showPageCwm();
+        if (this->recoveryCwm)
+        {
+            if (this->lastCwm)
+                this->showPageCwm();
+            else
+                this->showPageFiles();
+        }
         else
             this->showPageFiles();
 
@@ -471,10 +484,15 @@ void MainWindow::phoneConnectionChanged(int state)
         this->ui->menuFastboot->setDisabled(true);
 
         this->disableActions(Action::Recovery);
-        if (lastWidget == "cwm")
-            this->showPageCwm();
+        if (this->recoveryCwm)
+        {
+            if (this->lastCwm)
+                this->showPageCwm();
+            else
+                this->showPageFiles();
+        }
         else
-            this->showPageFiles();
+            this->showPageRecovery();
     }
     else if (state == FASTBOOT)
     {
@@ -489,13 +507,20 @@ void MainWindow::phoneConnectionChanged(int state)
 //        connect(this->ui->buttonPhoneInfo, SIGNAL(clicked()), this, SLOT(showPageDisconnected()));
 //        disconnect(this->ui->buttonPhoneInfo, SIGNAL(clicked()), this, SLOT(showPagePhoneInfo()));
     }
-    if (lastWidget == "cwm")
-        this->cwmWidget->phone->procesEvents=true;
-    else
+
+    if (this->recoveryCwm)
     {
+        if (this->lastCwm)
+            this->cwmWidget->phone->procesEvents=true;
+        else
+        {
+            this->fileWidget->phone->procesEvents=true;
+            this->fileWidget->computer->procesEvents=true;
+        }
+    }
+    else
         this->fileWidget->phone->procesEvents=true;
         this->fileWidget->computer->procesEvents=true;
-    }
 }
 
 void MainWindow::refreshState()
@@ -664,6 +689,7 @@ void MainWindow::showPageFiles()
 {
     qDebug()<<"showPageFiles";
 
+    this->lastCwm = false;
     this->setButtonDown(0);
 
     this->fileWidget->leftDisplay();
@@ -806,16 +832,16 @@ void MainWindow::showPagePhoneInfo()
 
 void MainWindow::showPageRecovery()
 {
-//    if (this->recoveryWidget == NULL)
-//    {
-//        this->recoveryWidget = new RecoveryWidget;
-//        this->settingsWidget->changeFont();
-//        ui->stackedWidget->addWidget(this->recoveryWidget);
-//    }
+    if (this->recoveryWidget == NULL)
+    {
+        this->recoveryWidget = new RecoveryWidget;
+        this->settingsWidget->changeFont();
+        ui->stackedWidget->addWidget(this->recoveryWidget);
+    }
 
-//    this->setButtonDown(2);
+    this->setButtonDown(2);
 
-//    this->startAnimation(this->recoveryWidget);
+    this->startAnimation(this->recoveryWidget);
 }
 
 void MainWindow::showPageCwm()
@@ -826,7 +852,7 @@ void MainWindow::showPageCwm()
         this->settingsWidget->changeFont();
         ui->stackedWidget->addWidget(this->cwmWidget);
     }
-    lastWidget = "cwm";
+    this->lastCwm = true;
 
     this->cwmWidget->sdcardDisplay();
 
@@ -863,23 +889,23 @@ void MainWindow::showPageSettings()
 
 void MainWindow::showPageShell()
 {
-    QSettings settings;
-    QProcess p;
-    QString sdk = settings.value("sdkPath").toString();
-    p.startDetached("\""+sdk+"\""+"adb shell");
+//    QSettings settings;
+//    QProcess p;
+//    QString sdk = settings.value("sdkPath").toString();
+//    p.startDetached("\""+sdk+"\""+"adb shell");
     //p.waitForFinished(-1);
 
-  //  if (this->shellWidget == NULL)
-  //  {
-  //      this->shellWidget = new ShellWidget;
-   //     this->settingsWidget->changeFont();
-   //     ui->stackedWidget->addWidget(this->shellWidget);
-   //     this->shellWidget->move(-ui->stackedWidget->currentWidget()->width(),0);
-  //  }
+    if (this->shellWidget == NULL)
+    {
+        this->shellWidget = new ShellWidget;
+        this->settingsWidget->changeFont();
+        ui->stackedWidget->addWidget(this->shellWidget);
+        this->shellWidget->move(-ui->stackedWidget->currentWidget()->width(),0);
+    }
 
-   // this->setButtonDown(7);
+    this->setButtonDown(7);
 
-   // this->startAnimation(this->shellWidget);
+    this->startAnimation(this->shellWidget);
 }
 
 void MainWindow::smsReceived(QString number, QString body)

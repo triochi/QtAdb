@@ -21,12 +21,21 @@
 #include "shellwidget.h"
 #include "ui_shellwidget.h"
 
+
+//extern QString sdk;
+//extern QString adb;
+//extern QString aapt;
+//extern QProcess *adbProces;
+//extern QString busybox;
+//extern QString fastboot;
+
+
 /*
-add 2 list of strings:
-   - CommandList - in the constructor load busybox and shell commands, and later szift + tab command is going to prompt
-   - FileList - when switching between folders (command 'cd') will be called method Phone: getFileList and then after pressing tab will podpwiadac folders
-     * May be both lists sorted alphabetically.
-     * To get the hint does not need to type in capital letters
+  dodac 2 listy stringow:
+  - commandList - w konstruktorze wczytywac komendy busyboxa i shella, a pozniej szift+tab bedzie podpowiadal komendy
+  - fileList - przy przechodzeniu miedzy folderami (komenda 'cd') bedzie wywolywana metoda Phone::getFileList a nastepnie po nacisnieciu tab bedzie podpwiadac foldery
+    * obie listy maja byc posortowane alfabetycznie.
+    * aby uzyskac podpowiedz nie trzeba wpisywac duzych liter
 */
 
 ShellWidget::ShellWidget(QWidget *parent) :
@@ -38,11 +47,8 @@ ShellWidget::ShellWidget(QWidget *parent) :
     this->cursor = this->textCursor();
     this->setCursorWidth(3);
     this->setTextCursor(cursor);
-    this->setContextMenuPolicy(Qt::DefaultContextMenu);
-
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
     QSettings settings;
-    this->sdk=settings.value("sdkPath").toString();
-
     this->fontColor = settings.value("shellFontColor", Qt::black).value<QColor>();
 
     QPalette palette = this->palette();
@@ -52,22 +58,25 @@ ShellWidget::ShellWidget(QWidget *parent) :
 
     this->setTextColor(this->fontColor);
 
-   // QTextCharFormat format = cursor.charFormat();
-   // format.setBackground(Qt::white);
-   // cursor.setCharFormat(format);
-
     //qDebug()<<"MainWindow::showPageShell() - process shell is not running, starting...";
+    this->sdk=settings.value("sdkPath").toString();
+
     this->process.setProcessChannelMode(QProcess::MergedChannels);
     this->process.start("\""+sdk+"\""+"adb shell");
 
     connect(&this->process, SIGNAL(readyRead()), this, SLOT(readFromProcess()));
-    connect(this, SIGNAL(textChanged ()), this, SLOT(PasteText()));
-    this->executeCommand("qtadb -help");
+    this->insertPlainText("QtADB shell. Type 'qtadb -help' for instructions\n");
 }
 
 ShellWidget::~ShellWidget()
 {
     this->process.close();
+}
+
+void ShellWidget::Refresh(){
+    if (this->process.state() != QProcess::Running){
+         this->process.start("\""+sdk+"\""+"adb shell");
+    }
 }
 
 void ShellWidget::keyPressEvent(QKeyEvent *e)
@@ -137,6 +146,7 @@ void ShellWidget::keyPressEvent(QKeyEvent *e)
 
     if (e->key() == Qt::Key_Return)
     {
+        Refresh();
         this->cursor.movePosition(QTextCursor::End);
         this->setTextCursor(this->cursor);
         this->cursorPosition = 0;
@@ -372,70 +382,6 @@ void ShellWidget::readFromProcess()
 
     //qDebug()<<"readShell() - "<<tmp;
 }
-
-
-
-void ShellWidget::PasteText()
-{
-    QClipboard *clipboard = QApplication::clipboard();
-    QString tmp = clipboard->text(QClipboard::Clipboard);
-    this->insertedChars=tmp.length();
-    this->command.insert(this->command.length()-this->cursorPosition,tmp);
-
-     // this->cursor.movePosition(QTextCursor::End);
-     // this->cursor.movePosition(QTextCursor::Left,QTextCursor::MoveAnchor,this->cursorPosition);
-     // this->setTextCursor(this->cursor);
-
-}
-
-
-
-
-//my custom cintext menu and copy()/paste()
-/*
-void ShellWidget::mousePressEvent(QMouseEvent *event)
-{
-   if (event->button() == Qt::RightButton)
-   emit customContextMenuRequested(event->pos());
-}
-
-void ShellWidget::on_ShellWidget_customContextMenuRequested(const QPoint &pos)
-{
-    this->customMenu = new QMenu;
-    this->customMenu->addAction(tr("Copy", "right click shell menu"),this,SLOT(CopyText()))->setData(QString("Copy"));
-    this->customMenu->addAction(tr("Paste", "right click shell menu"), this, SLOT(PasteText()))->setData(QString("Paste"));
-    QPoint pos2;
-    pos2.setX(pos.x());
-    pos2.setY(pos.y()+20);
-    this->customMenu->exec(this->mapToGlobal(pos2));
-    //this->customMenu->exec(QCursor::pos());
-}
-
-void ShellWidget::PasteText()
-{
-    QClipboard *clipboard = QApplication::clipboard();
-    QString tmp = clipboard->text(QClipboard::Clipboard);
-      if (tmp.length()>0)
-      {
-        this->insertedChars+=tmp.length();
-        this->command.insert(this->command.length()-this->cursorPosition,tmp);
-        this->insertPlainText(tmp);
-        this->cursor.movePosition(QTextCursor::End);
-        this->cursor.movePosition(QTextCursor::Left,QTextCursor::MoveAnchor,this->cursorPosition);
-        this->setTextCursor(this->cursor);
-      }
-}
-
-void ShellWidget::CopyText()
-{
-    QClipboard *clipboard = QApplication::clipboard();
-    QString tmp = this->textCursor().selection().toPlainText();
-    clipboard->setText(tmp,QClipboard::Clipboard);
-}
-*/
-
-
-
 
 /*
 ShellWidget::ShellWidget(QWidget *parent) :

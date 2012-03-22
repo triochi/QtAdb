@@ -46,7 +46,7 @@
 #include "../widgets/phoneinfowidget.h"
 #include "../widgets/messagewidget.h"
 #include "../widgets/appwidget.h"
-//#include "../widgets/recoverywidget.h"
+#include "../widgets/recoverywidget.h"
 #include "../widgets/cwmwidget.h"
 #include "../classes/animation.h"
 #include "../widgets/fastbootwidget.h"
@@ -110,20 +110,20 @@ private:
     PhoneInfoWidget *phoneInfoWidget;
     MessageWidget *messageWidget;
     AppWidget *appWidget;
-   // RecoveryWidget *recoveryWidget;
+    RecoveryWidget *recoveryWidget;
     CwmWidget *cwmWidget;
     FastbootWidget *fastbootWidget;
 
     QWidget *currentWidget;
     QWidget *targetWidget;
 
-    bool debugMode;
+    bool debugMode, lastCwm, recoveryCwm;
     QFile *debugFile;
     bool killDemonOnExit;
 
     bool showNoUpdates;
 
-    QString ipAddress, portNumber, lastWidget;
+    QString ipAddress, portNumber;
 
     QTextCodec *codec;
 

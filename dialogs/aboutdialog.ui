@@ -117,7 +117,7 @@
     <item row="1" column="2" colspan="6">
      <widget class="QLabel" name="label_4">
       <property name="text">
-       <string>Created by 7ymekk &amp; mozarcik, modded by nijel</string>
+       <string>Created by 7ymekk &amp; mozarcik</string>
       </property>
      </widget>
     </item>
