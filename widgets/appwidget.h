@@ -22,6 +22,9 @@
 #define APPWIDGET_H
 
 #include <QtGui>
+#include <QHeaderView>
+#include <QTableView>
+#include <QTextCodec>
 
 #include "../classes/phone.h"
 #include "../classes/computer.h"
@@ -46,6 +49,8 @@ public:
     void run();
     QString sdk;
     QList<App> appList;
+    QString appsBackupFolder;
+    QTextCodec *codec;
 
 signals:
     void gotApp(App);
@@ -63,6 +68,8 @@ class ThreadBackups : public QThread
 public:
     void run();
     QString sdk;
+    QString appsBackupFolder;
+    QTextCodec *codec;
 
 signals:
     void gotBackup(Backup);
@@ -81,6 +88,8 @@ class AppWidget : public QWidget
 public:
     explicit AppWidget(QWidget *parent = 0);
     ~AppWidget();
+    QTextCodec *codec;
+   // void mousePressEvent(QMouseEvent *event);
 
 protected:
     void changeEvent(QEvent *e);
@@ -88,10 +97,12 @@ protected:
 private:
     Ui::AppWidget *ui;
 
+    QString addToBackup();
+
     bool alwaysCloseCopy;
     bool dialogKopiujShowModal;
     dialogKopiuj *dialog;
-    QMenu *appMenu, *backupMenu;
+    QMenu *customMenu;
     ThreadApps threadApps;
     ThreadBackups threadBackups;
     appDialog *appsDialog;
@@ -109,10 +120,16 @@ private:
     AppSortModel *systemAppSortModel;
     BackupTableModel *backupModel;
     BackupSortModel *backupSortModel;
+    //int maximumWidthHint();
+    //QHeaderView * view;
+   // QHeaderView * horizontalHeader();
+    //bool stretchLastSection;
 
     bool withData;
     bool withApk;
     Phone *phone;
+    Computer *computer;
+    QString appsBackupFolder;
 
 public slots:
 
@@ -123,10 +140,10 @@ public slots:
     void insertBackup(Backup backup);
     void gotAllApps(QThread *);
     void appsSelectedCount();
-    void appsContextMenu(const QPoint&);
-    void backupsContextMenu(const QPoint&);
+   // void appsContextMenu(const QPoint&);
+   // void backupsContextMenu(const QPoint&);
+   // void refreshApps();
     void copyAppToPC();
-
 private slots:
     void getAppInfo();
 
@@ -149,8 +166,11 @@ private slots:
     void toolButtonInstallOnSd();
     void comboBoxAppsChanged();
     void refreshApps();
+    void refreshBackups();
+    void on_tableView_customContextMenuRequested(const QPoint &pos);
 signals:
     void progressValue(int value, int max);
     void progressFinished();
+    //void myContextMenuRequested(const QPoint &pos);
 };
 #endif // APPWIDGET_H

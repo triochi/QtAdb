@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string notr="true"/>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <widget class="QWidget" name="horizontalLayoutWidget">
    <property name="geometry">
     <rect>

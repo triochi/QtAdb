@@ -38,6 +38,8 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWind
     QDir dir;
     dir.mkdir(QDir::currentPath()+"/tmp/");
 
+
+
     this->settingsWidget = new SettingsWidget;
     this->fileWidget = new FileWidget(this, this->settingsWidget);
 //    this->fileWidget->settings = this->settingsWidget;
@@ -48,7 +50,8 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWind
     this->phoneInfoWidget = NULL;
     this->messageWidget = NULL;
     this->appWidget = NULL;
-    this->recoveryWidget = NULL;
+    //this->recoveryWidget = NULL;
+    this->cwmWidget = NULL;
     this->fastbootWidget = NULL;
     this->logcatDialog = NULL;
 
@@ -90,7 +93,8 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWind
 
     this->addButton(QIcon(":icons/files.png"), tr("Files", "files button"), "Files" , SLOT(showPageFiles()), Action::Device | Action::Recovery);
     this->addButton(QIcon(":icons/apps.png"), tr("Apps", "apps button"), "Apps", SLOT(showPageApps()), Action::Device | Action::Recovery);
-    this->addButton(QIcon(":icons/recovery.png"), tr("Recovery", "recovery button"), "Recovery", SLOT(showPageRecovery()), Action::Recovery);
+   // this->addButton(QIcon(":icons/recovery.png"), tr("Recovery", "recovery button"), "Recovery", SLOT(showPageRecovery()), Action::Recovery);
+    this->addButton(QIcon(":icons/recovery.png"), tr("Advanced", "advanced button"), "Advanced", SLOT(showPageCwm()), Action::Device | Action::Recovery);
     this->addButton(QIcon(":icons/fastboot.png"), tr("Fastboot", "fastbot button"), "Fastboot", SLOT(showPageFastboot()), Action::Fastboot);
     this->addButton(QIcon(":icons/info.png"), tr("Phone info", "phone info button"), "Phone info", SLOT(showPagePhoneInfo()), Action::Device | Action::Recovery | Action::Disconnected | Action::Fastboot);
     this->addButton(QIcon(":icons/screenshot.png"), tr("Screenshot", "screenshot button"), "Screenshot", SLOT(showPageScreenshot()), Action::Device | Action::Recovery);
@@ -135,6 +139,8 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWind
 #ifdef WIN7PROGRESS
     connect(this->fileWidget, SIGNAL(progressValue(int,int)), this, SLOT(setProgressValue(int, int)));
     connect(this->fileWidget, SIGNAL(copyFinished(int)), this, SLOT(setProgressDisable()));
+    connect(this->cwmWidget, SIGNAL(progressValue(int,int)), this, SLOT(setProgressValue(int, int)));
+    connect(this->cwmWidget, SIGNAL(copyFinished(int)), this, SLOT(setProgressDisable()));
 #endif
 
     connect(this->settingsWidget, SIGNAL(settingsChanged()), this, SLOT(changeToolBar()));
@@ -146,6 +152,17 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWind
         this->updateApp.checkUpdates();
 
 //    this->setWindowTitle("QtADB " + QString::number(this->height()) + "x" + QString::number(this->width()));
+        QProcess rec;
+        QSettings settings;
+        QString sdk = settings.value("sdkPath").toString();
+        rec.start("\""+sdk+"\"" + "adb shell find /cache/recovery/");
+        rec.waitForFinished(-1);
+        QString outputFind = rec.readAll();
+        if (outputFind.contains("No such file"))
+        {
+            rec.start("\""+sdk+"\""+"adb shell mkdir -p /cache/recovery/");
+            rec.waitForFinished(-1);
+        }
 }
 #ifdef WIN7PROGRESS
 bool MainWindow::winEvent(MSG *message, long *result)
@@ -194,6 +211,8 @@ MainWindow::~MainWindow()
 //        this->procesShell->close();
 //        delete this->procesShell;
 //    }
+    QDir dir;
+    dir.rmdir(QDir::currentPath()+"/tmp/");
 
     if (this->settingsWidget->killDemonOnExit)
     {
@@ -244,10 +263,16 @@ void MainWindow::changeEvent(QEvent *e)
 
 void MainWindow::connectWifi()
 {
+    QString command;
     QProcess *connect = new QProcess;
     QSettings settings;
     connect->setProcessChannelMode(QProcess::MergedChannels);
-    connect->start("\"" + settings.value("sdkPath").toString() + "\"adb connect " + this->ipAddress + ":" + this->portNumber);
+    if (this->portNumber.contains("0000"))
+        command = "\"" + settings.value("sdkPath").toString() + "\"adb connect " + this->ipAddress;
+    else
+        command = "\"" + settings.value("sdkPath").toString() + "\"adb connect " + this->ipAddress + ":" + this->portNumber;
+    qDebug()<<"connect WiFi"<<command;
+    connect->start(command);
     connect->waitForFinished(2000);
     connect->terminate();
     delete connect;
@@ -328,8 +353,8 @@ void MainWindow::fillLanguages()
     }
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *e)
-{
+//void MainWindow::keyPressEvent(QKeyEvent *e)
+//{
 //    if (ui->stackedWidget->currentWidget()==ui->pageFiles)
 //    {
 //        switch(e->key())
@@ -373,12 +398,12 @@ void MainWindow::keyPressEvent(QKeyEvent *e)
 //            break;
 //        }
 //    }
-}
+//}
 
 
 
-void MainWindow::mousePressEvent(QMouseEvent *event)
-{
+//void MainWindow::mousePressEvent(QMouseEvent *event)
+//{
 //    int width, height;
 //    if (event->button() == Qt::LeftButton)
 //    {
@@ -387,7 +412,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 //        this->ui->labelRgb565->setPixmap(QPixmap::fromImage(noScreenshotImage(width, height), Qt::AutoColor));
 //        this->takeScreenshot();
 //    }
-}
+//}
 
 void MainWindow::on_actionO_programie_triggered()
 {
@@ -396,7 +421,6 @@ void MainWindow::on_actionO_programie_triggered()
 
 void MainWindow::phoneConnectionChanged(int state)
 {
-//    int i =0;
     if (state == DISCONNECTED)
     {
         if (ui->stackedWidget->currentWidget()!=ui->pageDisconnected)
@@ -426,8 +450,11 @@ void MainWindow::phoneConnectionChanged(int state)
         this->ui->menuFastboot->setDisabled(true);
 
         this->disableActions(Action::Device);
+        if (lastWidget == "cwm")
+            this->showPageCwm();
+        else
+            this->showPageFiles();
 
-        this->showPageFiles();
     }
     else if (state == RECOVERY)
     {
@@ -444,7 +471,10 @@ void MainWindow::phoneConnectionChanged(int state)
         this->ui->menuFastboot->setDisabled(true);
 
         this->disableActions(Action::Recovery);
-        this->showPageRecovery();
+        if (lastWidget == "cwm")
+            this->showPageCwm();
+        else
+            this->showPageFiles();
     }
     else if (state == FASTBOOT)
     {
@@ -459,9 +489,13 @@ void MainWindow::phoneConnectionChanged(int state)
 //        connect(this->ui->buttonPhoneInfo, SIGNAL(clicked()), this, SLOT(showPageDisconnected()));
 //        disconnect(this->ui->buttonPhoneInfo, SIGNAL(clicked()), this, SLOT(showPagePhoneInfo()));
     }
-
-    this->fileWidget->phone->procesEvents=true;
-    this->fileWidget->computer->procesEvents=true;
+    if (lastWidget == "cwm")
+        this->cwmWidget->phone->procesEvents=true;
+    else
+    {
+        this->fileWidget->phone->procesEvents=true;
+        this->fileWidget->computer->procesEvents=true;
+    }
 }
 
 void MainWindow::refreshState()
@@ -473,21 +507,20 @@ void MainWindow::restartInWifi()
 {
     int result;
     this->connectWifiDialog = new ConnectWifi;
-
+    QSettings settings;
     QString tmp = Phone::getIp();
 
     if (tmp=="")
     {
-        QSettings settings;
         this->connectWifiDialog->adresEdit->setText(settings.value("wlanIP").toString());
     }
     else
     {
         this->connectWifiDialog->adresEdit->setText(tmp);
     }
-
-    this->connectWifiDialog->portEdit->setText("5555");
-
+    this->connectWifiDialog->portEdit->setText(settings.value("wlanPort").toString());
+    if (this->connectWifiDialog->portEdit->text() == "")
+        this->connectWifiDialog->portEdit->setText("5555");
     result = this->connectWifiDialog->exec();
     if (result == 1)
     {
@@ -495,6 +528,7 @@ void MainWindow::restartInWifi()
         this->portNumber = this->connectWifiDialog->portEdit->text();
         QSettings settings;
         settings.setValue("wlanIP",this->ipAddress);
+        settings.setValue("wlanPort",this->portNumber);
         if (this->fileWidget->phone->getConnectionState() == DEVICE && this->fileWidget->phone->getConnectionMode() == "usb")
         {
             QProcess *connect = new QProcess;
@@ -687,7 +721,6 @@ bool MainWindow::verifyRegistered(QString email)
 
 void MainWindow::showPageMessages()
 {
-    //settings->setValue("computerPath", this->computerPath);
     qDebug()<<"MainWindow::showPageMessages()";
     QStringList accountList;
     bool verified = false;
@@ -731,13 +764,14 @@ void MainWindow::showPageMessages()
         qDebug()<<"MainWindow::showPageMessages(): user is verified";
         if (this->messageWidget == NULL)
         {
+
             this->messageWidget = new MessageWidget(this,ip);
 
             this->settingsWidget->changeFont();
             ui->stackedWidget->addWidget(this->messageWidget);
             connect(this->messageWidget, SIGNAL(smsReceived(QString,QString)), this, SLOT(smsReceived(QString, QString)));
             connect(this->messageWidget, SIGNAL(smsResultSignal(QString)), this, SLOT(smsResult(QString)));
-        }
+      }
 
         this->setButtonDown(8);
 
@@ -772,17 +806,35 @@ void MainWindow::showPagePhoneInfo()
 
 void MainWindow::showPageRecovery()
 {
-    if (this->recoveryWidget == NULL)
+//    if (this->recoveryWidget == NULL)
+//    {
+//        this->recoveryWidget = new RecoveryWidget;
+//        this->settingsWidget->changeFont();
+//        ui->stackedWidget->addWidget(this->recoveryWidget);
+//    }
+
+//    this->setButtonDown(2);
+
+//    this->startAnimation(this->recoveryWidget);
+}
+
+void MainWindow::showPageCwm()
+{
+    if (this->cwmWidget == NULL)
     {
-        this->recoveryWidget = new RecoveryWidget;
+        this->cwmWidget = new CwmWidget;
         this->settingsWidget->changeFont();
-        ui->stackedWidget->addWidget(this->recoveryWidget);
+        ui->stackedWidget->addWidget(this->cwmWidget);
     }
+    lastWidget = "cwm";
+
+    this->cwmWidget->sdcardDisplay();
 
     this->setButtonDown(2);
 
-    this->startAnimation(this->recoveryWidget);
+    this->startAnimation(this->cwmWidget);
 }
+
 
 void MainWindow::showPageScreenshot()
 {
@@ -811,17 +863,23 @@ void MainWindow::showPageSettings()
 
 void MainWindow::showPageShell()
 {
-    if (this->shellWidget == NULL)
-    {
-        this->shellWidget = new ShellWidget;
-        this->settingsWidget->changeFont();
-        ui->stackedWidget->addWidget(this->shellWidget);
-        this->shellWidget->move(-ui->stackedWidget->currentWidget()->width(),0);
-    }
+    QSettings settings;
+    QProcess p;
+    QString sdk = settings.value("sdkPath").toString();
+    p.startDetached("\""+sdk+"\""+"adb shell");
+    //p.waitForFinished(-1);
 
-    this->setButtonDown(7);
+  //  if (this->shellWidget == NULL)
+  //  {
+  //      this->shellWidget = new ShellWidget;
+   //     this->settingsWidget->changeFont();
+   //     ui->stackedWidget->addWidget(this->shellWidget);
+   //     this->shellWidget->move(-ui->stackedWidget->currentWidget()->width(),0);
+  //  }
 
-    this->startAnimation(this->shellWidget);
+   // this->setButtonDown(7);
+
+   // this->startAnimation(this->shellWidget);
 }
 
 void MainWindow::smsReceived(QString number, QString body)
@@ -876,7 +934,7 @@ void MainWindow::animationFinished()
 
 void MainWindow::updatesCheck()
 {
-    this->win7.setOverlayIcon(QIcon(":icons/info.png"), "desc");
+    //this->win7.setOverlayIcon(QIcon(":icons/info.png"), "desc");
     this->showNoUpdates = true;
     this->updateApp.checkUpdates();
 }
@@ -885,7 +943,7 @@ void MainWindow::updatesCheckFinished(bool gotUpdate, QString oldVersion, QStrin
 {
     if (gotUpdate)
     {
-        QMessageBox *msgBox = new QMessageBox(QMessageBox::Information, tr("New updates"), tr("New update is available\n")
+        QMessageBox *msgBox = new QMessageBox(QMessageBox::Information, tr("New updates:"), tr("New update is available!\n")
                                               + tr("Your version: ") + oldVersion + tr("\nLatest version: ") + newVersion);
         QPushButton *getUpdatesMsg = msgBox->addButton(tr("Download"), QMessageBox::AcceptRole);
         QPushButton *closeMsg = msgBox->addButton(tr("Close"), QMessageBox::RejectRole);
@@ -904,11 +962,11 @@ void MainWindow::updatesCheckFinished(bool gotUpdate, QString oldVersion, QStrin
     {
         if (oldVersion == "failed")
         {
-            QMessageBox::critical(this, tr("error"), tr("There was problem while checking for updates"), QMessageBox::Ok);
+            QMessageBox::critical(this, tr("Connection error:"), tr("There was a problem while checking for updates!"), QMessageBox::Ok);
         }
         else if (this->showNoUpdates)
         {
-            QMessageBox::information(this, tr("No updates"), tr("Your version is up to date\n")
+            QMessageBox::information(this, tr("No updates:"), tr("Your version is up to date.\n")
                                  + tr("Your version: ") + oldVersion + tr("\nLatest version: ") + newVersion, QMessageBox::Ok);
         }
         this->showNoUpdates = true;
@@ -1027,11 +1085,11 @@ void MainWindow::donateMessage()
     {
         if (firstRun.addDays(14) <= QDate::currentDate() && runCount >= 10)
         {
-            QMessageBox *msgBox = new QMessageBox(QMessageBox::Information, tr("Donate"),
+            QMessageBox *msgBox = new QMessageBox(QMessageBox::Information, tr("Donate!"),
                                                   tr("It seems that you are using QtADB for a while now. Maybe consider a donation to a project..."));
-            QPushButton *donate = msgBox->addButton(tr("Yes, I want to donate"), QMessageBox::AcceptRole);
-            QPushButton *remaindLater = msgBox->addButton(tr("Remaind me later"), QMessageBox::RejectRole);
-            QPushButton *dontRemaind = msgBox->addButton(tr("Do not bother me again"), QMessageBox::RejectRole);
+            QPushButton *donate = msgBox->addButton(tr("Yes, I want to donate."), QMessageBox::AcceptRole);
+            QPushButton *remaindLater = msgBox->addButton(tr("Remaind me later."), QMessageBox::RejectRole);
+            QPushButton *dontRemaind = msgBox->addButton(tr("Do not bother me again."), QMessageBox::RejectRole);
 
             msgBox->exec();
 

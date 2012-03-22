@@ -22,6 +22,7 @@
 //#define CONTACTWIDGET_H
 
 //#include <QtGui>
+////#include "../classes/models/contactmodel.h"
 
 
 //typedef struct contactList
@@ -76,6 +77,7 @@
 //private:
 //    Ui::ContactWidget *ui;
 //    ThreadContacts threadContacts;
+//    //ContactList contactList;
 
 //private slots:
 //    void contactSelected(int);

@@ -120,11 +120,11 @@ QVariant AppTableModel::data(const QModelIndex &index, int role) const
         case 1:
             return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
         case 2:
-            return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
+            return QVariant(Qt::AlignCenter | Qt::AlignVCenter);
         case 3:
             return QVariant(Qt::AlignRight | Qt::AlignVCenter);
         case 4:
-            return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
+            return QVariant(Qt::AlignCenter | Qt::AlignVCenter);
         case 5:
             return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
         case 6:
@@ -149,13 +149,15 @@ QVariant AppTableModel::data(const QModelIndex &index, int role) const
                 tmp = tmp.left(15)+"...";
             return tmp;
         case 3:
-            return AppTableModel::humanReadableSize(app.appSize);
+            tmp = AppTableModel::humanReadableSize(app.appSize) + "   ";
+            return tmp;
         case 4:
-            return app.packageName;
-        case 5:
-            return app.appFile;
-        case 6:
             return app.location;
+        case 5:
+            return app.packageName;
+        case 6:
+            tmp = "   " + app.appFile;
+            return tmp;
          default:
             return QVariant();
         }
@@ -163,8 +165,12 @@ QVariant AppTableModel::data(const QModelIndex &index, int role) const
     else if (role == Qt::BackgroundColorRole)
     {
         App app = this->appList.at(index.row());
-        if (app.appVersion < app.cyrketVer)
+        if (app.appVersion < app.cyrketVer && app.cyrketVer.contains("Varies with device"))
             return QVariant::fromValue(QBrush(Qt::green, Qt::SolidPattern));
+        else if (app.cyrketVer.contains("app not found on Android Market"))
+        {
+            return QVariant::fromValue(QBrush(Qt::yellow, Qt::SolidPattern));
+        }
     }
     return QVariant();
 
@@ -180,17 +186,17 @@ QVariant AppTableModel::headerData(int section, Qt::Orientation orientation, int
         case 0:
             return "";
         case 1:
-            return tr("Name", "application table name");
+            return tr("app Name", "application table name");
         case 2:
-            return tr("Version", "application table version");
+            return tr("app Version", "application table version");
         case 3:
-            return tr("Size", "applications table size");
+            return tr("app Size", "applications table size");
         case 4:
-            return tr("Package", "application table package");
+            return tr("app Location", "application table location");
         case 5:
-            return tr("File", "application table file");
+            return tr("app Package Name", "application table package");
         case 6:
-            return tr("Location", "application table location");
+            return tr("app File Path", "application table file");
         default:
             return QVariant();
         }
@@ -231,13 +237,13 @@ bool AppTableModel::setData(const QModelIndex &index, const QVariant &value, int
             app.appSize = value.toString();
             break;
         case 4:
-            app.packageName = value.toString();
+            app.location = value.toString();
             break;
         case 5:
-            app.appFile = value.toString();
+            app.packageName = value.toString();
             break;
         case 6:
-            app.location = value.toString();
+            app.appFile = value.toString();
             break;
         default:
             return false;
@@ -488,3 +494,4 @@ bool AppSortModel::lessThan(const QModelIndex &left, const QModelIndex &right) c
         return leftName.toLower() < rightName.toLower();
     }
 }
+

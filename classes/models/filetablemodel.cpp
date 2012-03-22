@@ -541,4 +541,3 @@ bool FileSortModel::lessThan(const QModelIndex &left, const QModelIndex &right) 
             return leftName.toLower() < rightName.toLower();
     }
 }
-

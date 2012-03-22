@@ -253,5 +253,4 @@ bool Computer::deleteDir(QString dirName)
     }
 
     return !error;
-
 }

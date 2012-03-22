@@ -365,7 +365,7 @@ border: 1px solid black;
     <item row="10" column="9">
      <widget class="QLabel" name="labelExt">
       <property name="text">
-       <string notr="true">/ext</string>
+       <string notr="true">/sdext</string>
       </property>
      </widget>
     </item>

@@ -145,7 +145,7 @@ void PhoneInfoWidget::showPhoneInfo()
 
 
 
-        proces->start("\""+sdk+"\""+"adb shell busybox cat /sys/class/power_supply/battery/capacity");
+        proces->start("\""+sdk+"\""+"adb shell cat /sys/class/power_supply/battery/capacity");
         proces->waitForReadyRead(-1);
         tmp=proces->readLine();
         ui->progressBarBatteryLevel->setValue(tmp.toInt());
@@ -154,7 +154,7 @@ void PhoneInfoWidget::showPhoneInfo()
         QString sdFolder;
 //        QStringList lines, split;
 //        sdFolder.clear();
-//        proces->start("\"" + this->sdk + "\"adb shell busybox mount");
+//        proces->start("\"" + this->sdk + "\"adb shell mount");
 //        proces->waitForFinished(-1);
 //        tmp = proces->readAll();
 //        qDebug()<<"Get phone info mount - "<<tmp;
@@ -183,7 +183,7 @@ void PhoneInfoWidget::showPhoneInfo()
             if (sdFolder.endsWith("/",Qt::CaseInsensitive))
                 sdFolder.chop(1);
         }
-        proces->start("\""+sdk+"\""+"adb shell busybox df");
+        proces->start("\""+sdk+"\""+"adb shell df");
         tmp.clear();
 
         while (true)

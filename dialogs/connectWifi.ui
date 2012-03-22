@@ -22,6 +22,9 @@
   <property name="styleSheet">
    <string notr="true"/>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <widget class="QWidget" name="gridLayoutWidget">
    <property name="geometry">
     <rect>

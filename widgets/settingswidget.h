@@ -27,6 +27,9 @@
 #include "../classes/models/apptablemodel.h"
 #include "../classes/models/backuptablemodel.h"
 #include "../classes/models/filetablemodel.h"
+#include "../classes/computer.h"
+
+#include <QDir>
 
 
 namespace Ui {
@@ -60,12 +63,15 @@ public:
     bool enableAnimations;
     bool getQR;
     bool getCyrketVer;
+   // bool BackupAppsOnSdcard;
     bool showCopyConfirmation;
 
     QString phonePath;
     QString computerPath;
     QString showAppNameConfig;
     QString sdkPath;
+    QString appsBackupFolder;
+    QString editBacFolder;
     QString wlanIP;
     QString sdFolder;
 
@@ -87,6 +93,7 @@ public:
     QByteArray windowGeometry;
 
     void setSettings();
+
 
     int currentIndex;
     QStandardItemModel *appsColumnModel;
@@ -113,6 +120,7 @@ private:
     void createCurveIcons();
     Animation animation;
     void setBackgroundColor(QLabel *label, QColor color);
+    QDir directory;
 
 public slots:
     void saveSettings();
@@ -120,6 +128,12 @@ public slots:
 
 private slots:
     void on_pushButtonChangeSDKPath_pressed();
+
+    void on_buttonBrowseFolder_pressed();
+
+    void appsBackupFolderExists();
+
+
     void getSettings();
     void settingsSlotChanged();
     void chooseFontApp();
@@ -141,6 +155,8 @@ private slots:
 
 signals:
     void settingsChanged();
+
+    void stateChanged (int state);
 };
 
 #endif // SETTINGSWIDGET_H
