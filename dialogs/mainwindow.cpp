@@ -22,6 +22,13 @@
 #include "../classes/application.h"
 #include "ui_mainwindow.h"
 
+extern QProcess *adbProces;
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QString busybox;
+extern QString fastboot;
+
 MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
@@ -79,8 +86,8 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent),ui(new Ui::MainWind
 //    this->codec = QTextCodec::codecForLocale();
 
 //    ////Debugging
-    qDebug()<<QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss");
-    qDebug()<<"App version - "<<QCoreApplication::applicationVersion();
+    qDebug()<<QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss").toStdString().c_str();
+    qDebug()<<"App version - "<<QCoreApplication::applicationVersion().toStdString().c_str();
 
 //    this->setWindowTitle("QtADB");
 
@@ -226,7 +233,7 @@ MainWindow::~MainWindow()
     {
 	QProcess *kill=new QProcess;
 	QSettings settings;
-	kill->start("\""+settings.value("sdkPath").toString()+"\"adb kill-server");
+    kill->start("\""+settings.value("adbExecutable").toString()+"\"", QStringList()<< "kill-server");
 	kill->waitForFinished(-1);
 	delete kill;
     }
@@ -276,9 +283,9 @@ void MainWindow::connectWifi()
     QSettings settings;
     connect->setProcessChannelMode(QProcess::MergedChannels);
     if (this->portNumber.contains("0000"))
-        command = "\"" + settings.value("sdkPath").toString() + "\"adb connect " + this->ipAddress;
+        command = "\"" + settings.value("adbExecutable").toString() + "\"adb connect " + this->ipAddress;
     else
-        command = "\"" + settings.value("sdkPath").toString() + "\"adb connect " + this->ipAddress + ":" + this->portNumber;
+        command = "\"" + settings.value("adbExecutable").toString() + "\"adb connect " + this->ipAddress + ":" + this->portNumber;
     qDebug()<<"connect WiFi"<<command;
     connect->start(command);
     connect->waitForFinished(2000);
@@ -558,7 +565,13 @@ void MainWindow::restartInWifi()
         {
             QProcess *connect = new QProcess;
             connect->setProcessChannelMode(QProcess::MergedChannels);
-            connect->start("\"" + settings.value("sdkPath").toString() + "\"adb tcpip " + this->portNumber);
+            connect->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList()<<"tcpip " << this->portNumber);
+            if(!connect->waitForStarted()){
+                qDebug()<<" error - "<<adbProces->errorString().toStdString().c_str();
+                QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("error"), QObject::tr("It seems that adb is not working properly"), QMessageBox::Ok);
+                msgBox->exec();
+                delete msgBox;
+            }
             connect->waitForFinished(2000);
             connect->terminate();
             delete connect;
@@ -575,7 +588,7 @@ void MainWindow::restartInUsb()
     QSettings settings;
     QProcess *connect = new QProcess;
     connect->setProcessChannelMode(QProcess::MergedChannels);
-    connect->start("\"" + settings.value("sdkPath").toString() + "\"adb usb");
+    connect->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList() << " usb");
     connect->waitForFinished(2000);
     connect->terminate();
     delete connect;
@@ -747,6 +760,7 @@ bool MainWindow::verifyRegistered(QString email)
 
 void MainWindow::showPageMessages()
 {
+    //settings->setValue("computerPath", this->computerPath);
     qDebug()<<"MainWindow::showPageMessages()";
     QStringList accountList;
     bool verified = false;
@@ -1151,4 +1165,41 @@ void MainWindow::on_actionEnter_register_key_triggered()
 {
     RegisterDialog *registerDialog = new RegisterDialog(this,Phone::getGoogleAccounts());
     registerDialog->exec();
+}
+void MainWindow::on_actionRemount_triggered()
+{
+    QSettings settings;
+    QProcess *remount = new QProcess;
+    remount->setProcessChannelMode(QProcess::MergedChannels);
+    remount->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList() << " remount");
+    remount->waitForFinished(2000);
+    remount->terminate();
+    QMessageBox::information(0,"Warning" , "Mounted with write permissions");
+    delete remount;
+}
+
+void MainWindow::on_actionRemount_root_triggered()
+{
+    QSettings settings;
+    QProcess *remount = new QProcess;
+    remount->setProcessChannelMode(QProcess::MergedChannels);
+    // Set root (try to...)
+    remount->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList() << " root");
+    remount->waitForFinished(2000);
+    remount->terminate();
+
+    remount->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList() << " remount");
+    remount->waitForFinished(2000);
+    remount->terminate();
+    //remount via shell
+    remount->start("\"" + settings.value("adbExecutable").toString() + "\"", QStringList() << " shell mount -o remount rw /");
+    remount->waitForFinished(2000);
+    QString returnMessage = QString(remount->readAll());
+    remount->terminate();
+    if (returnMessage.contains("not permitted")){
+        QMessageBox::information(0,"Error" , "Operation not permitted!");
+    } else {
+         QMessageBox::information(0,"Warning" , "Mounted with root write permissions");
+    }
+    delete remount;
 }

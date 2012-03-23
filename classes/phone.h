@@ -64,7 +64,7 @@ class Phone: public QObject
 {
     Q_OBJECT
 public:
-    Phone(QString sdk,bool isThreadNecessary);
+    Phone(bool isThreadNecessary);
     ~Phone();
 
     bool cd(QString dir);
@@ -75,11 +75,10 @@ public:
 //    FileList getFileList();
     QList<File> *getFileList();
     QList<File> *getFileList(QString);
-    static FileList *getStaticFileList(QString path, QString sdk, bool hiddenFiles);
+    static FileList *getStaticFileList(QString path, QString adb, bool hiddenFiles);
     bool getHiddenFilesState();
     QString getPath();
     QImage getScreenshot();
-    QString getSdk();
     bool makeDir(QString newDir);
     bool recoverySDmounted;
     bool remove(QString name);
@@ -100,7 +99,6 @@ private:
     int connectionState;
     bool hiddenFiles;
     QString path;
-    QString sdk;
 
 public slots:
     void slotConnectionChanged(int connectionState,QString serialNumber);

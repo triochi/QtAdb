@@ -47,7 +47,6 @@ class ThreadApps : public QThread
 public:
     bool systemApps;
     void run();
-    QString sdk;
     QList<App> appList;
     QString appsBackupFolder;
     QTextCodec *codec;
@@ -67,7 +66,6 @@ class ThreadBackups : public QThread
     Q_OBJECT
 public:
     void run();
-    QString sdk;
     QString appsBackupFolder;
     QTextCodec *codec;
 
@@ -112,7 +110,6 @@ private:
 //    QList<App> apps;
 //    QList<App> systemApps;
     bool firstGetApps;//, firstGetBackups;
-    QString sdk;
 
     AppTableModel *appModel;
     AppSortModel *appSortModel;

@@ -190,6 +190,8 @@
      <property name="title">
       <string>Adb</string>
      </property>
+     <addaction name="actionRemount"/>
+     <addaction name="actionRemount_root"/>
      <addaction name="actionAdbReboot"/>
      <addaction name="actionAdbRebootBootloader"/>
      <addaction name="actionAdbRebootRecovery"/>
@@ -290,6 +292,16 @@
   <action name="actionEnter_register_key">
    <property name="text">
     <string>enter register key</string>
+   </property>
+  </action>
+  <action name="actionRemount">
+   <property name="text">
+    <string>Remount</string>
+   </property>
+  </action>
+  <action name="actionRemount_root">
+   <property name="text">
+    <string>Remount (root)</string>
    </property>
   </action>
  </widget>

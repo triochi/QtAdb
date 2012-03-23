@@ -21,6 +21,13 @@
 #include "filewidget.h"
 #include "ui_filewidget.h"
 
+extern QProcess *adbProces;
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QString busybox;
+extern QString fastboot;
+
 quint32 qbytearrayToInt32(QByteArray array)
 {
     QDataStream stream(array);
@@ -239,9 +246,7 @@ FileWidget::FileWidget(QWidget *parent, SettingsWidget *settings) :
 
     this->computer=new Computer();
 
-    this->sdk = this->settings->sdkPath;
-
-    this->phone=new Phone(this->sdk,true);
+    this->phone=new Phone(true);
 //    connect(this->phone, SIGNAL(signalConnectionChanged(int)), this, SIGNAL(phoneConnectionChanged(int)));
     this->phone->setPath(this->settings->phonePath);
     this->computer->setPath(this->settings->computerPath);
@@ -265,7 +270,7 @@ FileWidget::FileWidget(QWidget *parent, SettingsWidget *settings) :
     this->leftTableView->horizontalHeader()->setVisible(this->settings->showComputerColumnsHeaders);
     this->rightTableView->horizontalHeader()->setVisible(this->settings->showPhoneColumnsHeaders);
 
-    this->phoneLeft=new Phone(sdk,false);
+    this->phoneLeft=new Phone(false);
     this->phoneLeft->setPath(this->settings->phonePath);
     this->phoneLeft->setHiddenFiles(this->settings->phoneHiddenFiles);
 
@@ -615,7 +620,7 @@ void FileWidget::computerCopy()
 
     if (this->dialog != NULL)
         delete this->dialog;
-    this->dialog = new dialogKopiuj(this, filesToCopy, this->sdk, dialogKopiuj::ComputerToPhone, this->computer->getPath(), this->phone->getPath());
+    this->dialog = new dialogKopiuj(this, filesToCopy, dialogKopiuj::ComputerToPhone, this->computer->getPath(), this->phone->getPath());
 
     if (this->alwaysCloseCopy)
         this->dialog->closeAfterFinished();
@@ -757,7 +762,7 @@ QList<File> * FileWidget::computerFilesToCopy(QList<File> *fileList)
     QList<File> *tmpFiles = NULL;
     for (int i=0; i<x; i++)
     {
-        if (fileList->at(i).fileType == "dir")
+        if (fileList->at(i).fileType == File::dir)
         {
             this->computer->cd(fileList->takeAt(i).fileName);
             tmpFiles = this->computerFilesToCopy(this->computer->getFileList());
@@ -1421,10 +1426,10 @@ void FileWidget::phoneCopy()
     if (this->dialog != NULL)
         delete this->dialog;
     if (this->leftMode == "computer")
-        this->dialog = new dialogKopiuj(this, filesToCopy, this->sdk, dialogKopiuj::PhoneToComputer,
+        this->dialog = new dialogKopiuj(this, filesToCopy, dialogKopiuj::PhoneToComputer,
                                         phoneTmp->getPath(), this->computer->getPath());
     else
-        this->dialog = new dialogKopiuj(this, filesToCopy, this->sdk, dialogKopiuj::PhoneToPhone,
+        this->dialog = new dialogKopiuj(this, filesToCopy, dialogKopiuj::PhoneToPhone,
                                         phoneTmp->getPath(), phoneTmp2->getPath());
 
     if (this->alwaysCloseCopy)
@@ -1572,7 +1577,7 @@ QList<File> *FileWidget::phoneFilesToCopy(QList<File> *fileList, Phone *phone)
     QList<File> *tmpFiles = NULL;
     for (int i=0; i<x; i++)
     {
-        if (fileList->at(i).fileType == "dir")
+        if (fileList->at(i).fileType == File::dir)
         {
             phone->cd(fileList->takeAt(i).fileName);
             tmpFiles = this->phoneFilesToCopy(phone->getFileList(), phone);
@@ -1767,7 +1772,6 @@ void FileWidget::on_toolButtonFind_pressed()
     if (findModel->rowCount() > 0)
         this->findModel->clear();
     this->rightTableView->setModel(this->findModel);
-    threadFind.sdk=this->phone->getSdk();
     threadFind.fileName=ui->rightFileNameFilter->text();
     threadFind.path=this->phone->getPath();
     threadFind.start();
@@ -1852,14 +1856,14 @@ void FileWidget::rightDoubleClick()
     if (!this->rightTableView->selectionModel()->selection().isEmpty())
     {
         QModelIndex index;
-        QString fileType;
+        QString fileName;
         File file;
         if (rightTableView->model()==this->findModel)
         {
             index = this->rightTableView->selectionModel()->selection().indexes().takeFirst();
             file = this->findModel->getFile(index.row());
             fileName=file.fileName;
-            if (file.fileType == "file")
+            if (file.fileType == File::file)
             {
                 fileName = fileName.left(fileName.lastIndexOf("/"));
                 filePath = this->phoneModel->getFile(index.row()).filePath;
@@ -1994,9 +1998,9 @@ void ThreadFind::run()
     QString output;
     QString path, file;
     QStringList strList;
-    proces->start("\""+this->sdk+"\"adb shell find "+this->path+" -iname \'*"+this->fileName+"*\'");
+    proces->start("\""+adb+"\"" , QStringList() <<"shell" <<"busybox" << " find " << this->path <<" -iname" <<"\'*"+this->fileName+"*\'");
 
-    Phone phone(this->sdk,false);
+    Phone phone(false);
     phone.setConnectionState(DEVICE);
 
     do
@@ -2035,7 +2039,7 @@ void FileWidget::foundFile(File file)
 {
     QFile plik;
     QFileIconProvider *provider = new QFileIconProvider;
-    if (file.fileType == "file" || file.fileType == "device")
+    if (file.fileType == File::file || file.fileType == File::device)
     {
         QString name;
         name = file.fileName.right(file.fileName.size() - file.fileName.lastIndexOf("/") - 1);
@@ -2045,7 +2049,7 @@ void FileWidget::foundFile(File file)
         file.fileIcon = provider->icon(QFileInfo(plik));
         plik.remove();
     }
-    else if (file.fileType == "link")
+    else if (file.fileType == File::link)
     {
         file.fileIcon = QApplication::style()->standardIcon(QStyle::SP_FileLinkIcon);
     }
@@ -2137,12 +2141,10 @@ App * FileWidget::getAppInfo(QString filePath)
     QSettings settings;
     QByteArray ba;
     QPixmap pix;
-    QString sdk;
-    sdk = settings.value("sdkPath").toString();
 
     QFileInfo *plik = new QFileInfo(filePath);
     settings.beginGroup("apps");
-    proces->start("\""+sdk+"\"aapt d badging \"" + filePath + "\"");
+    proces->start("\""+aapt +"\"", QStringList() <<" d badging \"" + filePath + "\"");
     proces->waitForReadyRead(-1);
     temp=proces->readAll();
     if (temp.contains("ERROR"))
@@ -2345,10 +2347,10 @@ void FileWidget::copySlotToPhone(QStringList list)
     if (this->dialog != NULL)
         delete this->dialog;
     if (this->leftMode == "computer")
-        this->dialog = new dialogKopiuj(this, filesToCopy, this->sdk, dialogKopiuj::ComputerToPhone,
+        this->dialog = new dialogKopiuj(this, filesToCopy, dialogKopiuj::ComputerToPhone,
                                         this->computer->getPath(), this->phone->getPath());
     else
-        this->dialog = new dialogKopiuj(this, filesToCopy, this->sdk, dialogKopiuj::PhoneToPhone,
+        this->dialog = new dialogKopiuj(this, filesToCopy, dialogKopiuj::PhoneToPhone,
                                         this->phoneLeft->getPath(), this->phone->getPath());
 
     if (this->alwaysCloseCopy)
@@ -2397,7 +2399,7 @@ void FileWidget::copySlotToPhoneLeft(QStringList list)
     if (this->dialog != NULL)
         delete this->dialog;
 
-    this->dialog = new dialogKopiuj(this, filesToCopy, this->sdk, dialogKopiuj::PhoneToPhone,
+    this->dialog = new dialogKopiuj(this, filesToCopy, dialogKopiuj::PhoneToPhone,
                                     this->phone->getPath(), this->phoneLeft->getPath());
 
     if (this->alwaysCloseCopy)
@@ -2425,6 +2427,7 @@ void FileWidget::propsDialog()
         tableView = this->leftTableView;
         sortModel = this->phoneLeftSortModel;
         fileModel = this->phoneLeftModel;
+        this->leftChangeName = true;
     }
     else
     {

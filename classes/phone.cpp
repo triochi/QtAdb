@@ -21,7 +21,15 @@
 #include "phone.h"
 #include <QSettings>
 #include <QTextCodec>
+#include "sockets.h"
 
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
+extern Socket socket_global;
 
 void ConnectionThread::run()
 {
@@ -91,15 +99,15 @@ void ConnectionThread::run()
 
 Phone::Phone(QString sdk,bool isThreadNecessary)
 {
-    QProcess fastboot;
-    this->sdk=sdk;
+    QProcess proces;
     this->codec = QTextCodec::codecForLocale();
 
-    qDebug()<<"Phone::Phone - sdk="<<this->sdk;
-    fastboot.setProcessChannelMode(QProcess::MergedChannels);
-    fastboot.start("\"" + this->sdk + "\"adb shell mount -o remount,rw /system");
-    fastboot.waitForFinished();
-    qDebug()<<"Phone::Phone - adb start-server: "<<fastboot.readAll();
+    qDebug()<<"Phone::Phone - sdk="<<sdk.toStdString().c_str();
+    proces.setProcessChannelMode(QProcess::MergedChannels);
+    proces.start("\"" + adb + "\" remount");
+
+    proces.waitForFinished();
+    qDebug()<<"Phone::Phone - adb start-server: "<<proces.readAll();
     if (isThreadNecessary)
         this->connectionThread.start();
     connect(&this->connectionThread, SIGNAL(connectionChanged(int,QString)), this, SLOT(slotConnectionChanged(int,QString)));
@@ -125,12 +133,12 @@ bool Phone::cd(QString dir)
     QString command;
     if (dir.contains("/"))
     {
-        command="\""+this->sdk+"\""+"adb shell cd \""+this->codec->toUnicode(dir.toUtf8())+"\"";
+        command="\""+ adb + "\" shell cd \""+this->codec->toUnicode(dir.toUtf8())+"\"";
     }
     else
     {
         dir.prepend(this->getPath());
-        command="\""+this->sdk+"\""+"adb shell cd \""+this->codec->toUnicode(dir.toUtf8())+"\"";
+        command="\""+ adb +"\" shell cd \""+this->codec->toUnicode(dir.toUtf8())+"\"";
     }
     phone->start(command);
     phone->waitForReadyRead(-1);
@@ -187,44 +195,22 @@ QList<File> *Phone::getFileList()
     {
         return NULL;
     }
-
-    QProcess *phone=new QProcess(this);
-    phone->setProcessChannelMode(QProcess::MergedChannels);
-    QString command;
-
-    qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss");
-    qDebug()<<"Phone::getFileList() - "<<this->getPath();
-    if (this->hiddenFiles)
-        command="\""+this->sdk+"\""+"adb shell ls -l -a \""+this->codec->toUnicode(this->getPath().toUtf8())+"\"";
-    else
-        command="\""+this->sdk+"\""+"adb shell ls -l \""+this->codec->toUnicode(this->getPath().toUtf8())+"\"";
-
-    qDebug()<<"Phone::getFileList() - "<<command;
-    phone->start(command);
     QString outputLine="1";
     QStringList outputLines;
 
-//    while (!outputLine.isEmpty())
-//    {
-//        qApp->processEvents();
-//        phone->waitForReadyRead(-1);
-//        outputLine = phone->readLine();
-//        qDebug()<<"Phone::getFileList() - "<<outputLine;
-//        outputLines.append(outputLine);
-//    }
-    phone->waitForFinished(-1);
-    outputLine=phone->readAll();
-    outputLines=outputLine.split("\n");
-    if (outputLines.first().contains("No such file or directory")||outputLines.first().contains("cannot")||outputLines.first().contains("Not a directory"))
+    QString command;
+    command =  command="\""+adb+"\" shell busybox ";
+    command = QDir::toNativeSeparators(command);
+    qDebug()<<"Phone::getFileList() - "<<command.toStdString().c_str();
+
+    qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss");
+    qDebug()<<"Phone::getFileList() - "<<this->getPath();
+    outputLine= socket_global.listFiles(this->codec->toUnicode(this->getPath().toUtf8()));
+    if (outputLine.isEmpty())
     {
-        qDebug()<<"Phone::getFileList() - "<<outputLine;
-        phone->terminate();
-        delete phone;
         return NULL;
     }
-
-    outputLines.removeLast();   // pusty
-
+    outputLines=outputLine.split("\n");
     QStringList lineParts;
     QString name;
     QFile plik;
@@ -239,123 +225,28 @@ QList<File> *Phone::getFileList()
         tmp.clear();
         tmp = outputLines.takeFirst();
         tmp.remove(QRegExp("\\s+$"));
-        lineParts=tmp.split(QRegExp("\\s+"));
-        if (lineParts.length()>8)
-        {
-            if (lineParts[4].contains(","))
-            {
-                tmpFile.fileSize = lineParts.at(4)+lineParts.at(5);
-                lineParts.removeAt(5);
+                {
+                    tmpFile.fileColor = QColor(Qt::darkRed);
+                }
+                else if ((tmpFile.filePermissions& (1<<8)) == 0)//Not writable
+                {
+                    tmpFile.fileColor = QColor(Qt::darkBlue);
+                }
+                else if ((tmpFile.filePermissions& (1<<7)) == 1)//Executable
+                {
+                    tmpFile.fileColor = QColor(Qt::darkGreen);
+                }
             }
-            else
-                tmpFile.fileSize = lineParts.at(4);
-            tmpFile.fileDate = lineParts[5]+" "+lineParts[6]+" "+lineParts[7];
-
-            for (int i=8;i<lineParts.length();i++)
-                name.append(lineParts.at(i)+" ");
-            name.chop(1);
-            name.remove(QString("%1[0m").arg( QChar( 0x1b )));
-            name.remove(QChar( 0x1b ), Qt::CaseInsensitive);
-            if (name.contains("0;30"))//black
-            {
-                tmpFile.fileColor = QColor(Qt::black);
-            }
-            else if (name.contains("0;34"))//blue
-            {
-                tmpFile.fileColor = QColor(Qt::blue);
-            }
-            else if (name.contains("0;32"))//green
-            {
-                tmpFile.fileColor = QColor(Qt::green);
-            }
-            else if (name.contains("0;36"))//cyan
-            {
-                tmpFile.fileColor = QColor(Qt::cyan);
-            }
-            else if (name.contains("0;31"))//red
-            {
-                tmpFile.fileColor = QColor(Qt::red);
-            }
-            else if (name.contains("0;35"))//purple
-            {
-                tmpFile.fileColor = QColor(0, 0, 0);
-            }
-            else if (name.contains("0;33"))//brown
-            {
-                tmpFile.fileColor = QColor(0, 0, 0);
-            }
-            else if (name.contains("0;37"))//light gray
-            {
-                tmpFile.fileColor = QColor(Qt::lightGray);
-            }
-            else if (name.contains("1;30"))//dark gray
-            {
-                tmpFile.fileColor = QColor(Qt::darkGray);
-            }
-            else if (name.contains("1;34"))//dark gray
-            {
-                tmpFile.fileColor = QColor(Qt::blue);
-            }
-            else if (name.contains("1;32"))//light green
-            {
-                tmpFile.fileColor = QColor(Qt::green);
-            }
-            else if (name.contains("1;36"))//light cyan
-            {
-                tmpFile.fileColor = QColor(Qt::cyan);
-            }
-            else if (name.contains("1;31"))//light red
-            {
-                tmpFile.fileColor = QColor(Qt::red);
-            }
-            else if (name.contains("1;35"))//light purple
-            {
-                tmpFile.fileColor = QColor(0, 0, 0);
-            }
-            else if (name.contains("1;33"))//yellow
-            {
-                tmpFile.fileColor = QColor(Qt::yellow);
-            }
-            else if (name.contains("1;37"))//white
-            {
-                tmpFile.fileColor = QColor(Qt::white);
-            }
-            else
-                tmpFile.fileColor = QColor(Qt::black);
-            name.remove(QRegExp("\\[\\d;\\d+m"));
-
-            tmpFile.fileName = QString::fromUtf8(name.toAscii());
-            tmpFile.filePath = this->getPath() + tmpFile.fileName;
-            qDebug()<<"fileName = QString::fromUtf8(name.toAscii());"<<tmpFile.fileName;
-
-            qDebug()<<"Phone::getFileList() - plik: "<<name<< " - " <<lineParts.first();
-
-            if (lineParts.first()[0]=='d')
-                tmpFile.fileType = "dir";
-            else if (lineParts.first()[0]=='-'||lineParts.first()[0]=='s')
-                tmpFile.fileType = "file";
-            else if (lineParts.first()[0]=='l')
-            {
-                tmpFile.fileType = "link";
-                tmpFile.fileName = tmpFile.fileName.left(tmpFile.fileName.indexOf("->")-1);
-                tmpFile.filePath = this->getPath() + tmpFile.fileName;
-            }
-            else if (lineParts.first()[0]=='c'||lineParts.first()[0]=='b'||lineParts.first()[0]=='p')
-                tmpFile.fileType = "device";
-
             name = tmpFile.fileName;
-            name.remove(QString("%1[0m").arg( QChar( 0x1b )));
-            name.remove(QChar( 0x1b ), Qt::CaseInsensitive);
-            name.remove(QRegExp("\\[\\d;\\d+m"));
 
-            if (tmpFile.fileType == "file" || tmpFile.fileType == "device")
+            if (tmpFile.fileType == File::file || tmpFile.fileType == File::device)
             {
                 plik.setFileName(QDir::currentPath()+"/tmp/"+name);
                 plik.open(QFile::WriteOnly);
                 tmpFile.fileIcon = provider->icon(QFileInfo(plik));
                 plik.remove();
             }
-            else if (tmpFile.fileType == "link")
+            else if (tmpFile.fileType == File::link)
             {
                 tmpFile.fileIcon = QApplication::style()->standardIcon(QStyle::SP_FileLinkIcon);
             }
@@ -368,12 +259,9 @@ QList<File> *Phone::getFileList()
                 fileList->append(tmpFile);
         }
     }
-    phone->close();
     qDebug()<<"Phone::getFileList() - skonczylem analizowac pliki";
 
-    phone->terminate();
     delete provider;
-    delete phone;
     return fileList;
 }
 
@@ -386,35 +274,45 @@ QList<File> *Phone::getFileList(QString filter)
     {
         return NULL;
     }
-
-    QProcess *phone=new QProcess(this);
-    phone->setProcessChannelMode(QProcess::MergedChannels);
-    QString command;
-
-    qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss");
-    qDebug()<<"Phone::getFileList() - "<<this->getPath();
-    if (this->hiddenFiles)
-        command="\""+this->sdk+"\""+"adb shell ls -l -a \""+this->codec->toUnicode(this->getPath().toUtf8())+"\" | grep \"" + filter + "\"";
-    else
-        command="\""+this->sdk+"\""+"adb shell ls -l \""+this->codec->toUnicode(this->getPath().toUtf8())+"\" | grep \"" + filter + "\"";
-
-    qDebug()<<"Phone::getFileList() - "<<command;
-    phone->start(command);
     QString outputLine="1";
     QStringList outputLines;
+
+    QString command;
+
+    command =  command="\""+adb+"\" shell \"" + busybox + " ls";
+    qDebug()<<"Phone::getFileList() - "<<command;
+    adbProces->start(command);
+    adbProces->waitForFinished(-1);
+    outputLine=adbProces->readAll();
+    outputLines=outputLine.split("\n");
+    if (outputLines.first().contains("not")){
+        busybox = "";
+    } else {
+        busybox = "busybox";
+    }
+
+    qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss");
+    qDebug()<<"Phone::getFileList() - "<<this->getPath().toStdString().c_str();
+    if (this->hiddenFiles)
+        command="\""+adb+"\" shell \"" + busybox + " ls -l -a \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\' | grep \'" + filter + "\'\"";
+    else
+        command="\""+adb+"\" shell \"" + busybox + " ls -l \'"+this->codec->toUnicode(this->getPath().toUtf8())+"\' | grep \'" + filter + "\'\"";
+
+    qDebug()<<"Phone::getFileList() - "<<command.toStdString().c_str();
+    adbProces->start(command);
+
 
     while (!outputLine.isEmpty())
     {
         qApp->processEvents();
-        phone->waitForReadyRead(-1);
-        outputLine = phone->readLine();
+        adbProces->waitForReadyRead(-1);
+        outputLine = adbProces->readLine();
         qDebug()<<"Phone::getFileList() - "<<outputLine;
         outputLines.append(outputLine);
     }
     if (outputLines.first().contains("No such file or directory")||outputLines.first().contains("cannot")||outputLines.first().contains("Not a directory"))
     {
-        phone->terminate();
-        delete phone;
+        adbProces->terminate();
         return NULL;
     }
 
@@ -526,13 +424,13 @@ QList<File> *Phone::getFileList(QString filter)
             qDebug()<<"Phone::getFileList() - plik: "<<name<< " - " <<lineParts.first();
 
             if (lineParts.first()[0]=='d')
-                tmpFile.fileType = "dir";
-            else if (lineParts.first()[0]=='-'||lineParts.first()[0]=='s')
-                tmpFile.fileType = "file";
-            else if (lineParts.first()[0]=='l')
-                tmpFile.fileType = "link";
+                tmpFile.fileType = File::dir;
+            else if (lineParts.first()[2]=='0')
+                tmpFile.fileType = File::file;
+            else if (lineParts.first()[2]=='l')
+                tmpFile.fileType = File::link;
             else if (lineParts.first()[0]=='c'||lineParts.first()[0]=='b'||lineParts.first()[0]=='p')
-                tmpFile.fileType = "device";
+                tmpFile.fileType = File::device;
 
             name = tmpFile.fileName;
             name.remove(QString("%1[0m").arg( QChar( 0x1b )));
@@ -558,48 +456,58 @@ QList<File> *Phone::getFileList(QString filter)
                 fileList->append(tmpFile);
         }
     }
-    phone->close();
+    adbProces->close();
     qDebug()<<"Phone::getFileList() - skonczylem analizowac pliki";
 
-    phone->terminate();
+    adbProces->terminate();
 //    delete provider;
-    delete phone;
     return fileList;
 }
 
-FileList *Phone::getStaticFileList(QString path, QString sdk, bool hiddenFiles)
+FileList *Phone::getStaticFileList(QString path, QString adb, bool hiddenFiles)
 {
     QTextCodec *codec = QTextCodec::codecForLocale();
     FileList *fileList = new FileList;
+    QString outputLine="1";
+    QStringList outputLines;
 
-    QProcess *phone=new QProcess;
-    phone->setProcessChannelMode(QProcess::MergedChannels);
     QString command;
+
+    QString busyBoxStr;
+    command =  command="\"" + adb +"\" shell busybox ls";
+    qDebug()<<"Phone::getFileList() - "<<command.toStdString().c_str();
+    adbProces->start(command);
+    adbProces->waitForFinished(-1);
+    outputLine=adbProces->readAll();
+    outputLines=outputLine.split("\n");
+    if (outputLines.first().contains("not")){
+        busyBoxStr = "";
+    } else {
+        busyBoxStr = "busybox";
+    }
 
     qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss");
     qDebug()<<"Phone::getFileList() - "<<path;
     if (hiddenFiles)
-        command="\""+sdk+"\""+"adb shell ls -l -a \""+codec->toUnicode(path.toAscii())+"\"";
+        command="\""+adb+"\"", QStringList() <<"shell \"" + busyBoxStr + " ls -l -a \'"+codec->toUnicode(path.toAscii())+"\'\"";
     else
-        command="\""+sdk+"\""+"adb shell ls -l \""+codec->toUnicode(path.toAscii())+"\"";
+        command="\""+adb+"\"", QStringList() <<"shell \"" + busyBoxStr + " ls -l \'"+codec->toUnicode(path.toAscii())+"\'\"";
 
-    qDebug()<<"Phone::getFileList() - "<<command;
-    phone->start(command);
-    QString outputLine="1";
-    QStringList outputLines;
+    qDebug()<<"Phone::getFileList() - "<<command.toStdString().c_str();
+    adbProces->start(command);
+
 
     while (!outputLine.isEmpty())
     {
-        phone->waitForReadyRead(-1);
-        outputLine = phone->readLine();
+        adbProces->waitForReadyRead(-1);
+        outputLine = adbProces->readLine();
         qDebug()<<"Phone::getFileList() - "<<outputLine;
         outputLines.append(outputLine);
     }
     if (outputLines.first().contains("No such file or directory")||outputLines.first().contains("cannot")||outputLines.first().contains("Not a directory"))
     {
         fileList->name.append("error");
-        phone->terminate();
-        delete phone;
+        adbProces->terminate();
         return fileList;
     }
 
@@ -642,7 +550,7 @@ FileList *Phone::getStaticFileList(QString path, QString sdk, bool hiddenFiles)
                 fileList->type.append("device");
         }
     }
-    phone->close();
+    adbProces->close();
     qDebug()<<"Phone::getFileList() - skonczylem analizowac pliki";
     if (fileList->name.count()>0)
     {
@@ -669,8 +577,7 @@ FileList *Phone::getStaticFileList(QString path, QString sdk, bool hiddenFiles)
         }
     }
     qDebug()<<"Phone::getFileList() - . i .. usuniete, koncze funkcje";
-    phone->terminate();
-    delete phone;
+    adbProces->terminate();
     return fileList;
 }
 
@@ -687,29 +594,21 @@ QString Phone::getPath()
         return this->path + "/";
 }
 
-QString Phone::getSdk()
-{
-    return this->sdk;
-}
-
 bool Phone::makeDir(QString newDir)
 {
     if ((this->getConnectionState() != RECOVERY) && (this->getConnectionState() != DEVICE))
         return false;
 
-    QProcess *phone=new QProcess(this);
-    phone->setProcessChannelMode(QProcess::MergedChannels);
     QString command;
 
     newDir.prepend(this->getPath());
-    command="\""+this->sdk+"\""+"adb shell mkdir \""+this->codec->toUnicode(newDir.toUtf8())+"\"";
-    phone->start(command);
+    command="\""+adb+"\" shell " + busybox + " mkdir \""+this->codec->toUnicode(newDir.toUtf8())+"\"";
+    adbProces->start(command);
 
-    phone->waitForReadyRead(-1);
-    QString outputLine=phone->readLine();
+    adbProces->waitForReadyRead(-1);
+    QString outputLine=adbProces->readLine();
 
-    phone->terminate();
-    delete phone;
+    adbProces->terminate();
 
     if (outputLine.contains(QRegExp("can.+t create directory")))
         return false;
@@ -767,11 +666,11 @@ void Phone::slotConnectionChanged(int connState,QString serialNumber)
     {
         this->connecionMode = "usb";
         this->serialNumber=serialNumber;
-        QProcess fastboot;
-        fastboot.setProcessChannelMode(QProcess::MergedChannels);
-        fastboot.start("\"" + this->sdk + "\"fastboot devices");
-        fastboot.waitForFinished();
-        output = fastboot.readAll();
+        QProcess fastboot_proc;
+        fastboot_proc.setProcessChannelMode(QProcess::MergedChannels);
+        fastboot_proc.start("\"" + fastboot + "\" devices");
+        fastboot_proc.waitForFinished();
+        output = fastboot_proc.readAll();
         if (output.contains("fastboot"))
         {
             this->connectionState = FASTBOOT;
@@ -806,19 +705,14 @@ bool Phone::remove(QString name)
 //    if ((this->getConnectionState() != RECOVERY) && (this->getConnectionState() != DEVICE))
 //        return false;
 
-    QProcess *phone=new QProcess(this);
-    phone->setProcessChannelMode(QProcess::MergedChannels);
-    QString command;
+    adbProces->start("\""+ adb +"\" shell " + busybox + QString(" rm -r ")+"\""
+                     +this->codec->toUnicode(this->getPath().toUtf8())+
+                     this->codec->toUnicode(name.toUtf8())+"\"");
 
-    command="\""+this->sdk+"\""+"adb shell rm -r \""+this->codec->toUnicode(this->getPath().toUtf8())+
-            this->codec->toUnicode(name.toUtf8())+"\"";
-    phone->start(command);
+    adbProces->waitForReadyRead(-1);
+    QString outputLine=adbProces->readLine();
 
-    phone->waitForReadyRead(-1);
-    QString outputLine=phone->readLine();
-
-    phone->terminate();
-    delete phone;
+    adbProces->terminate();
 
     if (outputLine.contains("cannot remove"))
         return false;
@@ -836,13 +730,12 @@ bool Phone::rename(QString oldName, QString newName)
 
     command="\""+this->sdk+"\""+"adb shell mv \""+this->codec->toUnicode(this->getPath().toUtf8())+this->codec->toUnicode(oldName.toUtf8())+
             "\" \""+this->codec->toUnicode(this->getPath().toUtf8())+this->codec->toUnicode(newName.toUtf8())+"\"";
-    phone->start(command);
+    adbProces->start(command);
 
-    phone->waitForReadyRead(-1);
-    QString outputLine=phone->readLine();
+    adbProces->waitForReadyRead(-1);
+    QString outputLine=adbProces->readLine();
 
-    phone->terminate();
-    delete phone;
+    adbProces->terminate();
 
     if (outputLine.contains("cannot rename"))
         return false;
@@ -851,94 +744,71 @@ bool Phone::rename(QString oldName, QString newName)
 
 void Phone::adbPowerOff()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"adb shell shutdown");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\"" + adb + "\" shell shutdown");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
 }
 
 void Phone::adbReboot()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"adb shell reboot");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+ adb + "\" shell reboot");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
 }
 
 void Phone::adbRebootBootloader()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"adb shell reboot bootloader");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+ adb + "\" shell reboot bootloader");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
 }
 
 void Phone::adbRebootRecovery()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"adb shell reboot recovery");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\"" + adb + "\" shell reboot recovery");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
 }
 
 void Phone::fastbootPowerOff()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"fastboot oem powerdown");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+fastboot+"\" oem powerdown");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
     this->slotConnectionChanged(FASTBOOT, this->serialNumber);
 }
 
 void Phone::fastbootReboot()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"fastboot reboot");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+fastboot+"\" reboot");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
     this->slotConnectionChanged(FASTBOOT, this->serialNumber);
 }
 
 void Phone::fastbootRebootBootloader()
 {
-    QProcess *reboot=new QProcess();
-    reboot->start("\""+sdk+"\"fastboot reboot-bootloader");
-    reboot->waitForFinished(-1);
-    reboot->terminate();
-    delete reboot;
+    adbProces->start("\""+fastboot+"\" reboot-bootloader");
+    adbProces->waitForFinished(-1);
+    adbProces->terminate();
     this->slotConnectionChanged(FASTBOOT, this->serialNumber);
 }
 
 QStringList Phone::getGoogleAccounts()
 {
-
-    QString sdk;
     QString output;
     QSettings settings;
-    sdk = settings.value("sdkPath").toString();
-    QString operation = "\""+sdk+"\""+ "adb shell grep gmail-ls /data/system/sync/accounts.xml";
 //    QString operation = "\""+sdk+"\""+ "adb shell su -c 'busybox grep gmail-ls /data/system/sync/accounts.xml'";
 //su -c 'busybox grep gmail-ls /data/system/sync/accounts.xml'
-    QProcess *proces=new QProcess;
-    proces->start(operation);
-    proces->waitForFinished(-1);
-    output = proces->readAll();
+    adbProces->start("\""+adb+"\" shell " + busybox + " grep gmail-ls /data/system/sync/accounts.xml");
+    adbProces->waitForFinished(-1);
+    output = adbProces->readAll();
     qDebug()<<"Phone::getGoogleAccounts(): "<<output;
-    delete proces;
     if (output.contains("permission") && !output.contains("account"))//////////////////////////////zmeinic
     {
-        operation = "\""+sdk+"\""+ "adb shell su -c 'grep gmail-ls /data/system/sync/accounts.xml'";
-        proces = new QProcess;
-        proces->start(operation);
-        proces->waitForFinished(-1);
-        output = proces->readAll();
-        delete proces;
+        adbProces->start( "\""+adb+"\" shell su -c '" + busybox + " grep gmail-ls /data/system/sync/accounts.xml'");
+        adbProces->waitForFinished(-1);
+        output = adbProces->readAll();
     }
 
     QStringList list = output.split("\n");
@@ -955,13 +825,12 @@ QStringList Phone::getGoogleAccounts()
 
 QString Phone::getIp()
 {//? (192.168.2.1) at d8:5d:4c:de:85:94 [ether]  on tiwlan0
-    QProcess *proces=new QProcess;
     QSettings settings;
-    proces->start("\"" + settings.value("sdkPath").toString() + "\"adb shell arp");
+    adbProces->start("\"" + adb + "\" shell" + busybox + " arp");
     QString tmp;
-    proces->waitForFinished(-1);
-    tmp = proces->readAll();
-    qDebug()<<"Phone::getIP(): "<<tmp;
+    adbProces->waitForFinished(-1);
+    tmp = adbProces->readAll();
+    qDebug()<<"Phone::getIP(): "<<tmp.toStdString().c_str();
 
     if (tmp.length() < 5)
     {
@@ -971,13 +840,12 @@ QString Phone::getIp()
     tmp.remove(0,tmp.lastIndexOf(" "));
     tmp.remove("\n");
 
-    proces->start("\"" + settings.value("sdkPath").toString() + "\"adb shell ifconfig "+tmp);
-    proces->waitForFinished(-1);
-    tmp = proces->readAll();
+    adbProces->start("\"" + adb + "\" shell" + busybox + " ifconfig "+tmp);
+    adbProces->waitForFinished(-1);
+    tmp = adbProces->readAll();
     tmp.remove(QRegExp(".*inet addr:"));
     tmp.remove(QRegExp("\\s.*"));
 
-    qDebug()<<"Phone::getIP(), gotIP:  "<<tmp;
-    delete proces;
+    qDebug()<<"Phone::getIP(), gotIP:  "<<tmp.toStdString().c_str();
     return tmp;
 }

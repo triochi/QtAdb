@@ -82,7 +82,7 @@ bool RegisterDialog::verifyKey(QString key)
         md5.addData("QtADB"+element.toAscii()+"qtadb");
         sha1.addData(md5.result());
 
-        if (key != sha1.result().toHex())
+        if (key == sha1.result().toHex())
         {
             return true;
         }

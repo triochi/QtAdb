@@ -21,6 +21,12 @@
 #include "appdialog.h"
 #include "ui_appdialog.h"
 
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
 appDialog::appDialog(QWidget *parent,QList<App> appList, int operation, int mode) :
     QDialog(parent),
     ui(new Ui::appDialog)
@@ -36,10 +42,8 @@ appDialog::appDialog(QWidget *parent,QList<App> appList, int operation, int mode
     this->timer=new QTimer(this);
     this->clock=new QTimer(this);
     this->appList=appList;
-    this->sdk=settings.value("sdkPath").toString();
     this->licznik=0;
     this->mode = mode;
-    this->proces = new QProcess(this);
     this->operation = operation;
     proces->setProcessChannelMode(QProcess::MergedChannels);
     this->ui->progressBar->setMaximum(appList.size());
@@ -119,12 +123,9 @@ appDialog::appDialog(QList<App> appList, int operation, int mode) :
     this->timer=new QTimer(this);
     this->clock=new QTimer(this);
     this->appList=appList;
-    this->sdk=settings.value("sdkPath").toString();
     this->licznik=0;
     this->mode = mode;
-    this->proces = new QProcess(this);
     this->operation = operation;
-    proces->setProcessChannelMode(QProcess::MergedChannels);
     this->ui->progressBar->setMaximum(appList.size());
     this->ui->tableWidget->horizontalHeader()->setVisible(true);
 
@@ -200,7 +201,6 @@ void appDialog::backup()
     this->timer->stop();
 
     this->threadBackup = new ThreadBackup;
-    this->threadBackup->sdk = this->sdk;
 
     this->threadBackup->appList = this->appList;
     if (this->mode == appDialog::Application)
@@ -288,7 +288,6 @@ void appDialog::install()
 {
     this->timer->stop();
     this->threadInstall = new ThreadInstall;
-    this->threadInstall->sdk = this->sdk;
 
     this->threadInstall->reinstall=false;
     this->threadInstall->appList = this->appList;
@@ -302,7 +301,6 @@ void appDialog::reinstall()
 {
     this->timer->stop();
     this->threadInstall = new ThreadInstall;
-    this->threadInstall->sdk = this->sdk;
 
     this->threadInstall->reinstall=true;
     this->threadInstall->appList = this->appList;
@@ -318,7 +316,6 @@ void appDialog::restore()
     this->timer->stop();
 
     this->threadRestore = new ThreadRestore;
-    this->threadRestore->sdk = this->sdk;
 
     this->threadRestore->withData = false;
     this->threadRestore->withApk = false;
@@ -390,7 +387,6 @@ void appDialog::uninstall()
     this->timer->stop();
 
     this->threadUninstall = new ThreadUninstall;
-    this->threadUninstall->sdk = this->sdk;
 
     this->threadUninstall->appList = this->appList;
     if (this->appList.first().appFile.contains(QRegExp("/system/app/.+")))
@@ -444,20 +440,20 @@ void ThreadBackup::run()
     }
     else
        onsdcard = true;
-    proces->start("\"" + this->sdk + "\"" + "adb shell mkdir \"" + codec->toUnicode(appsBackupFolder.toUtf8()) +"\"");
+    proces->start("\"" + adb + "\" shell " + busybox +  " mkdir \"" + codec->toUnicode(appsBackupFolder.toUtf8()) +"\"");
     proces->waitForFinished(-1);
     qDebug()<<"mkdir - "<<proces->readAll();
     while (this->appList.size() > 0)
     {
         app = this->appList.takeFirst();
-        proces->start("\"" + this->sdk + "\"" + "adb shell mkdir \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(app.appName.append("/").toUtf8())+"\"");
+        proces->start("\"" + adb + "\" shell " + busybox + " mkdir \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(app.appName.append("/").toUtf8())+"\"");
         proces->waitForFinished(-1);
         emit this->nextApp(app);
-        proces->start("\""+this->sdk+"\""+"adb shell echo -e \"app.name="+codec->toUnicode(app.appName.left(app.appName.size()-1).toUtf8())+"\" > \""+ codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".txt\"");
+        proces->start("\""+adb + "\" shell " + busybox + " echo -e \"app.name="+codec->toUnicode(app.appName.left(app.appName.size()-1).toUtf8())+"\" > \""+ codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".txt\"");
         proces->waitForFinished(-1);
-        proces->start("\""+this->sdk+"\""+"adb shell echo -e \"app.size="+app.appSize+"\" >> \""+ codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".txt\"");
+        proces->start("\""+adb + "\" shell " + busybox + " echo -e \"app.size="+app.appSize+"\" >> \""+ codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".txt\"");
         proces->waitForFinished(-1);
-        proces->start("\""+this->sdk+"\""+"adb shell echo -e \"app.version="+app.appVersion+"\" >> \""+ codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".txt\"");
+        proces->start("\""+adb + "\" shell " + busybox + " echo -e \"app.version="+app.appVersion+"\" >> \""+ codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".txt\"");
         proces->waitForFinished(-1);
         ba = settings.value("apps/"+app.packageName+"/icon").toByteArray();
         if (onsdcard == false)
@@ -476,7 +472,7 @@ void ThreadBackup::run()
         ikona.close();
         if (onsdcard == true)
         {
-        proces->start("\""+this->sdk+"\""+"adb push \""+QDir::currentPath()+"/tmp/"+codec->toUnicode(app.packageName.toUtf8())+".png\" \""+ codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".png\"");
+        proces->start("\""+adb + "\" shell " + busybox + " push \""+QDir::currentPath()+"/tmp/"+codec->toUnicode(app.packageName.toUtf8())+".png\" \""+ codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".png\"");
         proces->waitForFinished(-1);
         output = proces->readAll();
         qDebug()<<"Backup app - icon "<<output;
@@ -484,7 +480,7 @@ void ThreadBackup::run()
         }
         if (this->withData)
         {
-            proces->start("\""+this->sdk+"\""+"adb shell tar -zchf \"" + codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".DATA.tar.gz\" \"/data/data/"+codec->toUnicode(app.packageName.toUtf8())+"\"");
+            proces->start("\""+adb + "\" shell " + busybox + " tar -zchf \"" + codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".DATA.tar.gz\" \"/data/data/"+codec->toUnicode(app.packageName.toUtf8())+"\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Backup app - "<<output;
@@ -492,9 +488,9 @@ void ThreadBackup::run()
         if (this->withApk)
         {
             if (onsdcard == false)
-                proces->start("\""+this->sdk+"\""+"adb pull \""+codec->toUnicode(app.appFile.toUtf8())+ "\" \"" + codec->toUnicode(backuponpc.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".apk\"");
+                proces->start("\""+ adb + "pull \""+codec->toUnicode(app.appFile.toUtf8())+ "\" \"" + codec->toUnicode(backuponpc.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".apk\"");
             else
-                proces->start("\""+this->sdk+"\""+"adb shell cp \""+codec->toUnicode(app.appFile.toUtf8())+ "\" \"" + codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".apk\"");
+                proces->start("\""+adb + "\" shell " + busybox + " cp \""+codec->toUnicode(app.appFile.toUtf8())+ "\" \"" + codec->toUnicode(appsBackupFolder.toUtf8())+codec->toUnicode(app.appName.toUtf8())+codec->toUnicode(app.packageName.toUtf8())+".apk\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Backup app - "<<output;
@@ -555,7 +551,7 @@ void ThreadRestore::run()
         namedir = app.appName.append("/");
         if (onsdcard == false)
         {
-            proces->start("\"" + this->sdk + "\"" + "adb shell mkdir \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+"\"");
+            proces->start("\"" +adb + "\" shell " + busybox + " mkdir \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+"\"");
             proces->waitForFinished(-1);
             qDebug()<<"mkdir /sdcard/tmpAppsBackup/appName/ - "<<proces->readAll();
         }
@@ -563,24 +559,24 @@ void ThreadRestore::run()
         {
             if (onsdcard == false)
             {
-                proces->start("\""+this->sdk+"\""+"adb push \"" + codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".apk\" \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) + "\"");
+                proces->start("\""+adb + "\" push \"" + codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".apk\" \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) + "\"");
                 proces->waitForFinished(-1);
             }
-            proces->start("\""+this->sdk+"\""+"adb shell pm install \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".apk\"");
+            proces->start("\""+adb + "\" shell " + busybox + " pm install \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".apk\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Restore pm - "<<output;
             if (output.contains("Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]"))
             {
-                proces->start("\""+this->sdk+"\""+"adb shell cp \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".apk\" /data/local/tmp/");
+                proces->start("\""+adb + "\" shell " + busybox + " cp \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".apk\" /data/local/tmp/");
                 proces->waitForFinished(-1);
                 output = proces->readAll();
                 qDebug()<<"Restore cp - "<<output;
-                proces->start("\""+this->sdk+"\""+"adb shell pm install /data/local/tmp/" +codec->toUnicode(app.packageName.toUtf8()) + ".apk");
+                proces->start("\""+adb + "\" shell " + busybox + " pm install /data/local/tmp/" +codec->toUnicode(app.packageName.toUtf8()) + ".apk");
                 proces->waitForFinished(-1);
                 output = proces->readAll();
                 qDebug()<<"Restore pm - "<<output;
-                proces->start("\""+this->sdk+"\""+"adb shell rm -f /data/local/tmp/" +codec->toUnicode(app.packageName.toUtf8()) + ".apk");
+                proces->start("\""+adb + "\" shell " + busybox + " rm -f /data/local/tmp/" +codec->toUnicode(app.packageName.toUtf8()) + ".apk");
                 proces->waitForFinished(-1);
             }
             if (output.contains("Failure"))
@@ -593,20 +589,20 @@ void ThreadRestore::run()
             {
                 if (this->withData)
                 {
-                    proces->start("\""+this->sdk+"\""+"adb shell rm -rf /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
+                    proces->start("\""+adb + "\" shell " + busybox + " rm -rf /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
                     proces->waitForFinished(-1);
                     output = proces->readAll();
                     qDebug()<<"Restore rm - "<<output;
                     if (onsdcard == false)
                     {
-                        proces->start("\""+this->sdk+"\""+"adb push \"" + codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".DATA.tar.gz\" \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) + "\"");
+                        proces->start("\""+adb + "\" + " push \"" + codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".DATA.tar.gz\" \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) + "\"");
                         proces->waitForFinished(-1);
                     }
-                    proces->start("\""+this->sdk+"\""+"adb shell tar -xzf \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8())+".DATA.tar.gz\" -C /");
+                    proces->start("\""+adb + "\" shell " + busybox + " tar -xzf \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8())+".DATA.tar.gz\" -C /");
                     proces->waitForFinished(-1);
                     output = proces->readAll();
                     qDebug()<<"Restore tar - "<<output;
-                    proces->start("\""+this->sdk+"\""+"adb shell \"cat /data/system/packages.xml | grep '^<package.*"+codec->toUnicode(app.packageName.toUtf8())+"'\"");
+                    proces->start("\""+adb + "\" shell " + busybox + " \"cat /data/system/packages.xml | grep '^<package.*"+codec->toUnicode(app.packageName.toUtf8())+"'\"");
                     proces->waitForFinished(-1);
                     output = proces->readAll();
                     qDebug()<<"Restore cat - "<<output;
@@ -614,11 +610,11 @@ void ThreadRestore::run()
                     if (start > 7)
                     {
                         userId = output.mid(start, output.indexOf("\"", start) - start);
-                        proces->start("\""+this->sdk+"\""+"adb shell chown -R "+userId+":"+userId+" /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
+                        proces->start("\""+adb + "\" shell " + busybox + " chown -R "+userId+":"+userId+" /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
                         proces->waitForFinished(-1);
                         output = proces->readAll();
                         qDebug()<<"Restore chown - "<<output;
-                        proces->start("\""+this->sdk+"\""+"adb shell chmod -R 775 /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
+                        proces->start("\""+adb + "\" shell " + busybox + " chmod -R 775 /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
                         proces->waitForFinished(-1);
                         output = proces->readAll();
                         qDebug()<<"Restore chmod - "<<output;
@@ -635,20 +631,20 @@ void ThreadRestore::run()
         }
         else if (this->withData)
         {
-            proces->start("\""+this->sdk+"\""+"adb shell rm -rf /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
+            proces->start("\""+adb + "\" shell " + busybox + " rm -rf /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Restore rm - "<<output;
             if (onsdcard == false)
             {
-                proces->start("\""+this->sdk+"\""+"adb push \"" + codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".DATA.tar.gz\" \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) + "\"");
+                proces->start("\""+adb + "\" push \"" + codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".DATA.tar.gz\" \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) + "\"");
                 proces->waitForFinished(-1);
             }
-            proces->start("\""+this->sdk+"\""+"adb shell tar -xzf \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8())+".DATA.tar.gz\" -C /");
+            proces->start("\""+adb+"\""+" shell tar -xzf \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8())+".DATA.tar.gz\" -C /");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Restore tar - "<<output;
-            proces->start("\""+this->sdk+"\""+"adb shell \"cat /data/system/packages.xml | grep '^<package.*"+codec->toUnicode(app.packageName.toUtf8())+"'\"");
+            proces->start("\""+adb + "\" shell " + busybox + " \"cat /data/system/packages.xml | grep '^<package.*"+codec->toUnicode(app.packageName.toUtf8())+"'\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Restore cat - "<<output;
@@ -656,11 +652,11 @@ void ThreadRestore::run()
             if (start > 7)
             {
                 userId = output.mid(start, output.indexOf("\"", start) - start);
-                proces->start("\""+this->sdk+"\""+"adb shell chown -R "+userId+":"+userId+" /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
+                proces->start("\""+adb + "\" shell " + busybox + " chown -R "+userId+":"+userId+" /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
                 proces->waitForFinished(-1);
                 output = proces->readAll();
                 qDebug()<<"Restore chown - "<<output;
-                proces->start("\""+this->sdk+"\""+"adb shell chmod -R 775 /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
+                proces->start("\""+adb + "\" shell " + busybox + " chmod -R 775 /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
                 proces->waitForFinished(-1);
                 output = proces->readAll();
                 qDebug()<<"Restore chmod - "<<output;
@@ -673,7 +669,7 @@ void ThreadRestore::run()
         }
         if (onsdcard == false)
         {
-            proces->start("\""+this->sdk+"\""+"adb shell rm -r \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+"\"");
+            proces->start("\""+adb + "\" shell " + busybox + " rm -r \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+"\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Backup app - rm -r "<<output;
@@ -681,7 +677,7 @@ void ThreadRestore::run()
     }
     if (onsdcard == false)
     {
-        proces->start("\""+this->sdk+"\""+"adb shell rm -r \""+codec->toUnicode(appsBackupFolder.toUtf8())+"\"");
+        proces->start("\""+adb + "\" shell " + busybox + " shell rm -r \""+codec->toUnicode(appsBackupFolder.toUtf8())+"\"");
         proces->waitForFinished(-1);
         output = proces->readAll();
         qDebug()<<"Backup app - rm -r "<<output;
@@ -702,7 +698,7 @@ void ThreadInstall::run()
 //        file = this->appList.package.takeFirst();
         app = this->appList.takeFirst();
         emit this->nextApp(app);
-        QString cmd = "\""+this->sdk+"\""+"adb install " + (this->reinstall ? "-r " : "") + "\""+codec->toUnicode(app.appFile.toUtf8())+"\"";
+        QString cmd = "\""+ adb + "\"" + QString(" install ") + (this->reinstall ? "-r " : "") + "\""+app.appFile+"\"";
         proces->start(cmd);
         proces->waitForFinished(-1);
         output = proces->readAll();
@@ -739,25 +735,25 @@ void ThreadUninstall::run()
 
         if (this->system)
         {
-            proces->start("\""+this->sdk+"\""+"adb shell mount -o remount,rw /system");
+            proces->start("\""+adb+"\""+" shell mount -o remount,rw /system");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Remove system - "<<output;
             if (this->keepData)
             {
-                proces->start("\""+this->sdk+"\""+"adb shell rm -rf /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
+                proces->start("\""+adb + "\" shell " + busybox + "adb shell rm -rf /data/data/"+codec->toUnicode(app.packageName.toUtf8()));
                 proces->waitForFinished(-1);
                 output = proces->readAll();
                 qDebug()<<"Remove system - "<<output;
             }
-            proces->start("\""+this->sdk+"\""+"adb shell rm -rf "+app.appFile);
+            proces->start("\""+adb + "\" shell " + busybox + " rm -rf "+app.appFile);
         }
         else
         {
             if (this->keepData)
-                proces->start("\""+this->sdk+"\""+"adb uninstall -k "+codec->toUnicode(app.packageName.toUtf8()));
+                proces->start("\""+adb+"\" uninstall -k "+codec->toUnicode(app.packageName.toUtf8()));
             else
-                proces->start("\""+this->sdk+"\""+"adb uninstall "+codec->toUnicode(app.packageName.toUtf8()));
+                proces->start("\""+adb+"\" uninstall "+codec->toUnicode(app.packageName.toUtf8()));
         }
         proces->waitForFinished(-1);
         output = proces->readAll();
@@ -778,7 +774,7 @@ void ThreadUninstall::run()
         }
         if (this->system)
         {
-            proces->start("\""+this->sdk+"\""+"adb shell mount -o remount,ro,noatime /system");
+            proces->start("\""+adb + "\" shell " + busybox + " mount -o remount,ro,noatime /system");
             proces->waitForFinished(-1);
         }
     }

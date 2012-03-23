@@ -141,7 +141,7 @@ QVariant FileTableModel::data(const QModelIndex &index, int role) const
         case 1:
             return file.fileName;
         case 2:
-            if (file.fileType == "dir")
+            if (file.fileType == File::dir)
                 return "";
             else
                 return FileTableModel::humanReadableSize(file.fileSize);
@@ -478,6 +478,13 @@ bool FileSortModel::lessThan(const QModelIndex &left, const QModelIndex &right) 
         return true;
     }
     else if (leftType != "dir" && rightType == "dir")
+    {
+        return false;
+    }
+    else if (leftType == "1" && rightType != "1"){
+        return true;
+    }
+    else if (leftType != "1" && rightType == "1")
     {
         return false;
     }

@@ -65,14 +65,14 @@ QList<File> *Computer::getFileList()
         file.fileIcon = provider->icon(fileInfo);
         file.fileName = fileInfo.fileName();
         file.fileSize = QString::number(fileInfo.size());
-        file.fileDate = fileInfo.lastModified().toString("MMM dd yyyy");
+        file.fileDate = fileInfo.lastModified().toString("MMM dd yyyy, hh:mm");
         file.filePath = fileInfo.absoluteFilePath();
-        file.filePermissions = "";
+        file.filePermissions = 0;
         file.fileOwner = fileInfo.owner();
         if (fileInfo.isDir())
-            file.fileType = "dir";
+            file.fileType = File::dir;
         else
-            file.fileType = "file";
+            file.fileType = File::file;
 
         fileList->append(file);
     }
@@ -166,7 +166,7 @@ bool Computer::makeDir(QString newDir)
 
 bool Computer::remove(File file)
 {
-    if (file.fileType == "dir")
+    if (file.fileType == File::dir)
     {
         this->deleteDir(file.filePath);
     }

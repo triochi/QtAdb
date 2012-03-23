@@ -21,6 +21,13 @@
 #include "appinfo.h"
 #include "ui_appinfo.h"
 
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
+
 appInfo::appInfo(QWidget *parent, App *app) :
     QDialog(parent),
     ui(new Ui::appInfo)
@@ -79,11 +86,9 @@ appInfo::appInfo(QWidget *parent, App *app) :
     this->appsDialog = NULL;
     this->reinstall = false;
 
-    QString sdk;
     QSettings settings;
-    sdk = settings.value("sdkPath").toString();
     QProcess proc;
-    proc.start("\"" + sdk + "\"adb shell ls /data/app/"
+    proc.start("\"" + adb + "\" shell " +  busybox + " ls /data/app/"
                + this->app->packageName + "*");
     proc.waitForFinished(-1);
     QString output = proc.readAll();
@@ -159,7 +164,7 @@ appInfo::appInfo(App *app) :
     QSettings settings;
     sdk = settings.value("sdkPath").toString();
     QProcess proc;
-    proc.start("\"" + sdk + "\"adb shell ls /data/app/"
+    proc.start("\"" + adb + "\" shell " + busybox + " ls /data/app/"
                + this->app->packageName + "*");
     proc.waitForFinished(-1);
     QString output = proc.readAll();
@@ -224,13 +229,13 @@ void appInfo::openMarket()
     QSettings settings;
     sdk = settings.value("sdkPath").toString();
     QProcess proc;
-    proc.start("\"" + sdk + "\"adb shell am start -a android.intent.action.VIEW -d market://details?id="
+    proc.start("\"" + adb + "\" am start -a android.intent.action.VIEW -d market://details?id="
                + this->ui->editAppsPackageName->text() + " -n com.android.vending/.AssetBrowserActivity");
     proc.waitForFinished(-1);
     QString out = proc.readAll();
     if (out.contains("Error"))
     {
-        proc.start("\"" + sdk + "\"adb shell am start -a android.intent.action.VIEW -d market://details?id="
+        proc.start("\"" + adb + "\" shell am start -a android.intent.action.VIEW -d market://details?id="
                    + this->ui->editAppsPackageName->text() + " -n com.android.vending/com.google.android.finsky.activities.PlayLauncherActivity");
         proc.waitForFinished(-1);
     }

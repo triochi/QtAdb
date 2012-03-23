@@ -26,6 +26,7 @@
 
 class File : public QObject{
 public:
+    enum fileTypes {file, dir, link, device, unknown};
     File(QObject *parent=0);
     File(const File&);
     QIcon fileIcon;
@@ -33,9 +34,9 @@ public:
     QString fileSize;
     QString fileDate;
     QString filePath;
-    QString filePermissions;
+    unsigned filePermissions;
     QString fileOwner;
-    QString fileType;
+    fileTypes fileType;
     QColor fileColor;
     File& operator =(const File&);
 };
@@ -73,8 +74,9 @@ public:
     QStringList mimeTypes() const;
     QMimeData *mimeData(const QModelIndexList &indexes) const;
     bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent);
+    QList< File > fileList; // Temporary moved to public
 private:
-    QList< File > fileList;
+//    QList< File > fileList;
     bool coloring;
 signals:
     void copy(QStringList list);

@@ -21,6 +21,13 @@
 #include "settingswidget.h"
 #include "ui_settingswidget.h"
 
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
+
 SettingsWidget::SettingsWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::SettingsWidget)
@@ -836,7 +843,7 @@ void SettingsWidget::detectSdExtFolder()
         QString output;
         this->sdFolder = "";
 
-        shell->start("\"" + this->sdkPath + "\"adb shell 'stat /data/app | grep \"File\"'");
+        shell->start("\"" + adb + "\" shell " + busybox + " stat /data/app |grep \"File\""); //'- remove. Does it work? TEST!!!
         shell->waitForFinished();
         output = shell->readAll();
         if (output.contains("->"))
@@ -847,7 +854,7 @@ void SettingsWidget::detectSdExtFolder()
         }
         else
         {
-            shell->start("\"" + this->sdkPath + "\"adb shell mount");
+            shell->start("\"" + adb + "\" shell " + busybox + " mount");
             shell->waitForFinished();
             output = shell->readAll();
             if (output.contains("ext"))

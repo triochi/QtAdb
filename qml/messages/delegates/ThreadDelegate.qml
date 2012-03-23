@@ -28,7 +28,7 @@ Item
 
     Keys.onReleased:
     {
-        if (event.key === Qt.Key_Down || event.key === Qt.Key_Up)
+        if (event.key == Qt.Key_Down || event.key == Qt.Key_Up)
         {
             messageWidget.sort(threadId);
         }
@@ -47,7 +47,7 @@ Item
         Rectangle
         {
             anchors.fill: parent
-            color:  read === "0" ? "#2200ff00" : "#00000000"
+            color:  read == "0" ? "#2200ff00" : "#00000000"
         }
     }
 
@@ -104,19 +104,19 @@ Item
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked:
         {
-            if (mouse.button === Qt.LeftButton)
+            if (mouse.button == Qt.LeftButton)
             {
                 ListView.view.currentIndex = index
                 threadItem.forceActiveFocus()
                 messageWidget.filterMessages(threadId);
                 messageList.opacity = 1
                 sendMessage.opacity = 1
-                if (read === "0")
+                if (read == "0")
                 {
                     messageWidget.markThreadAsRead(threadId);
                 }
             }
-            else if (mouse.button === Qt.RightButton )
+            else if (mouse.button == Qt.RightButton )
             {
                 ListView.threadContextMenu.x = mouseX;
                 ListView.threadContextMenu.y = mouseY;

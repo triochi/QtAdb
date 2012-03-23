@@ -69,7 +69,6 @@ public:
     QString phonePath;
     QString computerPath;
     QString showAppNameConfig;
-    QString sdkPath;
     QString appsBackupFolder;
     QString editBacFolder;
     QString wlanIP;

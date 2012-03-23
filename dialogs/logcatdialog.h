@@ -44,7 +44,6 @@ private:
     void executeBufferLimitation();
     int bufferLimit;
     QMenu *contextMenu;
-    QString sdk;
 public slots:
     void read();
     void filter();
