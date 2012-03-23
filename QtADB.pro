@@ -34,7 +34,6 @@ DEFINES += BUILDDIR "build"
             UI_DIR = release/.ui
         }
 
-
 TEMPLATE = app
 SOURCES += main.cpp \
     ./dialogs/mainwindow.cpp \
@@ -71,7 +70,9 @@ SOURCES += main.cpp \
     classes/mytableview.cpp \
     dialogs/registerdialog.cpp \
     dialogs/fipdialog.cpp \
-    widgets/cwmwidget.cpp
+    widgets/cwmwidget.cpp \
+    classes/sockets.cpp \
+    dialogs/permissions.cpp
 HEADERS += ./dialogs/mainwindow.h \
     ./dialogs/dialogkopiuj.h \
     ./classes/phone.h \
@@ -106,7 +107,9 @@ HEADERS += ./dialogs/mainwindow.h \
     classes/mytableview.h \
     dialogs/registerdialog.h \
     dialogs/fipdialog.h \
-    widgets/cwmwidget.h
+    widgets/cwmwidget.h \
+    classes/sockets.h \
+    dialogs/permissions.h
 FORMS += ./dialogs/mainwindow.ui \
     ./dialogs/dialogkopiuj.ui \
     ./dialogs/connectWifi.ui \
@@ -125,8 +128,10 @@ FORMS += ./dialogs/mainwindow.ui \
     widgets/contactwidget.ui \
     dialogs/logcatdialog.ui \
     dialogs/registerdialog.ui \
+    dialogs/permissions.ui \
     dialogs/fipdialog.ui \
     widgets/cwmwidget.ui
+
 RC_FILE = ikonka.rc
 RESOURCES += zasoby.qrc
 OTHER_FILES += otherFiles/changes.txt

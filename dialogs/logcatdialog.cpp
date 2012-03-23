@@ -36,7 +36,6 @@ LogcatDialog::LogcatDialog(QWidget *parent) :
     QSettings settings;
     this->bufferLimit = settings.value("logcatBufferLimit",0).toInt();
     this->spinBoxBufferLimit->setValue(this->bufferLimit);
-    this->sdk = settings.value("sdkPath").toString();
 
     checkBoxAutoScroll->setChecked(settings.value("logcatAutoScroll",true).toBool());
     this->tableView->setContextMenuPolicy(Qt::CustomContextMenu);

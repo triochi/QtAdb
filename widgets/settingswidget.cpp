@@ -472,7 +472,6 @@ void SettingsWidget::getSettings()
 //    this->phonePath = settings->value("phonePath", "/").toString();
 //    this->computerPath = settings->value("computerPath", "/").toString();
 
-    this->sdkPath = settings->value("sdkPath").toString();
     this->sdFolder = settings->value("sdFolder","empty").toString();
     if (this->sdFolder == "empty")
     {
@@ -885,43 +884,26 @@ void SettingsWidget::detectSdExtFolder()
 
 void SettingsWidget::on_pushButtonChangeSDKPath_pressed()
 {
-    QString sdk;
-    QString tmp;
-    bool sdkOk = false;
+    QSettings settings;
+        adb = QFileDialog::getOpenFileName(0,"adb executable", "", "adb.*");
+        aapt = QFileDialog::getOpenFileName(0,"aapt executable",QFileInfo(adb).canonicalPath(), "aapt.*");
+        fastboot = QFileDialog::getOpenFileName(0,"fastboot executable", QFileInfo(adb).canonicalPath(), "fastboot.*");
+    if ((QFile::exists(adb))&&(QFile::exists(aapt))&&(QFile::exists(fastboot))){
 
-    sdk=QFileDialog::getExistingDirectory(NULL,QObject::tr("Choose path to dir with adb and aapt binaries"),"/");
+        settings.setValue("sdkPath", sdk);
+        settings.setValue("adbExecutable", adb);
+        settings.setValue("aaptExecutable", aapt);
+        settings.setValue("fastbootExecutable", fastboot);
 
 
-    if (sdk.isEmpty())
-	return;
-
-    sdk.append("/");
-
-    QDir checkSDK(sdk);
-    QFileInfoList list=checkSDK.entryInfoList();
-    while(list.length()>0)
-    {
-	tmp = list.takeFirst().fileName();
-	if (tmp.contains("adb"))
-	{
-	    sdkOk=true;
-	    break;
-	}
+    } else {
+        sdk = settings.value("sdkPath").toString();
+        adb = settings.value("adbExecutable").toString();
+        aapt = settings.value("aaptExecutable").toString();
+        fastboot = settings.value("fastbootExecutable").toString();
+        QMessageBox::critical(0,"Error", "Some of the executables cannot be found. \nUsing previous settings");
     }
-
-    if (!sdkOk)
-    {
-    QMessageBox *msgBox = new QMessageBox(QMessageBox::Critical, QObject::tr("Error:"), QObject::tr("There is no adb binary in this location!"));
-	msgBox->exec();
     }
-    else
-    {
-	QSettings settings;
-	settings.setValue("sdkPath",sdk);
-    this->sdkPath = sdk;
-    }
-}
-
 void SettingsWidget::on_buttonBrowseFolder_pressed()
 {
     QString appsBackFolder=QFileDialog::getExistingDirectory(NULL,QObject::tr("Choose Folder to Backup Selected Apps and/or Data..."),directory.path());
@@ -953,7 +935,7 @@ void SettingsWidget::appsBackupFolderExists()
            this->ui->editBacFolder->setText(newAppsBackupFolder.append("/"));
            settings.setValue("appsBackupFolder",newAppsBackupFolder);
         }
-        command = "\""+this->sdkPath+"\""+"adb shell ls \""+newAppsBackupFolder+"\"";
+        command = "\""+adb+"\""+" shell ls \""+newAppsBackupFolder+"\"";
         qDebug()<<command;
         sdcard->start(command);
         sdcard->waitForFinished(-1);
@@ -966,7 +948,7 @@ void SettingsWidget::appsBackupFolderExists()
         }
         if (outputLine.contains(QRegExp("No such file or directory")))
         {
-            command="\""+this->sdkPath+"\""+"adb shell mkdir \""+newAppsBackupFolder+"\"";
+            command="\""+adb+"\""+" shell mkdir \""+newAppsBackupFolder+"\"";
             qDebug()<<command;
             sdcard->start(command);
             sdcard->waitForFinished(-1);

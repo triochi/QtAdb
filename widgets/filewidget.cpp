@@ -733,7 +733,6 @@ void FileWidget::computerDisplay(QTableWidget *tableWidget)
            }
         }
         this->computerModel->insertFile(0, tmpFile);
-    // }
     }
     delete fileList;
     this->leftTableView->resizeColumnsToContents();
@@ -1309,7 +1308,7 @@ void FileWidget::phoneContextMenu(const QPoint &pos,QTableView *tableView)
             this->phoneRightMenu->setLayoutDirection(Qt::LeftToRight);
         if (layoutDirection == 1)
             this->phoneRightMenu->setLayoutDirection(Qt::RightToLeft);
-        QAction *usun,*selectAll,*selectNone,*odswiez,*nowyFolder,*zmienNazwe,*ukryte, *copy, *openInNewTab, *props, *sep;
+        QAction *usun,*selectAll,*selectNone,*odswiez,*nowyFolder,*zmienNazwe,*ukryte, *copy, *openInNewTab, *props, *sep, *permissions;
 
         zmienNazwe = this->phoneRightMenu->addAction(QIcon(":icons/rename.png"),tr("rename", "phone right click menu"),this,SLOT(phoneRename()));
         zmienNazwe->setData(QString("rename"));
@@ -1329,6 +1328,8 @@ void FileWidget::phoneContextMenu(const QPoint &pos,QTableView *tableView)
         ukryte->setData(QString("hidden files"));
         openInNewTab = this->phoneRightMenu->addAction(QApplication::style()->standardIcon(QStyle::SP_DirIcon),tr("open in new tab", "phone right click menu"),this,SLOT(phoneOpenInNewTab()));
         openInNewTab->setData(QString("open in new tab"));
+        permissions = this->phoneRightMenu->addAction(QIcon(":icons/info.png"),tr("file permissions", "phone right click menu"),this,SLOT(permissions()));
+        ukryte->setData(QString("file permissions"));
         sep = this->phoneRightMenu->addSeparator();
         props = this->phoneRightMenu->addAction(QIcon(":icons/info.png"),tr("Properties", "phone right click menu"),this,SLOT(propsDialog()));
         props->setData(QString("properties"));
@@ -1887,7 +1888,7 @@ void FileWidget::rightDoubleClick()
         {
             this->rightDisplay();
         }
-        else if (fileType == "file")
+        else if (fileType == File::file)
         {
             pulled->removePath(QDir::currentPath()+"/tmp/phone/" + fileName);
             removeFile();
@@ -2294,7 +2295,7 @@ void FileWidget::copySlotToComputer(QStringList list)
 
     if (this->dialog != NULL)
         delete this->dialog;
-        this->dialog = new dialogKopiuj(this, filesToCopy, this->sdk, dialogKopiuj::PhoneToComputer,
+        this->dialog = new dialogKopiuj(this, filesToCopy, dialogKopiuj::PhoneToComputer,
                                         this->phone->getPath(), this->computer->getPath());
 
     if (this->alwaysCloseCopy)
@@ -2445,6 +2446,25 @@ void FileWidget::propsDialog()
     }
     if (indexList.size() == 1)
     {
+        /*
+        QModelIndex index = indexList.first();
+        QString fileName;
+        File file;
+//        index = this->rightTableView->selectionModel()->selection().indexes().takeFirst();
+//        file = this->findModel->getFile(index.row());
+        file = fileModel->fileList[index.row()];
+        fileName=file.fileName;
+        if (file.fileType == File::file)
+            fileName = fileName.left(fileName.lastIndexOf("/"));
+
+        PermissionsDialog *permissionsDialog = new PermissionsDialog(this);
+        permissionsDialog->setPermissions(file.filePermissions);
+        permissionsDialog->exec();
+
+        if (permissionsDialog->result() == 1){
+
+        */
+
         fipDialog *d = new fipDialog(this);
         QModelIndex index = sortModel->mapToSource(indexList.takeFirst());
         File tmpFile = fileModel->getFile(index.row());
@@ -2537,3 +2557,56 @@ void FileWidget::removeFile()
     QDir dir;
     dir.remove(QDir::currentPath()+"/tmp/phone/" + fileName);
 }
+
+void FileWidget::permissions()
+{
+    QTableView * tableView;
+    Phone * phoneTmp;
+    FileSortModel * sortModel;
+    FileTableModel * fileModel;
+    if (this->leftTableView->hasFocus())
+    {
+        phoneTmp = this->phoneLeft;
+        tableView = this->leftTableView;
+        sortModel = this->phoneLeftSortModel;
+        fileModel = this->phoneLeftModel;
+        this->leftChangeName = true;
+    }
+    else
+    {
+        phoneTmp = this->phone;
+        tableView = this->rightTableView;
+        sortModel = this->phoneSortModel;
+        fileModel = this->phoneModel;
+    }
+
+    QModelIndexList indexList = tableView->selectionModel()->selectedRows(1);
+    if (indexList.size() == 1)
+    {
+        QModelIndex index = indexList.first();
+        QString fileName;
+        File file;
+//        index = this->rightTableView->selectionModel()->selection().indexes().takeFirst();
+//        file = this->findModel->getFile(index.row());
+        file = fileModel->fileList[index.row()];
+        fileName=file.fileName;
+        if (file.fileType == File::file)
+            fileName = fileName.left(fileName.lastIndexOf("/"));
+
+        PermissionsDialog *permissionsDialog = new PermissionsDialog(this);
+        permissionsDialog->setPermissions(file.filePermissions);
+        permissionsDialog->exec();
+
+        if (permissionsDialog->result() == 1){
+
+        }
+
+        file = this->findModel->getFile(index.row());
+        file = file;
+//        QMessageBox::about(0,"Permissions", "File Permissions for file: " + fileName + " are :" + QString::number(file.filePermissions,2));
+        unsigned short perm = permissionsDialog->getPermissions();
+        QMessageBox::about(0,"Permissions", "File Permissions for file: " + fileName + " are :" + QString::number(perm,2));
+
+    }
+}
+

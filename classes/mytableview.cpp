@@ -91,7 +91,7 @@ void MyTableView::mousePressEvent(QMouseEvent *event)
                     this->selectionModel()->select(this->model()->index(index.row(),i, QModelIndex()), QItemSelectionModel::Select);
             }
         }
-      //  emit customContextMenuRequested(event->pos());
+        emit customContextMenuRequested(event->pos());
     }
 }
 

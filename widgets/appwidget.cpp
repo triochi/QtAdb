@@ -465,7 +465,6 @@ void AppWidget::comboBoxAppsChanged()
             this->appModel->clear();
             this->ui->tableView->setModel(this->appSortModel);
             this->threadApps.systemApps = false;
-            this->threadApps.sdk=this->sdk;
             this->threadApps.start();
         }
         QStringList appColumnList = settings.value("appColumnList").toStringList();
@@ -505,7 +504,6 @@ void AppWidget::comboBoxAppsChanged()
                 QMessageBox::information(this,"Backups:","Did you set the Apps Backup Folder in settings?");
                 return;
              }
-            this->threadBackups.sdk = this->sdk;
             this->threadBackups.start();
         }
         QStringList backupColumnList = settings.value("backupColumnList").toStringList();
@@ -735,12 +733,7 @@ void AppWidget::on_toolButtonBackup_pressed()
     {
         tmpModel = this->systemAppModel;
         sortModel = this->systemAppSortModel;
-    }
-    else
-    {
-        this->withData=false;
-        return;
-    }
+
         while (!indexList.isEmpty())
         {
             appList.append(tmpModel->getApp(sortModel->mapToSource(indexList.takeFirst()).row()));
@@ -1100,7 +1093,7 @@ void ThreadBackups::run()
     }
     else
     {
-    proces->start("\"" + this->sdk + "\"adb shell find \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + "\" -name *.txt");
+    proces->start("\"" + adb + "\" shell find \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + "\" -name *.txt");
     proces->waitForFinished(-1);
     output = proces->readAll();
     }
@@ -1146,7 +1139,7 @@ void ThreadBackups::run()
         }
         else
         {
-            proces->start("\"" + this->sdk + "\"adb shell cat \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+ codec->toUnicode(backupFound.packageName.toUtf8())+".txt\"");
+            proces->start("\"" + adb + "\" shell cat \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+ codec->toUnicode(backupFound.packageName.toUtf8())+".txt\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             txtLines = output.split("\n", QString::SkipEmptyParts);
@@ -1161,7 +1154,7 @@ void ThreadBackups::run()
             else
             {
                 iconfile = QDir::currentPath()+"/tmp/"+codec->toUnicode(backupFound.packageName.toUtf8())+".png";
-                proces->start("\"" + this->sdk + "\"adb pull \""+codec->toUnicode(appsBackupFolder.toUtf8())+ codec->toUnicode(namedir.toUtf8())+codec->toUnicode(backupFound.packageName.toUtf8())+".png\" "+codec->toUnicode(iconfile.toUtf8()));
+                proces->start("\"" +adb + "\" pull \""+codec->toUnicode(appsBackupFolder.toUtf8())+ codec->toUnicode(namedir.toUtf8())+codec->toUnicode(backupFound.packageName.toUtf8())+".png\" "+codec->toUnicode(iconfile.toUtf8()));
                 proces->waitForFinished(-1);
             }
             QFile icon(iconfile);
@@ -1204,7 +1197,7 @@ void ThreadBackups::run()
         }
         else
         {
-            proces->start("\"" + this->sdk + "\"adb shell ls \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+ codec->toUnicode(backupFound.packageName.toUtf8())+".apk\"");
+            proces->start("\"" + adb + "\"adb shell ls \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+ codec->toUnicode(backupFound.packageName.toUtf8())+".apk\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             if (output.contains("No such file or directory"))
@@ -1221,7 +1214,7 @@ void ThreadBackups::run()
         }
         else
         {
-            proces->start("\"" + this->sdk + "\"adb shell ls \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+ codec->toUnicode(backupFound.packageName.toUtf8())+".DATA.tar.gz\"");
+            proces->start("\"" + adb + "\" shell ls \"" + codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8())+ codec->toUnicode(backupFound.packageName.toUtf8())+".DATA.tar.gz\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             if (output.contains("No such file or directory"))
@@ -1387,7 +1380,7 @@ void ThreadApps::run()
                 appList.append(app);
             }
         }
-//        proces.start("\"" + this->sdk + "\"adb shell mount");
+//        proces.start("\"" + adb + "\"", QStringList()<<" shell busybox mount");
 //        proces.waitForFinished(-1);
 //        tmp = proces.readAll();
 //        qDebug()<<"Get apps mount - "<<tmp;
@@ -1558,12 +1551,12 @@ void ThreadApps::run()
             qDebug()<<"Apps there is missing icon i settings";
             if (!fileTmpList.contains(app.appFileName))
             {
-                zip.start("\""+adb+"\""+" pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
+                zip.start("\""+adb + "\" pull "+app.appFile.toLatin1()+" \""+QDir::currentPath()+"/tmp/\""+app.appFileName);
                 zip.waitForFinished(-1);
                 QString out;
                 out = zip.readAll();
             }
-            FileWidget::unpack(QDir::currentPath()+"/tmp/"+app.appFileName,QDir::currentPath()+"/tmp/",app.icoName,temp);
+            FileWidget::unpack(QDir::currentPath()+"/tmp/"+app.appFileName,QDir::currentPath()+"/icons/",app.icoName,temp);
 
             QByteArray ba;
             QFile icon(QDir::currentPath()+"/tmp/"+temp);
@@ -1978,7 +1971,6 @@ void AppWidget::filter()
 void AppWidget::refreshBackups() //in background
 {
     this->backupModel->clear();
-    this->threadBackups.sdk = this->sdk;
     this->threadBackups.start();
 }
 

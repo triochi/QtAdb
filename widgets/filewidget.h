@@ -112,6 +112,7 @@ private:
     QFileSystemWatcher *pulled;
     QProcess *edit;
     QString oldComputerPath, fileName, filePath;
+    File::fileTypes fileType;
     QMessageBox *msg;
 
 public slots:

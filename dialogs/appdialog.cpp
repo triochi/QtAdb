@@ -497,11 +497,11 @@ void ThreadBackup::run()
         }
         if (onsdcard == false)
         {
-            proces->start("\""+this->sdk+"\""+"adb pull \""+codec->toUnicode(appsBackupFolder.toUtf8())+"\" \""+ codec->toUnicode(backuponpc.toUtf8())+"\"");
+            proces->start("\""+adb+"\""+" pull \""+codec->toUnicode(appsBackupFolder.toUtf8())+"\" \""+ codec->toUnicode(backuponpc.toUtf8())+"\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Backup app - adb pull "<<output;
-            proces->start("\""+this->sdk+"\""+"adb shell rm -r \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(app.appName.toUtf8())+"\"");
+            proces->start("\""+adb+"\""+" shell rm -r \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(app.appName.toUtf8())+"\"");
             proces->waitForFinished(-1);
             output = proces->readAll();
             qDebug()<<"Backup app - rm -r "<<output;
@@ -511,7 +511,7 @@ void ThreadBackup::run()
     }
         if (onsdcard == false)
         {
-        proces->start("\""+this->sdk+"\""+"adb shell rm -r \""+codec->toUnicode(appsBackupFolder.toUtf8())+"\"");
+        proces->start("\""+adb+"\""+" shell rm -r \""+codec->toUnicode(appsBackupFolder.toUtf8())+"\"");
         proces->waitForFinished(-1);
         output = proces->readAll();
         qDebug()<<"Backup app - rm -r "<<output;
@@ -535,7 +535,7 @@ void ThreadRestore::run()
     {
         backuponpc = appsBackupFolder.append("/");
         appsBackupFolder = "/sdcard/tmpAppsBackup/";
-        proces->start("\"" + this->sdk + "\"" + "adb shell mkdir \"" + codec->toUnicode(appsBackupFolder.toUtf8()) +"\"");
+        proces->start("\"" + adb + "\"" + "adb shell mkdir \"" + codec->toUnicode(appsBackupFolder.toUtf8()) +"\"");
         proces->waitForFinished(-1);
         qDebug()<<"mkdir /sdcard/tmpAppsBackup/ - "<<proces->readAll();
         onsdcard = false;
@@ -595,7 +595,7 @@ void ThreadRestore::run()
                     qDebug()<<"Restore rm - "<<output;
                     if (onsdcard == false)
                     {
-                        proces->start("\""+adb + "\" + " push \"" + codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".DATA.tar.gz\" \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) + "\"");
+                        proces->start("\""+adb + "\"" + " push \"" + codec->toUnicode(backuponpc.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8()) + ".DATA.tar.gz\" \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) + "\"");
                         proces->waitForFinished(-1);
                     }
                     proces->start("\""+adb + "\" shell " + busybox + " tar -xzf \""+codec->toUnicode(appsBackupFolder.toUtf8()) + codec->toUnicode(namedir.toUtf8()) +codec->toUnicode(app.packageName.toUtf8())+".DATA.tar.gz\" -C /");

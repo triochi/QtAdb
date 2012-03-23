@@ -159,7 +159,7 @@ void PhoneInfoWidget::showPhoneInfo()
         QString sdFolder;
 //        QStringList lines, split;
 //        sdFolder.clear();
-//        proces->start("\"" + this->sdk + "\"adb shell mount");
+//        proces->start("\"" + adb + "\"", QStringList()<<" shell busybox mount");
 //        proces->waitForFinished(-1);
 //        tmp = proces->readAll();
 //        qDebug()<<"Get phone info mount - "<<tmp;

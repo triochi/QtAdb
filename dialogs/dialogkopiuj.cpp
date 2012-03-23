@@ -82,7 +82,7 @@ dialogKopiuj::dialogKopiuj(QWidget *parent, QList<File> *fileList,  int mode, QS
     this->setLayout(ui->gridLayout);
 }
 
-dialogKopiuj::dialogKopiuj(QWidget *parent, QList<App> *appList, QString sdk, int mode, QString targetPath) :
+dialogKopiuj::dialogKopiuj(QWidget *parent, QList<App> *appList, int mode, QString targetPath) :
         QDialog(parent),
         ui(new Ui::dialogKopiuj)
 {
@@ -244,6 +244,7 @@ void ThreadCopy::run()
     {
         while (this->fileList->size() > 0)
         {
+            QDir dir;
             proces = new QProcess;
             proces->setProcessChannelMode(QProcess::MergedChannels);
             counter++;

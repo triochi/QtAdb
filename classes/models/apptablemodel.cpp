@@ -186,17 +186,17 @@ QVariant AppTableModel::headerData(int section, Qt::Orientation orientation, int
         case 0:
             return "";
         case 1:
-            return tr("app Name", "application table name");
+            return tr("Name", "application table name");
         case 2:
-            return tr("app Version", "application table version");
+            return tr("Version", "application table version");
         case 3:
-            return tr("app Size", "applications table size");
+            return tr("Size", "applications table size");
         case 4:
-            return tr("app Location", "application table location");
+            return tr("Package", "application table package");
         case 5:
-            return tr("app Package Name", "application table package");
+            return tr("File", "application table file");
         case 6:
-            return tr("app File Path", "application table file");
+            return tr("Location", "application table location");
         default:
             return QVariant();
         }

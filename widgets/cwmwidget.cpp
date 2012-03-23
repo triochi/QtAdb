@@ -45,9 +45,7 @@ CwmWidget::CwmWidget(QWidget *parent) :
 
     this->sdcardTableView->setModel(this->phoneSortModel);
 
-    this->sdk = this->settings->sdkPath;
-
-    this->phone=new Phone(this->sdk,true);
+    this->phone=new Phone(true);
     this->phone->setPath("/sdcard");
     this->phone->setHiddenFiles(this->settings->phoneHiddenFiles);
     this->sdcardChangeName=false;
@@ -726,7 +724,7 @@ void CwmWidget::on_buttonCreate_pressed()
        phone->setPath("/sdcard/");
        QList<File> *fileList = NULL;
        fileList = phone->getFileList();
-       this->dialog = new dialogKopiuj(this, fileList, this->sdk, dialogKopiuj::PhoneToComputer,
+       this->dialog = new dialogKopiuj(this, fileList, dialogKopiuj::PhoneToComputer,
                                            "/sdcard/", QDir::currentPath()+"/SD_Card/");
        this->dialog->closeAfterFinished();
        this->dialog->show();
@@ -1141,17 +1139,17 @@ void CwmWidget::on_buttonInsert_pressed()
         QModelIndex index = phoneSortModel->mapToSource(indexList.takeFirst());
         File tmpFile = phoneModel->getFile(index.row());
         QString itemPath = tmpFile.filePath;
-        QString itemType = tmpFile.fileType;
+        File::fileTypes itemType = tmpFile.fileType;
         if (this->ui->tabWidget->currentIndex() == 2 && this->ui->radioInstallPath->isChecked())
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "file" && itemPath.endsWith(".zip"))
+            if (itemPath.startsWith("/sdcard/") && itemType == File::file && itemPath.endsWith(".zip"))
                 this ->ui->lineInstallPath->setText(itemPath);
             else
                 QMessageBox::information(this,"Insert Selection:",tr("Valid Zip file must be selected!"));
         }
         if (this->ui->tabWidget->currentIndex() == 3 && !this->ui->checkDefaultBackupDir->isChecked())
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "dir")
+            if (itemPath.startsWith("/sdcard/") && itemType == File::dir)
             {
                 if (itemPath.contains(" "))
                 {
@@ -1174,7 +1172,7 @@ void CwmWidget::on_buttonInsert_pressed()
         }
         if (this->ui->tabWidget->currentIndex() == 4)
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "dir")
+            if (itemPath.startsWith("/sdcard/") && itemType == File::dir)
             {
                 this ->ui->lineRestore->setText(itemPath);
                 if (QMessageBox::question(this, tr("Insert Selection:"),"Do you want to check Backup's MD5 Sum before Restore?",QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
@@ -1197,14 +1195,14 @@ void CwmWidget::on_buttonInsert_pressed()
         }
         if (this->ui->tabWidget->currentIndex() == 5)
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "file" && itemPath.endsWith(".zip"))
+            if (itemPath.startsWith("/sdcard/") && itemType == File::file && itemPath.endsWith(".zip"))
                 this ->ui->lineUpdate->setText(itemPath);
             else
                 QMessageBox::information(this,"Insert Selection:",tr("Valid ROM file must be selected!"));
         }
         if (this->ui->tabWidget->currentIndex() == 6)
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "file" && itemPath.endsWith(".zip"))
+            if (itemPath.startsWith("/sdcard/") && itemType == File::file && itemPath.endsWith(".zip"))
             {
                 if (!this->ui->checkBefore->isChecked() && !this->ui->checkAfter->isChecked())
                     this ->ui->lineFlash->setText(itemPath);
@@ -1238,7 +1236,7 @@ void CwmWidget::on_buttonInsert_pressed()
         }
         if (this->ui->tabWidget_3->currentIndex() == 2)
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "file" && itemPath.endsWith(".img"))
+            if (itemPath.startsWith("/sdcard/") && itemType == File::file && itemPath.endsWith(".img"))
                 this ->ui->lineRecovery->setText(itemPath);
             else
                 QMessageBox::information(this,"Insert Selection:",tr("Valid IMG file must be selected!"));
@@ -1254,11 +1252,11 @@ void CwmWidget::activateButtonInsert()
         QModelIndex index = phoneSortModel->mapToSource(indexList.takeFirst());
         File tmpFile = phoneModel->getFile(index.row());
         QString itemPath = tmpFile.filePath;
-        QString itemType = tmpFile.fileType;
+        File::fileTypes itemType = tmpFile.fileType;
         this->ui->lineEditPath->setText(itemPath);
         if (this->ui->tabWidget->currentIndex() == 2 && this->ui->radioInstallPath->isChecked())
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "file" && itemPath.endsWith(".zip"))
+            if (itemPath.startsWith("/sdcard/") && itemType == File::file && itemPath.endsWith(".zip"))
             {
                 this ->ui->buttonInsert->setEnabled(true);
             }
@@ -1269,7 +1267,7 @@ void CwmWidget::activateButtonInsert()
         }
         if (this->ui->tabWidget->currentIndex() == 3 && !this->ui->checkDefaultBackupDir->isChecked())
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "dir")
+            if (itemPath.startsWith("/sdcard/") && itemType == File::dir)
             {
                 this ->ui->buttonInsert->setEnabled(true);
             }
@@ -1280,7 +1278,7 @@ void CwmWidget::activateButtonInsert()
         }
         if (this->ui->tabWidget->currentIndex() == 4)
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "dir")
+            if (itemPath.startsWith("/sdcard/") && itemType == File::dir)
             {
                 processFind->start("\""+this->sdk+"\""+"adb shell ls \"" + this->codec->toUnicode(itemPath.toUtf8()) + "\"");
                 processFind->waitForFinished(-1);
@@ -1301,7 +1299,7 @@ void CwmWidget::activateButtonInsert()
         }
         if (this->ui->tabWidget->currentIndex() == 5)
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "file" && itemPath.endsWith(".zip"))
+            if (itemPath.startsWith("/sdcard/") && itemType == File::file && itemPath.endsWith(".zip"))
             {
                 this ->ui->buttonInsert->setEnabled(true);
             }
@@ -1312,7 +1310,7 @@ void CwmWidget::activateButtonInsert()
         }
         if (this->ui->tabWidget->currentIndex() == 6)
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "file" && itemPath.endsWith(".zip"))
+            if (itemPath.startsWith("/sdcard/") && itemType == File::file && itemPath.endsWith(".zip"))
             {
                 this ->ui->buttonInsert->setEnabled(true);
             }
@@ -1323,7 +1321,7 @@ void CwmWidget::activateButtonInsert()
         }
         if (this->ui->tabWidget_3->currentIndex() == 2)
         {
-            if (itemPath.startsWith("/sdcard/") && itemType == "file" && itemPath.endsWith(".img"))
+            if (itemPath.startsWith("/sdcard/") && itemType == File::file && itemPath.endsWith(".img"))
             {
                 this ->ui->buttonInsert->setEnabled(true);
             }
@@ -1460,7 +1458,7 @@ void CwmWidget::backupAvailable()
         processStarted();
         QList<File> *fileList = NULL;
         fileList = this->getFileList();
-            this->dialog = new dialogKopiuj(this, fileList, this->sdk, dialogKopiuj::ComputerToPhone,
+            this->dialog = new dialogKopiuj(this, fileList, dialogKopiuj::ComputerToPhone,
                                              QDir::currentPath()+"/SD_Card/","/sdcard/" );
         this->dialog->closeAfterFinished();
         this->dialog->show();
@@ -1676,12 +1674,12 @@ QList<File> *CwmWidget::getFileList()
         file.fileSize = QString::number(fileInfo.size());
         file.fileDate = fileInfo.lastModified().toString("MMM dd yyyy");
         file.filePath = fileInfo.absoluteFilePath();
-        file.filePermissions = "";
+        file.filePermissions = 0;
         file.fileOwner = fileInfo.owner();
         if (fileInfo.isDir())
-            file.fileType = "dir";
+            file.fileType = File::dir;
         else
-            file.fileType = "file";
+            file.fileType = File::file;
         fileList->append(file);
     }
     delete provider;

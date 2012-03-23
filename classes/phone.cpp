@@ -97,7 +97,7 @@ void ConnectionThread::run()
     }
 }
 
-Phone::Phone(QString sdk,bool isThreadNecessary)
+Phone::Phone(bool isThreadNecessary)
 {
     QProcess proces;
     this->codec = QTextCodec::codecForLocale();
@@ -225,6 +225,30 @@ QList<File> *Phone::getFileList()
         tmp.clear();
         tmp = outputLines.takeFirst();
         tmp.remove(QRegExp("\\s+$"));
+        lineParts=tmp.split("\t");
+        if((lineParts.count()>3)&&(((QString)lineParts[0]).length()>14))
+        {
+            tmpFile.fileSize = lineParts.at(1);
+            name.append(lineParts.at(3));
+            tmpFile.filePermissions = lineParts[0].right(9).toUInt(0,2);
+            tmpFile.fileColor = QColor(Qt::black);
+            if(tmpFile.filePermissions<2) tmpFile.filePermissions = 111111111;
+
+            tmpFile.fileName = QString::fromUtf8(name.toAscii());
+            tmpFile.filePath = this->getPath() + tmpFile.fileName;
+            tmpFile.fileDate = lineParts[2];
+            qDebug()<<"Phone::getFileList() - plik: "<<name<< " - " <<lineParts.first();
+
+            if (((QString)lineParts[0]).length() == 15){
+                tmpFile.fileName = tmpFile.fileName;
+                tmpFile.fileType = File::dir;
+            } else if (((QString)(lineParts[0]))[2]=='1')
+                tmpFile.fileType = File::link;
+//            else if (((QString)(lineParts[0]))[2]=='0') // TODO: FIX ME!!!
+//                tmpFile.fileType = File::device;
+            else if (((QString)(lineParts[0]))[2]=='0') {
+                tmpFile.fileType = File::file;
+                if ((tmpFile.filePermissions & (1<<9)) == 0) //Not readable
                 {
                     tmpFile.fileColor = QColor(Qt::darkRed);
                 }
@@ -724,11 +748,9 @@ bool Phone::rename(QString oldName, QString newName)
     if ((this->getConnectionState() != RECOVERY) && (this->getConnectionState() != DEVICE))
         return false;
 
-    QProcess *phone=new QProcess(this);
-    phone->setProcessChannelMode(QProcess::MergedChannels);
     QString command;
 
-    command="\""+this->sdk+"\""+"adb shell mv \""+this->codec->toUnicode(this->getPath().toUtf8())+this->codec->toUnicode(oldName.toUtf8())+
+    command="\""+adb+"\""+" shell mv \""+this->codec->toUnicode(this->getPath().toUtf8())+this->codec->toUnicode(oldName.toUtf8())+
             "\" \""+this->codec->toUnicode(this->getPath().toUtf8())+this->codec->toUnicode(newName.toUtf8())+"\"";
     adbProces->start(command);
 

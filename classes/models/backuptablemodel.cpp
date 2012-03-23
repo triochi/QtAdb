@@ -171,17 +171,17 @@ QVariant BackupTableModel::headerData(int section, Qt::Orientation orientation, 
         case 0:
             return "";
         case 1:
-            return tr("app Name", "backup table header app name");
+            return tr("Name", "backup table header app name");
         case 2:
-            return tr("app Version", "backup table header app version");
+            return tr("Version", "backup table header app version");
         case 3:
-            return tr("app Size", "backup table header app size");
+            return tr("Size", "backup table header app size");
         case 4:
-            return tr("app Backed up?", "backup table header apk file");
+            return tr("Package", "backup table header app package");
         case 5:
-            return tr("data Backed up?", "backup table header data");
+            return tr("App", "backup table header apk file");
         case 6:
-            return tr("app Package Name", "backup table header app package");
+            return tr("Data", "backup table header data");
         default:
             return QVariant();
         }

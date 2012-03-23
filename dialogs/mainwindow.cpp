@@ -903,12 +903,6 @@ void MainWindow::showPageSettings()
 
 void MainWindow::showPageShell()
 {
-//    QSettings settings;
-//    QProcess p;
-//    QString sdk = settings.value("sdkPath").toString();
-//    p.startDetached("\""+sdk+"\""+"adb shell");
-    //p.waitForFinished(-1);
-
     if (this->shellWidget == NULL)
     {
         this->shellWidget = new ShellWidget;

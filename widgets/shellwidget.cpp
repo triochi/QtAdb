@@ -22,12 +22,12 @@
 #include "ui_shellwidget.h"
 
 
-//extern QString sdk;
-//extern QString adb;
-//extern QString aapt;
-//extern QProcess *adbProces;
-//extern QString busybox;
-//extern QString fastboot;
+extern QString sdk;
+extern QString adb;
+extern QString aapt;
+extern QProcess *adbProces;
+extern QString busybox;
+extern QString fastboot;
 
 
 /*
@@ -59,10 +59,8 @@ ShellWidget::ShellWidget(QWidget *parent) :
     this->setTextColor(this->fontColor);
 
     //qDebug()<<"MainWindow::showPageShell() - process shell is not running, starting...";
-    this->sdk=settings.value("sdkPath").toString();
-
     this->process.setProcessChannelMode(QProcess::MergedChannels);
-    this->process.start("\""+sdk+"\""+"adb shell");
+    this->process.start("\""+adb + "\" shell");
 
     connect(&this->process, SIGNAL(readyRead()), this, SLOT(readFromProcess()));
     this->insertPlainText("QtADB shell. Type 'qtadb -help' for instructions\n");
@@ -75,7 +73,7 @@ ShellWidget::~ShellWidget()
 
 void ShellWidget::Refresh(){
     if (this->process.state() != QProcess::Running){
-         this->process.start("\""+sdk+"\""+"adb shell");
+         this->process.start("\""+adb + "\" shell");
     }
 }
 
