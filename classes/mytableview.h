@@ -23,6 +23,7 @@
 
 #include <QTableView>
 #include <QtGui>
+//#include <QHeaderView>
 #include "../classes/models/filetablemodel.h"
 
 class MyTableView : public QTableView
@@ -41,7 +42,6 @@ protected:
     void mousePressEvent(QMouseEvent *event);
 //    void mouseReleaseEvent(QMouseEvent *event);
 //    void mouseMoveEvent(QMouseEvent *event);
-
 signals:
 
 public slots:

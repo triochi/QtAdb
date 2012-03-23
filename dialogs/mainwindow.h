@@ -47,6 +47,7 @@
 #include "../widgets/messagewidget.h"
 #include "../widgets/appwidget.h"
 #include "../widgets/recoverywidget.h"
+#include "../widgets/cwmwidget.h"
 #include "../classes/animation.h"
 #include "../widgets/fastbootwidget.h"
 #include "registerdialog.h"
@@ -85,9 +86,9 @@ protected:
     void changeEvent(QEvent *e);
     void resizeEvent(QResizeEvent *e);
     bool eventFilter(QObject *object, QEvent *event);
-    virtual void keyPressEvent( QKeyEvent *e );
+    //virtual void keyPressEvent( QKeyEvent *e );
 
-    void mousePressEvent(QMouseEvent*);
+    //void mousePressEvent(QMouseEvent*);
 #ifdef WIN7PROGRESS
     virtual bool winEvent(MSG *message, long *result);
 #endif
@@ -110,12 +111,13 @@ private:
     MessageWidget *messageWidget;
     AppWidget *appWidget;
     RecoveryWidget *recoveryWidget;
+    CwmWidget *cwmWidget;
     FastbootWidget *fastbootWidget;
 
     QWidget *currentWidget;
     QWidget *targetWidget;
 
-    bool debugMode;
+    bool debugMode, lastCwm, recoveryCwm;
     QFile *debugFile;
     bool killDemonOnExit;
 
@@ -151,6 +153,7 @@ private slots:
     void showPageApps();
     void showPageFiles();
     void showPageRecovery();
+    void showPageCwm();
     void showPageFastboot();
     void showPagePhoneInfo();
     void showPageScreenshot();

@@ -121,6 +121,13 @@
     </item>
     <item row="5" column="1">
      <widget class="QPushButton" name="buttonRemoveSettings">
+      <property name="toolTip">
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Clear QtADB entries from system registry. Do this first if you want to remove QtADB from your PC.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
       <property name="text">
        <string>Remove settings from system</string>
       </property>
@@ -134,8 +141,11 @@
         <height>0</height>
        </size>
       </property>
+      <property name="toolTip">
+       <string>Reset settings to default values.</string>
+      </property>
       <property name="text">
-       <string>Set defaults</string>
+       <string>Set default settings</string>
       </property>
      </widget>
     </item>
@@ -146,6 +156,9 @@
         <width>100</width>
         <height>0</height>
        </size>
+      </property>
+      <property name="toolTip">
+       <string>Save current settings to system registry.</string>
       </property>
       <property name="text">
        <string>Save Settings</string>
@@ -163,15 +176,22 @@
       <property name="enabled">
        <bool>true</bool>
       </property>
+      <property name="toolTip">
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Associate .apk files on PC with QtADB. Enables apps Info/Install/Uninstall directly from Windows Explorer without opening QtADB.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
       <property name="text">
-       <string>Associate apk files with QtADB</string>
+       <string>Associate .apk files with QtADB</string>
       </property>
      </widget>
     </item>
     <item row="1" column="2" rowspan="5">
      <widget class="QStackedWidget" name="stackedSettings">
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="pageSettingsGeneral">
        <widget class="QWidget" name="layoutWidget_4">
@@ -186,6 +206,13 @@
         <layout class="QGridLayout" name="layoutGeneralSettings">
          <item row="1" column="1" colspan="4">
           <widget class="QCheckBox" name="checkWindowPosition">
+           <property name="toolTip">
+            <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Save position and size of QtADB window on exit.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Save position and size of window on exit</string>
            </property>
@@ -193,6 +220,9 @@
          </item>
          <item row="2" column="1" colspan="4">
           <widget class="QCheckBox" name="checkAlwaysCloseCopy">
+           <property name="toolTip">
+            <string>Autohide Copy dialog window after copying finishes.</string>
+           </property>
            <property name="text">
             <string>Always close copy window after finished</string>
            </property>
@@ -532,7 +562,7 @@
        </widget>
       </widget>
       <widget class="QWidget" name="pageSettingsFile">
-       <widget class="QWidget" name="layoutWidget">
+       <widget class="QWidget" name="layoutWidget_3">
         <property name="geometry">
          <rect>
           <x>10</x>
@@ -950,7 +980,7 @@
            <property name="title">
             <string>Both</string>
            </property>
-           <widget class="QWidget" name="">
+           <widget class="QWidget" name="layoutWidget">
             <property name="geometry">
              <rect>
               <x>10</x>
@@ -1205,7 +1235,7 @@
            </property>
           </spacer>
          </item>
-         <item row="11" column="1">
+         <item row="12" column="1">
           <spacer name="verticalSpacer_44">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
@@ -1294,14 +1324,14 @@
            </property>
           </spacer>
          </item>
-         <item row="8" column="1" colspan="2">
+         <item row="9" column="1" colspan="2">
           <widget class="QCheckBox" name="checkCyrketVer">
            <property name="text">
             <string>Check app version on internet</string>
            </property>
           </widget>
          </item>
-         <item row="10" column="1">
+         <item row="11" column="1">
           <widget class="QListView" name="listAppsColumn">
            <property name="editTriggers">
             <set>QAbstractItemView::NoEditTriggers</set>
@@ -1311,17 +1341,17 @@
            </property>
           </widget>
          </item>
-         <item row="10" column="2">
+         <item row="11" column="2">
           <widget class="QListView" name="listBackupsColumn"/>
          </item>
-         <item row="9" column="1">
+         <item row="10" column="1">
           <widget class="QLabel" name="label_13">
            <property name="text">
             <string>Show/hide apps columns:</string>
            </property>
           </widget>
          </item>
-         <item row="9" column="2">
+         <item row="10" column="2">
           <widget class="QLabel" name="label_14">
            <property name="text">
             <string>Show/hide backups columns:</string>
@@ -1333,7 +1363,7 @@
            <item>
             <widget class="QLabel" name="label_10">
              <property name="text">
-              <string>sd ext folder</string>
+              <string>sdext folder</string>
              </property>
             </widget>
            </item>
@@ -1344,6 +1374,37 @@
             <widget class="QPushButton" name="buttonDetectSdExt">
              <property name="text">
               <string>Detect</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="8" column="1" colspan="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>apps backup folder</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="editBacFolder">
+             <property name="inputMethodHints">
+              <set>Qt::ImhNone</set>
+             </property>
+             <property name="dragEnabled">
+              <bool>true</bool>
+             </property>
+             <property name="placeholderText">
+              <string>Browse for PC folder or set path to folder on Phone's /sdcard/ and press [Enter]...</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonBrowseFolder">
+             <property name="text">
+              <string>Browse</string>
              </property>
             </widget>
            </item>
@@ -1679,8 +1740,11 @@
     </item>
     <item row="6" column="1">
      <widget class="QPushButton" name="pushButtonChangeSDKPath">
+      <property name="toolTip">
+       <string>QtADB requires Android SDK to work properly. Browse to the installation folder to Set/Change Android SDK path. </string>
+      </property>
       <property name="text">
-       <string>Change sdk path...</string>
+       <string>Set Android SDK path</string>
       </property>
      </widget>
     </item>

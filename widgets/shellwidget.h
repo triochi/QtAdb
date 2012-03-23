@@ -31,6 +31,7 @@ public:
     ~ShellWidget();
     void setProcessPath(QString processPath);
     QString getProcessPath();
+    void Refresh();
 
 protected:
     void keyPressEvent(QKeyEvent *e);
@@ -40,11 +41,10 @@ private:
     int cursorPosition;
     QString command;
     QProcess process;
-    QString processPath;
+    QString processPath, sdk;
     QTextCursor cursor;
 
     QColor fontColor;
-    QString sdk;
 
     QStringList commandHistory;
     QStringList commands;
@@ -80,7 +80,6 @@ private:
     Ui::ShellWidget *ui;
     QProcess *procesShell;
     bool processShellIsRunning;
-    QString sdk;
     QCompleter *completer;
     QStringList commandList;
     QStringListModel *commandModel;

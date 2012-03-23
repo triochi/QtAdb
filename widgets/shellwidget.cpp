@@ -21,6 +21,15 @@
 #include "shellwidget.h"
 #include "ui_shellwidget.h"
 
+
+//extern QString sdk;
+//extern QString adb;
+//extern QString aapt;
+//extern QProcess *adbProces;
+//extern QString busybox;
+//extern QString fastboot;
+
+
 /*
   dodac 2 listy stringow:
   - commandList - w konstruktorze wczytywac komendy busyboxa i shella, a pozniej szift+tab bedzie podpowiadal komendy
@@ -39,10 +48,7 @@ ShellWidget::ShellWidget(QWidget *parent) :
     this->setCursorWidth(3);
     this->setTextCursor(cursor);
     this->setContextMenuPolicy(Qt::CustomContextMenu);
-
     QSettings settings;
-    this->sdk=settings.value("sdkPath").toString();
-
     this->fontColor = settings.value("shellFontColor", Qt::black).value<QColor>();
 
     QPalette palette = this->palette();
@@ -53,15 +59,24 @@ ShellWidget::ShellWidget(QWidget *parent) :
     this->setTextColor(this->fontColor);
 
     //qDebug()<<"MainWindow::showPageShell() - process shell is not running, starting...";
+    this->sdk=settings.value("sdkPath").toString();
+
     this->process.setProcessChannelMode(QProcess::MergedChannels);
     this->process.start("\""+sdk+"\""+"adb shell");
 
     connect(&this->process, SIGNAL(readyRead()), this, SLOT(readFromProcess()));
+    this->insertPlainText("QtADB shell. Type 'qtadb -help' for instructions\n");
 }
 
 ShellWidget::~ShellWidget()
 {
     this->process.close();
+}
+
+void ShellWidget::Refresh(){
+    if (this->process.state() != QProcess::Running){
+         this->process.start("\""+sdk+"\""+"adb shell");
+    }
 }
 
 void ShellWidget::keyPressEvent(QKeyEvent *e)
@@ -131,6 +146,7 @@ void ShellWidget::keyPressEvent(QKeyEvent *e)
 
     if (e->key() == Qt::Key_Return)
     {
+        Refresh();
         this->cursor.movePosition(QTextCursor::End);
         this->setTextCursor(this->cursor);
         this->cursorPosition = 0;

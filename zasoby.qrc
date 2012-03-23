@@ -39,21 +39,6 @@
     </qresource>
     <qresource prefix="/lang">
         <file alias="qtadb_en.qm">languages/qtadb_en.qm</file>
-        <file alias="qtadb_pl.qm">languages/qtadb_pl.qm</file>
-        <file alias="qtadb_el.qm">languages/qtadb_el.qm</file>
-        <file alias="qtadb_es.qm">languages/qtadb_es.qm</file>
-        <file alias="qtadb_it.qm">languages/qtadb_it.qm</file>
-        <file alias="qtadb_nl.qm">languages/qtadb_nl.qm</file>
-        <file alias="qtadb_cs.qm">languages/qtadb_cs.qm</file>
-        <file alias="qtadb_de.qm">languages/qtadb_de.qm</file>
-        <file alias="qtadb_hu.qm">languages/qtadb_hu.qm</file>
-        <file alias="qtadb_sv.qm">languages/qtadb_sv.qm</file>
-        <file alias="qtadb_ja.qm">languages/qtadb_ja.qm</file>
-        <file alias="qtadb_ar.qm">languages/qtadb_ar.qm</file>
-        <file alias="qtadb_ru.qm">languages/qtadb_ru.qm</file>
-        <file alias="qtadb_pt.qm">languages/qtadb_pt.qm</file>
-        <file alias="qtadb_sr.qm">languages/qtadb_sr.qm</file>
-        <file alias="qtadb_zh.qm">languages/qtadb_zh.qm</file>
     </qresource>
     <qresource prefix="/qml">
         <file>qml/messageView.qml</file>

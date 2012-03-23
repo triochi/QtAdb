@@ -110,13 +110,13 @@ QVariant BackupTableModel::data(const QModelIndex &index, int role) const
         case 1:
             return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
         case 2:
-            return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
+            return QVariant(Qt::AlignCenter | Qt::AlignVCenter);
         case 3:
             return QVariant(Qt::AlignRight | Qt::AlignVCenter);
         case 4:
-            return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
+            return QVariant(Qt::AlignCenter | Qt::AlignVCenter);
         case 5:
-            return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
+            return QVariant(Qt::AlignCenter | Qt::AlignVCenter);
         case 6:
             return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
          default:
@@ -139,19 +139,20 @@ QVariant BackupTableModel::data(const QModelIndex &index, int role) const
                 tmp = tmp.left(15)+"...";
             return tmp;
         case 3:
-            return BackupTableModel::humanReadableSize(backup.appSize);
+            tmp = BackupTableModel::humanReadableSize(backup.appSize) + "   ";
+            return tmp;
         case 4:
-            return backup.packageName;
-        case 5:
             if (backup.withApk)
-                return QString(tr("yes"));
+                return QString(tr("YES"));
             else
-                return QString(tr("no"));
-        case 6:
+                return QString(tr("NO"));
+        case 5:
             if (backup.withData)
-                return QString(tr("yes"));
+                return QString(tr("YES"));
             else
-                return QString(tr("no"));
+                return QString(tr("NO"));
+        case 6:
+            return backup.packageName;
          default:
             return QVariant();
         }
@@ -170,17 +171,17 @@ QVariant BackupTableModel::headerData(int section, Qt::Orientation orientation, 
         case 0:
             return "";
         case 1:
-            return tr("Name", "backup table header app name");
+            return tr("app Name", "backup table header app name");
         case 2:
-            return tr("Version", "backup table header app version");
+            return tr("app Version", "backup table header app version");
         case 3:
-            return tr("Size", "backup table header app size");
+            return tr("app Size", "backup table header app size");
         case 4:
-            return tr("Package", "backup table header app package");
+            return tr("app Backed up?", "backup table header apk file");
         case 5:
-            return tr("App", "backup table header apk file");
+            return tr("data Backed up?", "backup table header data");
         case 6:
-            return tr("Data", "backup table header data");
+            return tr("app Package Name", "backup table header app package");
         default:
             return QVariant();
         }
@@ -221,13 +222,13 @@ bool BackupTableModel::setData(const QModelIndex &index, const QVariant &value, 
             backup.appSize = value.toString();
             break;
         case 4:
-            backup.packageName = value.toString();
-            break;
-        case 5:
             backup.withApk = value.toBool();
             break;
-        case 6:
+        case 5:
             backup.withData = value.toBool();
+            break;
+        case 6:
+            backup.packageName = value.toString();
             break;
         default:
             return false;

@@ -172,7 +172,7 @@ void RecoveryWidget::fixUIDoutput()
 
 void RecoveryWidget::flashZip()
 {
-    if (QMessageBox::question(this, tr("Flash Zip"), tr("Are you sure??"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this, tr("Flash Zip:"), tr("Are you sure??"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
         return;
     this->romFileName = QFileDialog::getOpenFileName(this, tr("Open ROM File"), "/", tr("Zip files (*.zip)"));
     QFileInfo fInfo = QFileInfo(this->romFileName);
@@ -234,15 +234,15 @@ void RecoveryWidget::mountSDcard()
     tmp = process->readAll();
     if (tmp.contains("enabled"))
     {
-        QMessageBox::information(this, tr("USB mounted"), tr("SD card is mounted as usb drive"), QMessageBox::Ok);
+        QMessageBox::information(this, tr("USB mounted:"), tr("SD card is mounted as usb drive."), QMessageBox::Ok);
     }
     else if (tmp.contains("disabled"))
     {
-        QMessageBox::information(this, tr("USB unmounted"), tr("SD card is unmounted"), QMessageBox::Ok);
+        QMessageBox::information(this, tr("USB unmounted:"), tr("SD card is unmounted."), QMessageBox::Ok);
     }
     else
     {
-        QMessageBox::warning(this, tr("Error"), tmp, QMessageBox::Ok);
+        QMessageBox::warning(this, tr("Error:"), tmp, QMessageBox::Ok);
     }
     process->terminate();
     delete process;
@@ -485,11 +485,11 @@ void RecoveryWidget::nandroidRestoreFound()
 
     if (tmpStr.contains("Error"))
     {
-        QMessageBox::warning(this, "Error", tmpStr, QMessageBox::Ok);
+        QMessageBox::warning(this, "Error:", tmpStr, QMessageBox::Ok);
         this->ui->textNandroidRestore->insertPlainText(tr("Finished"));
     }
     else
-        this->ui->textNandroidRestore->insertPlainText(tr("Finished\nChoose one backup from combo above to restore it"));
+        this->ui->textNandroidRestore->insertPlainText(tr("Finished\nChoose one backup from combo above to restore it."));
     this->nandroidRestoreCombo();
 }
 
@@ -529,12 +529,12 @@ void RecoveryWidget::wipeBattery()
     process->terminate();
     output = process->readAll();
     delete process;
-    QMessageBox::information(this, tr("Information"), output, QMessageBox::Ok);
+    QMessageBox::information(this, tr("Information:"), output, QMessageBox::Ok);
 }
 
 void RecoveryWidget::wipeData()
 {
-    if (QMessageBox::question(this, tr("Wipe data"), tr("Are you sure??"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
+    if (QMessageBox::question(this, tr("Wipe data:"), tr("Are you sure??"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
         return;
     this->procesNandroid.setProcessChannelMode(QProcess::MergedChannels);
     this->procesNandroid.start("\"" + sdk + "\"adb shell echo \'--wipe_data\'>/cache/recovery/command");

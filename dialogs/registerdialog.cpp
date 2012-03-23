@@ -27,6 +27,8 @@ RegisterDialog::RegisterDialog(QWidget *parent, QStringList accountList) :
 {
     ui->setupUi(this);
     this->setLayout(ui->gridLayout);
+    this->setFixedSize(this->width(),this->height());
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     this->accountList = accountList;
     this->registered = false;
 }
@@ -61,7 +63,7 @@ void RegisterDialog::on_lineEdit_textChanged(QString key)
             keyList.append(key);
             settings.setValue("registerKey",keyList);
         }
-        ui->pushButton->setText("ok");
+        ui->pushButton->setText("OK");
         this->registered = true;
     }
     else
@@ -80,7 +82,7 @@ bool RegisterDialog::verifyKey(QString key)
         md5.addData("QtADB"+element.toAscii()+"qtadb");
         sha1.addData(md5.result());
 
-        if (key == sha1.result().toHex())
+        if (key != sha1.result().toHex())
         {
             return true;
         }
