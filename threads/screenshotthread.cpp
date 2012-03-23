@@ -18,7 +18,7 @@
 ************************************************************************/
 
 
-#include "./threads/screenshotthread.h"
+#include "screenshotthread.h"
 
 QImage noScreenshotImage(int width, int height)
 {
